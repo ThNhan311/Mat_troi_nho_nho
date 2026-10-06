@@ -1,28 +1,33 @@
 # FitnessCenter App
-Môn học: Công nghệ phần mềm
-Tên đề tài: Ứng dụng quản lý phòng gym
-Nhóm: 4
-Tên nhóm: Mặt trời nho nhỏ
+
+- **Môn học:** Công nghệ phần mềm
+- **Tên đề tài:** Ứng dụng quản lý phòng gym
+- **Nhóm:** 4
+- **Tên nhóm:** Mặt trời nho nhỏ
+
+---
 
 ## 1. Yêu cầu
 
-Cài đặt các requirements sau:
+Cài đặt các công cụ sau:
 
-- [Node.js](https://nodejs.org/)
+- [Node.js](https://nodejs.org/) (khuyên dùng bản LTS)
 - Git
-- Tải về ứng dụng "Expo Go" trên điện thoại iOS hoặc Android.
-    (Expo là một framework và bộ công cụ xây dựng trên React Native, giúp tạo, chạy, kiểm thử và build ứng dụng mobile dễ hơn)
+- Tải ứng dụng **Expo Go** trên điện thoại iOS hoặc Android
+  *(Expo là framework & bộ công cụ hỗ trợ phát triển, chạy thử và build ứng dụng React Native nhanh chóng).*
 
 ## 2. Bắt đầu dự án
 
-Mở Terminal, chạy:
-Lần đầu:
+Mở Terminal và thực hiện:
+
+### Lần đầu tiên (Clone dự án)
+
 ```bash
-git clone https://github.com/kiyu-syna/Mat_troi_nho_nho.git
+git clone https://github.com/ThNhan311/Mat_troi_nho_nho.git
 cd Mat_troi_nho_nho
 ```
 
-Các lần sau:
+### Các lần sau (Cập nhật code mới nhất)
 
 ```bash
 git pull origin main
@@ -42,13 +47,12 @@ npx expo start
 
 Sau khi Expo khởi động:
 
-- Nhấn `w` để chạy trên trình duyệt hoặc quét QR bằng ứng dụng Expo Go trên điện thoại
+- Nhấn `w` để chạy trên trình duyệt Web hoặc quét mã QR bằng ứng dụng **Expo Go** trên điện thoại.
 
-Nếu app không nhận biến môi trường, xóa cache chạy lại: 
-
-```bash
-npx expo start -c
-```
+> **Mẹo:** Nếu app không nhận biến môi trường (`.env`), hãy xóa cache và khởi động lại:
+> ```bash
+> npx expo start -c
+> ```
 
 ## 5. Quy trình làm việc với Git
 
