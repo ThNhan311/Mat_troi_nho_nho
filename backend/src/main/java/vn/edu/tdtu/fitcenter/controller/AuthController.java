@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.tdtu.fitcenter.dto.auth.LoginRequest;
 import vn.edu.tdtu.fitcenter.dto.auth.LoginResponse;
+import vn.edu.tdtu.fitcenter.dto.auth.RefreshTokenRequest;
 import vn.edu.tdtu.fitcenter.service.AuthService;
 
 @RestController
@@ -19,7 +20,21 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request
     ) {
-        LoginResponse response = authService.login(request);
+
+        LoginResponse response =
+                authService.login(request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+
+        LoginResponse response =
+                authService.refresh(request);
+
         return ResponseEntity.ok(response);
     }
 }
