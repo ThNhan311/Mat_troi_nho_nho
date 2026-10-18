@@ -1,5 +1,7 @@
+
 package vn.edu.tdtu.fitcenter.config;
 
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,7 +38,20 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
+
+                        // Cho phép Spring Boot xử lý lỗi nội bộ
+                        .dispatcherTypeMatchers(
+                                DispatcherType.ERROR,
+                                DispatcherType.FORWARD
+                        ).permitAll()
+
+                        // Login và refresh không cần access token
+                        .requestMatchers(
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/refresh"
+                        ).permitAll()
+
+                        // Các API còn lại yêu cầu xác thực
                         .anyRequest().authenticated()
                 )
 
