@@ -11,13 +11,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 import vn.edu.tdtu.fitcenter.security.JwtAuthenticationFilter;
+import vn.edu.tdtu.fitcenter.security.RestAuthenticationEntryPoint;
+import vn.edu.tdtu.fitcenter.security.RestAccessDeniedHandler;
 
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RestAuthenticationEntryPoint authenticationEntryPoint;
+    private final RestAccessDeniedHandler accessDeniedHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -37,21 +42,26 @@ public class SecurityConfig {
                         )
                 )
 
-                .authorizeHttpRequests(auth -> auth
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
 
-                        // Cho phép Spring Boot xử lý lỗi nội bộ
+                .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(
                                 DispatcherType.ERROR,
                                 DispatcherType.FORWARD
                         ).permitAll()
 
-                        // Login và refresh không cần access token
                         .requestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh"
                         ).permitAll()
 
-                        // Các API còn lại yêu cầu xác thực
+                        .requestMatchers(
+                                "/api/v1/memberships/me"
+                        ).hasRole("MEMBER")
+
                         .anyRequest().authenticated()
                 )
 
