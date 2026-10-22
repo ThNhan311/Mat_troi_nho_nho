@@ -1,0 +1,455 @@
+import 'package:flutter/material.dart';
+
+import '../theme/app_theme.dart';
+import '../widgets/page_header.dart';
+import '../widgets/section_title.dart';
+import 'workout_history_page.dart';
+import 'notification_page.dart';
+import 'help_page.dart';
+import 'about_page.dart';
+
+class ProfilePage extends StatefulWidget {
+  final bool isDark;
+  final ValueChanged<bool> onToggleTheme;
+  final ValueChanged<String> onShowMessage;
+  final VoidCallback onOpenBookingHistory;
+  final VoidCallback onOpenMembership;
+  final VoidCallback onLogout;
+
+  const ProfilePage({
+    super.key,
+    required this.isDark,
+    required this.onToggleTheme,
+    required this.onShowMessage,
+    required this.onOpenBookingHistory,
+    required this.onOpenMembership,
+    required this.onLogout,
+  });
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String fullName = 'Nguyễn Văn Nam';
+  String email = 'nam.nguyen@example.com';
+  String phone = '0901234567';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const PageHeader(
+                icon: Icons.person_outline,
+                title: 'Cá nhân',
+                subtitle: 'Quản lý thông tin tài khoản',
+              ),
+              const SizedBox(height: 24),
+
+              _buildProfileCard(),
+
+              const SizedBox(height: 28),
+
+              const SectionTitle('Tài khoản'),
+              const SizedBox(height: 12),
+
+              _buildMenuItem(
+                context,
+                icon: Icons.person_outline,
+                title: 'Thông tin cá nhân',
+                subtitle: 'Họ tên, số điện thoại, email',
+                onTap: () {
+                  _showEditProfileDialog(context);
+                },
+              ),
+
+              _buildMenuItem(
+                context,
+                icon: Icons.card_membership_outlined,
+                title: 'Gói hội viên',
+                subtitle: 'Xem thông tin gói tập hiện tại',
+                onTap: widget.onOpenMembership,
+              ),
+
+              _buildMenuItem(
+                context,
+                icon: Icons.history,
+                title: 'Lịch sử đặt lịch',
+                subtitle: 'Xem các buổi tập PT đã đặt',
+                onTap: widget.onOpenBookingHistory,
+              ),
+
+              _buildMenuItem(
+                context,
+                icon: Icons.history_toggle_off,
+                title: 'Lịch sử tập luyện',
+                subtitle: 'Theo dõi những buổi tập đã hoàn thành',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const WorkoutHistoryPage(),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 28),
+
+              const SectionTitle('Cài đặt'),
+              const SizedBox(height: 12),
+
+              Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child:
+                SwitchListTile(
+                  secondary: Icon(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Icons.dark_mode
+                        : Icons.light_mode,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: const Text('Giao diện sáng/tối'),
+                  subtitle: Text(
+                    Theme.of(context).brightness == Brightness.dark
+                        ? 'Đang sử dụng giao diện tối'
+                        : 'Đang sử dụng giao diện sáng',
+                  ),
+                  value: Theme.of(context).brightness == Brightness.dark,
+                  onChanged: widget.onToggleTheme,
+                  activeThumbColor: Theme.of(context).colorScheme.primary,
+                ),
+
+              ),
+
+              _buildMenuItem(
+                context,
+                icon: Icons.notifications_none,
+                title: 'Thông báo',
+                subtitle: 'Nhắc lịch tập và lịch hẹn PT',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const NotificationPage(),
+                    ),
+                  );
+                },
+              ),
+
+              _buildMenuItem(
+                context,
+                icon: Icons.help_outline,
+                title: 'Trợ giúp',
+                subtitle: 'Hỗ trợ sử dụng FitCenter',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HelpPage(),
+                    ),
+                  );
+                },
+              ),
+
+              _buildMenuItem(
+                context,
+                icon: Icons.info_outline,
+                title: 'Về FitCenter',
+                subtitle: 'Ứng dụng quản lý hội viên phòng gym',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AboutPage(),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    _showLogoutDialog(context);
+                  },
+                  icon: const Icon(Icons.logout),
+                  label: const Text('Đăng xuất'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    side: BorderSide(
+                      color: Colors.redAccent.withValues(alpha: 0.5),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.green.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 84,
+            height: 84,
+            decoration: BoxDecoration(
+              color: AppColors.green.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.person,
+              size: 46,
+              color: AppColors.green,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            fullName,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 21,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            email,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 7,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.green.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'Gói cao cấp',
+              style: TextStyle(
+                color: AppColors.green,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(
+      BuildContext context, {
+        required IconData icon,
+        required String title,
+        required String subtitle,
+        required VoidCallback onTap,
+      }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 5,
+        ),
+        leading: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: AppColors.green.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: AppColors.green,
+            size: 22,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            subtitle,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 12,
+            ),
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
+      ),
+    );
+  }
+
+  void _showMessage(BuildContext context, String message) {
+    widget.onShowMessage(message);
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF20271F),
+          title: const Text(
+            'Đăng xuất',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'Bạn có chắc chắn muốn đăng xuất khỏi FitCenter?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                widget.onLogout();
+              },
+              child: const Text(
+                'Đăng xuất',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditProfileDialog(BuildContext context) {
+    final nameController = TextEditingController(text: fullName);
+    final emailController = TextEditingController(text: email);
+    final phoneController = TextEditingController(text: phone);
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF20271F),
+          title: const Text(
+            'Thông tin cá nhân',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Họ và tên',
+                  ),
+                ),
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Số điện thoại',
+                  ),
+                ),
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nameController.text.trim().isEmpty ||
+                    emailController.text.trim().isEmpty ||
+                    phoneController.text.trim().isEmpty) {
+                  widget.onShowMessage('Vui lòng nhập đầy đủ thông tin');
+                  return;
+                }
+
+                setState(() {
+                  fullName = nameController.text.trim();
+                  email = emailController.text.trim();
+                  phone = phoneController.text.trim();
+                });
+
+                Navigator.pop(dialogContext);
+                widget.onShowMessage('Cập nhật thông tin thành công');
+              },
+              child: Text(
+                'Lưu',
+                style: TextStyle(color: AppColors.green),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
