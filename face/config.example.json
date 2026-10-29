@@ -1,0 +1,18 @@
+{
+  "roi": {"x": 0.2, "y": 0.1, "width": 0.6, "height": 0.8},
+  "min_width_ratio": 0.15,
+  "min_height_ratio": 0.15,
+  "min_blur_variance": 60.0,
+  "min_brightness": 45.0,
+  "max_brightness": 220.0,
+  "detection_hz": 8.0,
+  "stable_seconds": 0.7,
+  "stable_min_frames": 3,
+  "stable_iou": 0.4,
+  "max_detection_gap_seconds": 0.4,
+  "auth_timeout_seconds": 7.0,
+  "cooldown_seconds": 5.0,
+  "leave_seconds": 0.4,
+  "reconnect_seconds": 1.0,
+  "kiosk_id": "fitcenter-local-mock"
+}
