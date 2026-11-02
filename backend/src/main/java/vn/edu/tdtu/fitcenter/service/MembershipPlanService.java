@@ -1,3 +1,4 @@
+
 package vn.edu.tdtu.fitcenter.service;
 
 import lombok.RequiredArgsConstructor;
@@ -5,7 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
 import vn.edu.tdtu.fitcenter.domain.entity.MembershipPlan;
+import vn.edu.tdtu.fitcenter.domain.enums.MembershipPlanStatus;
 import vn.edu.tdtu.fitcenter.dto.membership.MembershipPlanResponse;
 import vn.edu.tdtu.fitcenter.repository.MembershipPlanRepository;
 
@@ -21,7 +24,8 @@ public class MembershipPlanService {
     @Transactional(readOnly = true)
     public List<MembershipPlanResponse> getActivePlans() {
 
-        return membershipPlanRepository.findByActiveTrue()
+        return membershipPlanRepository
+                .findByStatus(MembershipPlanStatus.ACTIVE)
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -31,7 +35,7 @@ public class MembershipPlanService {
     public MembershipPlanResponse getPlanById(UUID id) {
 
         MembershipPlan plan = membershipPlanRepository.findById(id)
-                .filter(MembershipPlan::getActive)
+                .filter(p -> p.getStatus() == MembershipPlanStatus.ACTIVE)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Membership plan not found"

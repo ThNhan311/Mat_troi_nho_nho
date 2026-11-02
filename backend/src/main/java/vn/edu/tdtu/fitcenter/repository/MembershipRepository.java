@@ -1,3 +1,4 @@
+
 package vn.edu.tdtu.fitcenter.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,5 +10,5 @@ import java.util.UUID;
 public interface MembershipRepository
         extends JpaRepository<Membership, UUID> {
 
-    List<Membership> findByMemberId(UUID memberId);
+    List<Membership> findByMember_Id(UUID memberId);
 }

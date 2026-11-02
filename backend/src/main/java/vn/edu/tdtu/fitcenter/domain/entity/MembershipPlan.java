@@ -1,7 +1,10 @@
+
 package vn.edu.tdtu.fitcenter.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import vn.edu.tdtu.fitcenter.domain.enums.MembershipPlanStatus;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -17,26 +20,38 @@ import java.util.UUID;
 public class MembershipPlan {
 
     @Id
+    @Column(name = "id")
     private UUID id;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(length = 500)
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "duration_days", nullable = false)
     private Integer durationDays;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(name = "price", nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
-    @Column(nullable = false)
-    private Boolean active;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 10)
+    private MembershipPlanStatus status;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(
+            name = "created_at",
+            nullable = false,
+            insertable = false,
+            updatable = false
+    )
     private OffsetDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(
+            name = "updated_at",
+            nullable = false,
+            insertable = false,
+            updatable = false
+    )
     private OffsetDateTime updatedAt;
 }

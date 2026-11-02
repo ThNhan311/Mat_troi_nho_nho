@@ -4,17 +4,25 @@ package vn.edu.tdtu.fitcenter.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.access.AccessDeniedException;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.server.ResponseStatusException;
+
+import vn.edu.tdtu.fitcenter.domain.entity.Member;
 import vn.edu.tdtu.fitcenter.domain.entity.Membership;
 import vn.edu.tdtu.fitcenter.domain.entity.MembershipPlan;
 import vn.edu.tdtu.fitcenter.domain.entity.User;
+
 import vn.edu.tdtu.fitcenter.domain.enums.AccountStatus;
 import vn.edu.tdtu.fitcenter.domain.enums.MembershipStatus;
 import vn.edu.tdtu.fitcenter.domain.enums.Role;
+
+import vn.edu.tdtu.fitcenter.repository.MemberRepository;
 import vn.edu.tdtu.fitcenter.repository.MembershipRepository;
 import vn.edu.tdtu.fitcenter.repository.UserRepository;
 
@@ -30,15 +38,19 @@ import static org.mockito.Mockito.*;
 class MembershipServiceTest {
 
     @Mock
-    private MembershipRepository membershipRepository;
+    private UserRepository userRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private MemberRepository memberRepository;
+
+    @Mock
+    private MembershipRepository membershipRepository;
 
     @InjectMocks
     private MembershipService membershipService;
 
     private User testUser;
+    private Member testMember;
 
     @BeforeEach
     void setUp() {
@@ -47,26 +59,44 @@ class MembershipServiceTest {
         testUser.setEmail("member@test.com");
         testUser.setRole(Role.MEMBER);
         testUser.setStatus(AccountStatus.ACTIVE);
+
+        testMember = new Member();
+        testMember.setId(UUID.randomUUID());
+        testMember.setUser(testUser);
+        testMember.setFullName("Test Member");
     }
 
-    @Test
-    void getMyMemberships_returnsEmptyList_whenMemberHasNoMembership() {
+    private void mockActiveMember() {
         when(userRepository.findByEmail("member@test.com"))
                 .thenReturn(Optional.of(testUser));
 
-        when(membershipRepository.findByMemberId(testUser.getId()))
+        when(memberRepository.findByUser_Id(testUser.getId()))
+                .thenReturn(Optional.of(testMember));
+    }
+
+    @Test
+    void returnsEmptyList_whenMemberHasNoMembership() {
+        mockActiveMember();
+
+        when(membershipRepository.findByMember_Id(testMember.getId()))
                 .thenReturn(List.of());
 
-        var result = membershipService.getMyMemberships("member@test.com");
+        var result = membershipService.getMyMemberships(
+                "member@test.com"
+        );
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        verify(membershipRepository).findByMemberId(testUser.getId());
+        verify(memberRepository)
+                .findByUser_Id(testUser.getId());
+
+        verify(membershipRepository)
+                .findByMember_Id(testMember.getId());
     }
 
     @Test
-    void getMyMemberships_deniesAccess_whenAccountSuspended() {
+    void deniesAccess_whenAccountSuspended() {
         testUser.setStatus(AccountStatus.SUSPENDED);
 
         when(userRepository.findByEmail("member@test.com"))
@@ -74,14 +104,19 @@ class MembershipServiceTest {
 
         assertThrows(
                 AccessDeniedException.class,
-                () -> membershipService.getMyMemberships("member@test.com")
+                () -> membershipService.getMyMemberships(
+                        "member@test.com"
+                )
         );
 
-        verifyNoInteractions(membershipRepository);
+        verifyNoInteractions(
+                memberRepository,
+                membershipRepository
+        );
     }
 
     @Test
-    void getMyMemberships_deniesAccess_whenUserIsPT() {
+    void deniesAccess_whenUserIsPT() {
         testUser.setRole(Role.PT);
 
         when(userRepository.findByEmail("member@test.com"))
@@ -89,14 +124,44 @@ class MembershipServiceTest {
 
         assertThrows(
                 AccessDeniedException.class,
-                () -> membershipService.getMyMemberships("member@test.com")
+                () -> membershipService.getMyMemberships(
+                        "member@test.com"
+                )
+        );
+
+        verifyNoInteractions(
+                memberRepository,
+                membershipRepository
+        );
+    }
+
+    @Test
+    void returns404_whenMemberProfileNotFound() {
+        when(userRepository.findByEmail("member@test.com"))
+                .thenReturn(Optional.of(testUser));
+
+        when(memberRepository.findByUser_Id(testUser.getId()))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> membershipService.getMyMemberships(
+                        "member@test.com"
+                )
+        );
+
+        assertEquals(
+                HttpStatus.NOT_FOUND,
+                exception.getStatusCode()
         );
 
         verifyNoInteractions(membershipRepository);
     }
 
     @Test
-    void getMyMemberships_returnsMembership_whenDataExists() {
+    void returnsMembership_whenDataExists() {
+        mockActiveMember();
+
         UUID membershipId = UUID.randomUUID();
         UUID planId = UUID.randomUUID();
 
@@ -106,26 +171,40 @@ class MembershipServiceTest {
 
         Membership membership = new Membership();
         membership.setId(membershipId);
-        membership.setMember(testUser);
+        membership.setMember(testMember);
         membership.setPlan(plan);
-        membership.setStartDate(LocalDate.of(2026, 10, 21));
-        membership.setEndDate(LocalDate.of(2026, 11, 20));
+        membership.setStartDate(
+                LocalDate.of(2026, 10, 21)
+        );
+        membership.setExpiryDate(
+                LocalDate.of(2026, 11, 20)
+        );
         membership.setStatus(MembershipStatus.ACTIVE);
 
-        when(userRepository.findByEmail("member@test.com"))
-                .thenReturn(Optional.of(testUser));
-
-        when(membershipRepository.findByMemberId(testUser.getId()))
+        when(membershipRepository.findByMember_Id(testMember.getId()))
                 .thenReturn(List.of(membership));
 
-        var result = membershipService.getMyMemberships("member@test.com");
+        var result = membershipService.getMyMemberships(
+                "member@test.com"
+        );
 
         assertEquals(1, result.size());
         assertEquals(membershipId, result.get(0).id());
         assertEquals(planId, result.get(0).planId());
         assertEquals("Basic 30 Days", result.get(0).planName());
-        assertEquals(MembershipStatus.ACTIVE, result.get(0).status());
+        assertEquals(
+                LocalDate.of(2026, 11, 20),
+                result.get(0).endDate()
+        );
+        assertEquals(
+                MembershipStatus.ACTIVE,
+                result.get(0).status()
+        );
 
-        verify(membershipRepository).findByMemberId(testUser.getId());
+        verify(memberRepository)
+                .findByUser_Id(testUser.getId());
+
+        verify(membershipRepository)
+                .findByMember_Id(testMember.getId());
     }
 }

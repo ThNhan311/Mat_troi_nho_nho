@@ -1,3 +1,4 @@
+
 package vn.edu.tdtu.fitcenter.domain.entity;
 
 import jakarta.persistence.*;
@@ -18,29 +19,40 @@ import java.util.UUID;
 public class Membership {
 
     @Id
+    @Column(name = "id")
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "member_id", nullable = false)
-    private User member;
+    private Member member;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "plan_id", nullable = false)
     private MembershipPlan plan;
 
-    @Column(name = "start_date", nullable = false)
+    @Column(name = "start_date")
     private LocalDate startDate;
 
-    @Column(name = "end_date", nullable = false)
-    private LocalDate endDate;
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "status", nullable = false, length = 20)
     private MembershipStatus status;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(
+            name = "created_at",
+            nullable = false,
+            insertable = false,
+            updatable = false
+    )
     private OffsetDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(
+            name = "updated_at",
+            nullable = false,
+            insertable = false,
+            updatable = false
+    )
     private OffsetDateTime updatedAt;
 }
