@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -117,6 +117,26 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<!-- Application resources, excluding legacy migrations -->
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>db/migration/**</exclude>
+				</excludes>
+			</resource>
+
+			<!-- Canonical migrations maintained by Database Team -->
+			<resource>
+				<directory>../database/migrations</directory>
+				<targetPath>db/migration</targetPath>
+				<includes>
+					<include>V*__*.sql</include>
+				</includes>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
