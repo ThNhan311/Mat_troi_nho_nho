@@ -16,9 +16,9 @@ database/
 Cần cài Docker Desktop. Mở terminal trong thư mục `database/`:
 
 ```bash
-cp .env.example .env                       # Windows CMD: copy .env.example .env
-docker compose up -d                       # chạy PostgreSQL và tự áp dụng migration
-docker compose logs flyway                 # xem "Successfully applied 6 migrations"
+cp .env.example .env                       
+docker compose up -d                      
+docker compose logs flyway                 
 
 # nạp dữ liệu demo
 docker compose exec -T db psql -U fitcenter -d fitcenter -f /seed/demo_data.sql
