@@ -1,0 +1,34 @@
+# Dựng PostgreSQL + tự chạy migration (Flyway) cho môi trường local.
+# Dùng:  cp .env.example .env   rồi   docker compose up -d
+services:
+  db:
+    image: postgres:16
+    container_name: fitcenter-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - fitcenter_pgdata:/var/lib/postgresql/data
+      - ./seed:/seed:ro
+      - ./tests:/tests:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  flyway:
+    image: flyway/flyway:10
+    container_name: fitcenter-flyway
+    depends_on:
+      db:
+        condition: service_healthy
+    command: -url=jdbc:postgresql://db:5432/${POSTGRES_DB} -user=${POSTGRES_USER} -password=${POSTGRES_PASSWORD} -connectRetries=5 migrate
+    volumes:
+      - ./migrations:/flyway/sql:ro
+
+volumes:
+  fitcenter_pgdata:
