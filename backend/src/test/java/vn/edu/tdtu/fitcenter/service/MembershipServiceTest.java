@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,9 @@ import vn.edu.tdtu.fitcenter.repository.MembershipRepository;
 import vn.edu.tdtu.fitcenter.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +40,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MembershipServiceTest {
+    @Spy
+    private Clock clock = Clock.fixed(Instant.parse("2026-11-05T12:00:00Z"), ZoneOffset.UTC);
 
     @Mock
     private UserRepository userRepository;
@@ -67,7 +73,7 @@ class MembershipServiceTest {
     }
 
     private void mockActiveMember() {
-        when(userRepository.findByEmail("member@test.com"))
+        when(userRepository.findByEmailIgnoreCase("member@test.com"))
                 .thenReturn(Optional.of(testUser));
 
         when(memberRepository.findByUser_Id(testUser.getId()))
@@ -99,7 +105,7 @@ class MembershipServiceTest {
     void deniesAccess_whenAccountSuspended() {
         testUser.setStatus(AccountStatus.SUSPENDED);
 
-        when(userRepository.findByEmail("member@test.com"))
+        when(userRepository.findByEmailIgnoreCase("member@test.com"))
                 .thenReturn(Optional.of(testUser));
 
         assertThrows(
@@ -119,7 +125,7 @@ class MembershipServiceTest {
     void deniesAccess_whenUserIsPT() {
         testUser.setRole(Role.PT);
 
-        when(userRepository.findByEmail("member@test.com"))
+        when(userRepository.findByEmailIgnoreCase("member@test.com"))
                 .thenReturn(Optional.of(testUser));
 
         assertThrows(
@@ -137,7 +143,7 @@ class MembershipServiceTest {
 
     @Test
     void returns404_whenMemberProfileNotFound() {
-        when(userRepository.findByEmail("member@test.com"))
+        when(userRepository.findByEmailIgnoreCase("member@test.com"))
                 .thenReturn(Optional.of(testUser));
 
         when(memberRepository.findByUser_Id(testUser.getId()))
@@ -206,5 +212,52 @@ class MembershipServiceTest {
 
         verify(membershipRepository)
                 .findByMember_Id(testMember.getId());
+    }
+
+    private vn.edu.tdtu.fitcenter.dto.membership.MembershipResponse responseFor(
+            MembershipStatus status, LocalDate start, LocalDate end) {
+        mockActiveMember();
+        MembershipPlan plan = MembershipPlan.builder().id(UUID.randomUUID()).name("Plan").build();
+        Membership membership = Membership.builder().id(UUID.randomUUID()).member(testMember)
+                .plan(plan).status(status).startDate(start).expiryDate(end).build();
+        when(membershipRepository.findByMember_Id(testMember.getId())).thenReturn(List.of(membership));
+        return membershipService.getMyMemberships("member@test.com").get(0);
+    }
+
+    @Test void expiredDateDoesNotRemainActive() {
+        assertEquals(MembershipStatus.EXPIRED, responseFor(MembershipStatus.ACTIVE,
+                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 11, 4)).status());
+    }
+
+    @Test void expiryTodayIsStillActive() {
+        assertEquals(MembershipStatus.ACTIVE, responseFor(MembershipStatus.ACTIVE,
+                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 11, 5)).status());
+    }
+
+    @Test void futureStartIsNotActive() {
+        assertEquals(MembershipStatus.PENDING_ACTIVATION, responseFor(MembershipStatus.ACTIVE,
+                LocalDate.of(2026, 11, 6), LocalDate.of(2026, 12, 5)).status());
+    }
+
+    @Test void missingDatesCannotGrantActiveMembership() {
+        assertEquals(MembershipStatus.PENDING_ACTIVATION,
+                responseFor(MembershipStatus.ACTIVE, null, null).status());
+    }
+
+    @Test void suspendedStatusIsPreservedEvenWhenDatesExpired() {
+        assertEquals(MembershipStatus.SUSPENDED, responseFor(MembershipStatus.SUSPENDED,
+                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 11, 4)).status());
+    }
+
+    @Test void cancelledStatusIsPreserved() {
+        assertEquals(MembershipStatus.CANCELLED, responseFor(MembershipStatus.CANCELLED,
+                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 12, 5)).status());
+    }
+
+    @Test void expirationUsesVietnamBusinessDateAcrossUtcMidnight() {
+        clock = Clock.fixed(Instant.parse("2026-11-05T18:00:00Z"), ZoneOffset.UTC);
+        membershipService = new MembershipService(membershipRepository, memberRepository, userRepository, clock);
+        assertEquals(MembershipStatus.EXPIRED, responseFor(MembershipStatus.ACTIVE,
+                LocalDate.of(2026, 10, 1), LocalDate.of(2026, 11, 5)).status());
     }
 }

@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Map;
+import vn.edu.tdtu.fitcenter.dto.error.ApiErrorResponse;
+import vn.edu.tdtu.fitcenter.web.CorrelationIdFilter;
 
 @Component
 @RequiredArgsConstructor
@@ -29,14 +31,12 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
+        response.setHeader(CorrelationIdFilter.HEADER, CorrelationIdFilter.getOrCreate(request));
 
         objectMapper.writeValue(
                 response.getOutputStream(),
-                Map.of(
-                        "status", 403,
-                        "error", "Forbidden",
-                        "message", "You do not have permission to access this resource"
-                )
+                ApiErrorResponse.of(403, "ERR_FORBIDDEN",
+                        "You do not have permission to access this resource", Map.of(), request)
         );
     }
 }

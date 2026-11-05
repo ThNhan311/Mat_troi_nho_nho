@@ -5,6 +5,8 @@ import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,6 +19,7 @@ import vn.edu.tdtu.fitcenter.security.RestAuthenticationEntryPoint;
 import vn.edu.tdtu.fitcenter.security.RestAccessDeniedHandler;
 
 @Configuration
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -34,6 +37,7 @@ public class SecurityConfig {
             throws Exception {
 
         http
+                .cors(org.springframework.security.config.Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session ->
@@ -53,14 +57,21 @@ public class SecurityConfig {
                                 DispatcherType.FORWARD
                         ).permitAll()
 
-                        .requestMatchers(
+                        .requestMatchers(HttpMethod.POST,
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh"
                         ).permitAll()
 
-                        .requestMatchers(
-                                "/api/v1/memberships/me"
-                        ).hasRole("MEMBER")
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/pt/**").hasRole("PT")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/membership-plans/**")
+                        .hasAnyRole("MEMBER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/trainers", "/api/v1/trainers/**")
+                        .hasRole("MEMBER")
+                        .requestMatchers("/api/v1/membership", "/api/v1/membership/**",
+                                "/api/v1/memberships/**", "/api/v1/bookings/**",
+                                "/api/v1/attendance/me", "/api/v1/workout-plans/**",
+                                "/api/v1/workout-items/**").hasRole("MEMBER")
 
                         .anyRequest().authenticated()
                 )

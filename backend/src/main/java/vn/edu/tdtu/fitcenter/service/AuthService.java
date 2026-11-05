@@ -24,7 +24,7 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
 
-        User user = userRepository.findByEmail(request.email())
+        User user = userRepository.findByEmailIgnoreCase(request.email().trim())
                 .orElseThrow(() ->
                         new BadCredentialsException(
                                 "Invalid email or password"

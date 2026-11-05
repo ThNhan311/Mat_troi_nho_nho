@@ -15,12 +15,16 @@ import vn.edu.tdtu.fitcenter.domain.entity.Membership;
 import vn.edu.tdtu.fitcenter.domain.entity.User;
 import vn.edu.tdtu.fitcenter.domain.enums.AccountStatus;
 import vn.edu.tdtu.fitcenter.domain.enums.Role;
+import vn.edu.tdtu.fitcenter.domain.enums.MembershipStatus;
 import vn.edu.tdtu.fitcenter.dto.membership.MembershipResponse;
 import vn.edu.tdtu.fitcenter.repository.MemberRepository;
 import vn.edu.tdtu.fitcenter.repository.MembershipRepository;
 import vn.edu.tdtu.fitcenter.repository.UserRepository;
 
 import java.util.List;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -29,12 +33,13 @@ public class MembershipService {
     private final MembershipRepository membershipRepository;
     private final MemberRepository memberRepository;
     private final UserRepository userRepository;
+    private final Clock clock;
 
     @Transactional(readOnly = true)
     public List<MembershipResponse> getMyMemberships(String email) {
 
         // 1. Tim tai khoan dang dang nhap
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() ->
                         new BadCredentialsException("User not found")
                 );
@@ -75,7 +80,20 @@ public class MembershipService {
                 membership.getPlan().getName(),
                 membership.getStartDate(),
                 membership.getExpiryDate(),
-                membership.getStatus()
+                effectiveStatus(membership)
         );
+    }
+
+    private MembershipStatus effectiveStatus(Membership membership) {
+        if (membership.getStatus() != MembershipStatus.ACTIVE) {
+            return membership.getStatus();
+        }
+        LocalDate today = LocalDate.now(clock.withZone(ZoneId.of("Asia/Ho_Chi_Minh")));
+        if (membership.getStartDate() == null || membership.getExpiryDate() == null
+                || membership.getStartDate().isAfter(today)) {
+            return MembershipStatus.PENDING_ACTIVATION;
+        }
+        return membership.getExpiryDate().isBefore(today)
+                ? MembershipStatus.EXPIRED : MembershipStatus.ACTIVE;
     }
 }

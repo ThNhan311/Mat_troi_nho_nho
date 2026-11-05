@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Map;
+import vn.edu.tdtu.fitcenter.dto.error.ApiErrorResponse;
+import vn.edu.tdtu.fitcenter.web.CorrelationIdFilter;
 
 @Component
 @RequiredArgsConstructor
@@ -29,14 +31,12 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
+        response.setHeader(CorrelationIdFilter.HEADER, CorrelationIdFilter.getOrCreate(request));
 
         objectMapper.writeValue(
                 response.getOutputStream(),
-                Map.of(
-                        "status", 401,
-                        "error", "Unauthorized",
-                        "message", "Authentication is required"
-                )
+                ApiErrorResponse.of(401, "ERR_UNAUTHORIZED", "Authentication is required",
+                        Map.of(), request)
         );
     }
 }
