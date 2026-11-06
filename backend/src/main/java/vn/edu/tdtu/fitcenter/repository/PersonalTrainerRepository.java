@@ -17,4 +17,6 @@ public interface PersonalTrainerRepository
 
     @EntityGraph(attributePaths = "user")
     Optional<PersonalTrainer> findByIdAndUser_Status(UUID id, AccountStatus status);
+
+    Optional<PersonalTrainer> findByUser_Id(UUID userId);
 }

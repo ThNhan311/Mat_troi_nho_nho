@@ -13,6 +13,13 @@ public interface AvailabilitySlotRepository
         extends JpaRepository<AvailabilitySlot, UUID> {
 
     List<AvailabilitySlot>
+    findByPersonalTrainerIdAndStartAtGreaterThanEqualAndStartAtLessThanOrderByStartAtAsc(
+            UUID ptId,
+            OffsetDateTime from,
+            OffsetDateTime to
+    );
+
+    List<AvailabilitySlot>
     findByPersonalTrainerIdAndStatusAndStartAtGreaterThanEqualAndStartAtLessThanOrderByStartAtAsc(
             UUID ptId,
             SlotStatus status,
