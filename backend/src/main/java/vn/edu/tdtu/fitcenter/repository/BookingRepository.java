@@ -14,4 +14,10 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     List<Booking> findByMemberIdAndStatusAndStartAtGreaterThanEqualAndStartAtLessThanOrderByStartAtAsc(
             UUID memberId, BookingStatus status, OffsetDateTime from, OffsetDateTime to);
+
+    List<Booking> findByPtIdAndStartAtGreaterThanEqualAndStartAtLessThanOrderByStartAtAsc(
+            UUID ptId, OffsetDateTime from, OffsetDateTime to);
+
+    List<Booking> findByPtIdAndStatusAndStartAtGreaterThanEqualAndStartAtLessThanOrderByStartAtAsc(
+            UUID ptId, BookingStatus status, OffsetDateTime from, OffsetDateTime to);
 }

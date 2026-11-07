@@ -23,6 +23,7 @@ import vn.edu.tdtu.fitcenter.domain.enums.Role;
 import vn.edu.tdtu.fitcenter.dto.booking.BookingResponse;
 import vn.edu.tdtu.fitcenter.repository.BookingRepository;
 import vn.edu.tdtu.fitcenter.repository.MemberRepository;
+import vn.edu.tdtu.fitcenter.repository.PersonalTrainerRepository;
 import vn.edu.tdtu.fitcenter.repository.UserRepository;
 
 import java.time.OffsetDateTime;
@@ -43,6 +44,7 @@ class BookingQueryServiceTest {
     @Mock UserRepository users;
     @Mock MemberRepository members;
     @Mock BookingRepository bookings;
+    @Mock PersonalTrainerRepository trainers;
     @InjectMocks BookingQueryService service;
 
     private User user;

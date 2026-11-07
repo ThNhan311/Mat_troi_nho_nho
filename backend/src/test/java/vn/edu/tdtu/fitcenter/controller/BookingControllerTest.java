@@ -23,6 +23,7 @@ import vn.edu.tdtu.fitcenter.domain.enums.Role;
 import vn.edu.tdtu.fitcenter.exception.ApiExceptionHandler;
 import vn.edu.tdtu.fitcenter.repository.BookingRepository;
 import vn.edu.tdtu.fitcenter.repository.MemberRepository;
+import vn.edu.tdtu.fitcenter.repository.PersonalTrainerRepository;
 import vn.edu.tdtu.fitcenter.repository.UserRepository;
 import vn.edu.tdtu.fitcenter.security.JwtAuthenticationFilter;
 import vn.edu.tdtu.fitcenter.security.JwtService;
@@ -61,6 +62,7 @@ class BookingControllerTest {
     @MockitoBean UserRepository users;
     @MockitoBean MemberRepository members;
     @MockitoBean BookingRepository bookings;
+    @MockitoBean PersonalTrainerRepository trainers;
 
     private User memberUser;
     private Member member;

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import vn.edu.tdtu.fitcenter.domain.entity.Booking;
 import vn.edu.tdtu.fitcenter.domain.entity.Member;
+import vn.edu.tdtu.fitcenter.domain.entity.PersonalTrainer;
 import vn.edu.tdtu.fitcenter.domain.entity.User;
 import vn.edu.tdtu.fitcenter.domain.enums.AccountStatus;
 import vn.edu.tdtu.fitcenter.domain.enums.BookingStatus;
@@ -16,6 +17,7 @@ import vn.edu.tdtu.fitcenter.domain.enums.Role;
 import vn.edu.tdtu.fitcenter.dto.booking.BookingResponse;
 import vn.edu.tdtu.fitcenter.repository.BookingRepository;
 import vn.edu.tdtu.fitcenter.repository.MemberRepository;
+import vn.edu.tdtu.fitcenter.repository.PersonalTrainerRepository;
 import vn.edu.tdtu.fitcenter.repository.UserRepository;
 
 import java.time.OffsetDateTime;
@@ -28,6 +30,7 @@ public class BookingQueryService {
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
     private final BookingRepository bookingRepository;
+    private final PersonalTrainerRepository personalTrainerRepository;
 
     public List<BookingResponse> getMyBookings(
             String email, OffsetDateTime from, OffsetDateTime to, BookingStatus status) {
@@ -51,6 +54,32 @@ public class BookingQueryService {
                         member.getId(), from, to)
                 : bookingRepository.findByMemberIdAndStatusAndStartAtGreaterThanEqualAndStartAtLessThanOrderByStartAtAsc(
                         member.getId(), status, from, to);
+
+        return bookings.stream().map(this::toResponse).toList();
+    }
+
+    public List<BookingResponse> getMyPtBookings(
+            String email, OffsetDateTime from, OffsetDateTime to, BookingStatus status) {
+        if (from == null || to == null || !from.isBefore(to)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "'from' must be earlier than 'to'");
+        }
+
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new BadCredentialsException("User not found"));
+        if (user.getRole() != Role.PT || user.getStatus() != AccountStatus.ACTIVE) {
+            throw new AccessDeniedException("Only active personal trainers can access this resource");
+        }
+
+        PersonalTrainer trainer = personalTrainerRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Personal trainer profile not found"));
+
+        List<Booking> bookings = status == null
+                ? bookingRepository.findByPtIdAndStartAtGreaterThanEqualAndStartAtLessThanOrderByStartAtAsc(
+                        trainer.getId(), from, to)
+                : bookingRepository.findByPtIdAndStatusAndStartAtGreaterThanEqualAndStartAtLessThanOrderByStartAtAsc(
+                        trainer.getId(), status, from, to);
 
         return bookings.stream().map(this::toResponse).toList();
     }
