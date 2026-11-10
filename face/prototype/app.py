@@ -37,6 +37,9 @@ def run(args) -> dict:
                 selection, faces = None, []
                 frame = np.zeros((480, 640, 3), dtype=np.uint8)
             else:
+                if not args.synthetic:
+                    # Mirror before detection so boxes and ROI match the preview.
+                    frame = cv2.flip(frame, 1)
                 frames += 1
                 if now >= next_detection:
                     next_detection = now + 1 / config.detection_hz

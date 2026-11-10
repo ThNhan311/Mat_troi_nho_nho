@@ -40,6 +40,47 @@ def test_preview_window_close_releases_camera(monkeypatch):
     assert sources[0].closed
 
 
+def test_webcam_mirrors_image_with_aligned_detection_and_overlay(monkeypatch):
+    import numpy as np
+    from face.prototype.camera import CameraCapture
+    from face.prototype.types import Box
+
+    raw = np.zeros((480, 640, 3), dtype=np.uint8)
+    raw[300:320, 40:60] = (10, 80, 200)
+    shown, detected, released = [], [], []
+
+    class Source:
+        def isOpened(self):
+            return True
+
+        def read(self):
+            return True, raw.copy()
+
+        def release(self):
+            released.append(True)
+
+    class Detector:
+        def detect(self, frame):
+            detected.append(frame.copy())
+            return [Box(580, 300, 20, 20)]
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(app, "CameraCapture", lambda *_: CameraCapture(factory=lambda _: Source()))
+    monkeypatch.setattr(app, "MediaPipeFaceDetector", lambda _: Detector())
+    monkeypatch.setattr(cv2, "imshow", lambda title, frame: shown.append(frame.copy()))
+    monkeypatch.setattr(cv2, "waitKey", lambda _: ord("q"))
+    monkeypatch.setattr(cv2, "destroyAllWindows", lambda: None)
+    app.run(args(synthetic=False, model="unused.tflite"))
+
+    assert tuple(detected[0][310, 590]) == (10, 80, 200)
+    assert tuple(detected[0][310, 50]) == (0, 0, 0)
+    assert tuple(shown[0][310, 590]) == (10, 80, 200)
+    assert tuple(shown[0][310, 580]) == (0, 100, 255)  # Rejected box follows mirrored image.
+    assert released == [True]
+
+
 def test_detector_failure_does_not_start_auth_and_closes(monkeypatch):
     closed = []
 

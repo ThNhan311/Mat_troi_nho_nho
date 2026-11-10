@@ -34,6 +34,8 @@ Chỉ cài một bản cung cấp `cv2`: `opencv-contrib-python`, cũng là depe
 
 ## Webcam với MediaPipe Tasks
 
+Hình webcam được đảo ngang như soi gương trước khi detection; ROI và bbox dùng cùng tọa độ với preview, chữ hướng dẫn vẫn đọc bình thường.
+
 MediaPipe **0.10.32** dùng `mediapipe.tasks.python.vision.FaceDetector` ở `RunningMode.IMAGE`, không dùng API `mp.solutions` cũ. Adapter chạy detection tối đa theo cấu hình; không gửi video lên server. Tải model riêng, không commit model vào Git:
 
 ```powershell
