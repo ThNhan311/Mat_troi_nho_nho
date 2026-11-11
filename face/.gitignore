@@ -4,4 +4,6 @@ __pycache__/
 *.py[cod]
 .env
 models/
+data/
+*.enc
 test-results.xml

@@ -71,3 +71,5 @@ class AuthRequest:
 class AuthResult:
     request_id: str
     outcome: AuthOutcome
+    member_id: str | None = None
+    score: float | None = None

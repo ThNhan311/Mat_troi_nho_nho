@@ -15,7 +15,20 @@ def run(args) -> dict:
     import numpy as np
     config = PrototypeConfig.load(args.config) if args.config else PrototypeConfig()
     selector = EligibleFaceSelector(config)
-    controller = PrototypeController(config, SingleFlightWorker(MockAuthClient(AuthOutcome(args.mock_outcome), args.mock_delay)))
+    frame_buffer = None
+    if args.auth == "local":
+        from .embedder import InsightFaceEmbedder
+        from .gallery import Gallery, key_from_env
+        from .local_auth_client import LatestFrameBuffer, LocalAuthClient
+        from .matcher import Matcher
+        embedder = InsightFaceEmbedder()
+        gallery = Gallery.load(args.gallery, key_from_env(), embedder.model_name)
+        frame_buffer = LatestFrameBuffer()
+        client = LocalAuthClient(embedder, Matcher(gallery, config.match_threshold, config.match_margin),
+                                 frame_buffer, config.match_samples)
+    else:
+        client = MockAuthClient(AuthOutcome(args.mock_outcome), args.mock_delay)
+    controller = PrototypeController(config, SingleFlightWorker(client))
     camera = CameraCapture(args.camera, config.reconnect_seconds,
                            factory=(lambda _: SyntheticVideoSource())) if args.synthetic else CameraCapture(args.camera, config.reconnect_seconds)
     detector = None
@@ -23,7 +36,8 @@ def run(args) -> dict:
     frames = detections = 0
     selection, faces = None, []
     detector_warning = ""
-    title = "FitCenter - MOCK AUTH ONLY - Q/Esc to quit"
+    title = ("FitCenter - LOCAL 1:N, NO LIVENESS - Q/Esc to quit" if args.auth == "local"
+             else "FitCenter - MOCK AUTH ONLY - Q/Esc to quit")
     try:
         detector = MockFaceDetector() if args.synthetic else MediaPipeFaceDetector(args.model)
         while True:
@@ -37,6 +51,9 @@ def run(args) -> dict:
                 selection, faces = None, []
                 frame = np.zeros((480, 640, 3), dtype=np.uint8)
             else:
+                if frame_buffer is not None:
+                    # Identification uses the un-mirrored camera image, like enrollment.
+                    frame_buffer.put(frame)
                 if not args.synthetic:
                     # Mirror before detection so boxes and ROI match the preview.
                     frame = cv2.flip(frame, 1)
@@ -73,12 +90,16 @@ def run(args) -> dict:
                          SelectionStatus.READY: "Hold still",
                          SelectionStatus.MULTIPLE_ELIGIBLE_FACES: "Only ONE eligible person in ROI, please"}[status]
                 machine = controller.machine
-                lines = ["MOCK ONLY - no identity, liveness, attendance or real access",
+                local = args.auth == "local"
+                lines = ["LOCAL 1:N identification - NO liveness, no attendance or real access" if local
+                         else "MOCK ONLY - no identity, liveness, attendance or real access",
                          f"{machine.state.value} | {status.value} | eligible={len(selection.eligible_faces) if selection else 0}", guide]
                 if machine.last_result:
-                    lines.append(f"MOCK result: {machine.last_result.outcome.value}")
+                    last = machine.last_result
+                    detail = f" member={last.member_id} score={last.score:.2f}" if last.score is not None else ""
+                    lines.append(f"{'LOCAL' if local else 'MOCK'} result: {last.outcome.value}{detail}")
                 if machine.needs_leave:
-                    lines.append("Leave ROI to re-arm after mock SUCCESS")
+                    lines.append("Leave ROI to re-arm after SUCCESS")
                 if controller.worker.busy and machine.state.value != "VERIFYING":
                     lines.append("Auth transport still stopping; no new request allowed")
                 lines.extend(filter(None, [camera.warning, detector_warning]))
@@ -105,7 +126,7 @@ def run(args) -> dict:
     elapsed = monotonic() - started
     return {"mode": "synthetic" if args.synthetic else "webcam", "frames": frames, "detections": detections,
             "elapsed_seconds": round(elapsed, 3), "requests_sent": controller.requests_sent,
-            "last_mock_result": controller.machine.last_result.outcome.value if controller.machine.last_result else None}
+            "auth": args.auth, "last_mock_result": controller.machine.last_result.outcome.value if controller.machine.last_result else None}
 
 
 def main():
@@ -118,8 +139,13 @@ def main():
     parser.add_argument("--seconds", type=float)
     parser.add_argument("--mock-outcome", choices=[s.value for s in AuthOutcome], default="SUCCESS")
     parser.add_argument("--mock-delay", type=float, default=0.5)
+    parser.add_argument("--auth", choices=["mock", "local"], default="mock",
+                        help="local = 1:N identification against an enrolled gallery (needs FITCENTER_GALLERY_KEY)")
+    parser.add_argument("--gallery", default="face/data/gallery.enc")
     args = parser.parse_args()
     from math import isfinite
+    if args.auth == "local" and args.synthetic:
+        parser.error("--auth local needs real faces; it cannot run with --synthetic")
     if args.headless and (args.seconds is None or not args.synthetic):
         parser.error("--headless requires --synthetic and a bounded --seconds duration")
     if args.seconds is not None and (not isfinite(args.seconds) or args.seconds <= 0):

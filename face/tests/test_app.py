@@ -6,7 +6,7 @@ from face.prototype import app
 
 def args(**changes):
     values = dict(config=None, camera=0, model=None, synthetic=True, headless=False,
-                  seconds=2, mock_outcome="SUCCESS", mock_delay=.5)
+                  seconds=2, mock_outcome="SUCCESS", mock_delay=.5, auth="mock", gallery="unused")
     values.update(changes)
     return Namespace(**values)
 

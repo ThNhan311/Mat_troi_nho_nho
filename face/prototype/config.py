@@ -39,6 +39,10 @@ class PrototypeConfig:
     leave_seconds: float = 0.4
     reconnect_seconds: float = 1.0
     kiosk_id: str = "fitcenter-local-mock"
+    # Uncalibrated defaults: tune from measured FAR/FRR on consented data.
+    match_threshold: float = 0.5
+    match_margin: float = 0.05
+    match_samples: int = 3
 
     def __post_init__(self):
         for name in ("min_width_ratio", "min_height_ratio", "stable_iou"):
@@ -58,6 +62,12 @@ class PrototypeConfig:
             raise ValueError("brightness thresholds must satisfy 0 <= min < max <= 255")
         if not self.kiosk_id:
             raise ValueError("kiosk_id is required")
+        if not isfinite(self.match_threshold) or not -1 < self.match_threshold < 1:
+            raise ValueError("match_threshold must be in (-1, 1)")
+        if not isfinite(self.match_margin) or not 0 <= self.match_margin < 1:
+            raise ValueError("match_margin must be in [0, 1)")
+        if type(self.match_samples) is not int or self.match_samples < 1:
+            raise ValueError("match_samples must be an integer >= 1")
 
     @classmethod
     def load(cls, path: str | Path) -> "PrototypeConfig":

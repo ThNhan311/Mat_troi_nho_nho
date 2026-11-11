@@ -14,5 +14,8 @@
   "cooldown_seconds": 5.0,
   "leave_seconds": 0.4,
   "reconnect_seconds": 1.0,
-  "kiosk_id": "fitcenter-local-mock"
+  "kiosk_id": "fitcenter-local-mock",
+  "match_threshold": 0.5,
+  "match_margin": 0.05,
+  "match_samples": 3
 }

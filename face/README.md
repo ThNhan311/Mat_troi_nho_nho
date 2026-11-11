@@ -1,6 +1,8 @@
 # FitCenter — camera gate prototype (MVP)
 
-Đây là demo **chọn ứng viên khuôn mặt + MOCK authentication**, không nhận diện danh tính, không kiểm tra liveness và không mở cổng thật. Chỉ chạy cục bộ; không có HTTP client, không lưu/đẩy ảnh, embedding, secret hay AttendanceRecord. Payload mock chỉ chứa metadata. Khung hình tồn tại trong RAM để preview và đo chất lượng.
+Mặc định đây là demo **chọn ứng viên khuôn mặt + MOCK authentication**: không nhận diện danh tính, không kiểm tra liveness và không mở cổng thật. Khung hình tồn tại trong RAM để preview và đo chất lượng; payload mock chỉ chứa metadata.
+
+Ngoài mock, module có phần **thử nghiệm** nhận diện 1:N cục bộ ([bên dưới](#nhận-diện-1n-cục-bộ-thử-nghiệm)) và **Face Service** HTTP cho kiosk Flutter ([bên dưới](#face-service-http-api-cho-kiosk)). Hai phần này lưu embedding (không lưu ảnh) đã mã hóa, vẫn **chưa có liveness** và không dùng cho kiểm soát ra vào thật.
 
 Yêu cầu gốc: [implementation prompt](../docs/face/CODEX_IMPLEMENTATION_PROMPT.md) và [spec v0.3](../docs/face/FITCENTER_FACE_PROTOTYPE_SPEC.md). Kết quả đã chạy: [báo cáo kiểm thử](../docs/face/PROTOTYPE_TEST_REPORT.md).
 
@@ -16,6 +18,23 @@ py -3.12 -m venv face/.venv
 ```
 
 Chỉ cài một bản cung cấp `cv2`: `opencv-contrib-python`, cũng là dependency của MediaPipe. Không cài thêm `opencv-python`/`opencv-python-headless` vào cùng virtualenv. Các dependency trực tiếp được pin trong [requirements](requirements.txt); dependency gián tiếp chưa có lockfile.
+
+## Chạy nhanh: Face Service + kiosk Flutter (Windows, máy dev)
+
+Sau khi cài môi trường Python ở trên và tải model (mục webcam bên dưới), mở [run_fitcenter_demo.ps1](../run_fitcenter_demo.ps1) trong VS Code rồi bấm Run, hoặc chạy:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run_fitcenter_demo.ps1
+```
+
+Script tạo khóa và token một lần (lưu ở `face/data/demo_env.ps1`, đã gitignore — không commit), bật Face Service, rồi mở kiosk Flutter trong cửa sổ `flutter` riêng (build khoảng 30–60 giây). Đóng cửa sổ `flutter` để thoát, Face Service tự tắt. Tham số: `-Enroll <mã>` đăng ký khuôn mặt bằng webcam trước khi chạy (tự chụp, không cần chạm), `-Kiosk <đường dẫn>` nếu thư mục `fitcenter_kiosk` không ở chỗ mặc định.
+
+Kiosk Flutter (`frontend/fitcenter_kiosk`, nhánh `frontend`) đã nối với service:
+- **Check-in tự động, không cần chạm**: camera luôn mở, mỗi giây kiểm tra có người đứng trước camera không; có thì chụp 3 ảnh, nhận diện và hiện kết quả. Sau khi thành công, người đó phải rời camera mới được nhận diện lại.
+- **Đăng ký** là thao tác duy nhất phải chạm: nút "Đăng ký khuôn mặt" ở góc trên bên phải, rồi nút **CHẠM ĐỂ ĐĂNG KÝ**; máy tự chụp 8 ảnh và tự tạo mã hội viên. Khuôn mặt đã đăng ký sẽ báo "đã được đăng ký rồi".
+- Script nhúng token Admin vào bản build demo để trang đăng ký không hỏi mã. Cách này chỉ dùng trên máy dev vì ai có file build đều lấy được token; bản dùng thật không đặt `FACE_ADMIN_TOKEN` và Admin nhập mã trên màn hình.
+- Kiosk hiện tên theo **mã hội viên**; tên và kiểm tra gói tập chờ backend.
+- Trên Windows, project kiosk cần plugin `camera_windows` (đã thêm cùng `http` vào `pubspec.yaml`); gói `camera` mặc định không có bản Windows.
 
 ## Demo không cần webcam/model
 
@@ -50,6 +69,48 @@ SHA256 của model đã dùng khi kiểm thử: `b4578f35940bf5a1a655214a1cce5ca
 Model lấy từ [MediaPipe Face Detector](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector). Đối chiếu model card và giấy phép model/dependency trước khi phân phối. Lệnh demo không tự tải model. Thiếu model sẽ báo lỗi; không tự chuyển sang detector giả trong chế độ webcam.
 
 Cho phép camera cho desktop apps trong Windows Settings; đóng ứng dụng khác đang giữ webcam; thử `--camera 1` nếu cần. Camera dùng DirectShow trên Windows, release khi thoát và thử mở lại mỗi 1 giây khi đọc lỗi. Màn hình cảnh báo khi camera mất kết nối; không tạo quan sát ROI trống từ lỗi camera. OpenCV/driver có thể chặn trong `VideoCapture.read()`; kiểm thử độ trễ/rút cáp trên thiết bị kiosk thực vẫn cần operator. Không có tuyên bố đã kiểm chứng webcam thật trong báo cáo hiện tại.
+
+## Nhận diện 1:N cục bộ (thử nghiệm)
+
+Thay mock bằng nhận diện thật: InsightFace `buffalo_s` (ArcFace, CPU) lấy embedding 512 chiều, so cosine với gallery đã đăng ký. Chỉ lưu **embedding, không lưu ảnh**; file gallery mã hóa (Fernet) và nằm ngoài Git (`face/data/`, `*.enc`). Chỉ đăng ký người đã đồng ý xử lý dữ liệu sinh trắc học.
+
+```powershell
+# 1. Tạo khóa một lần, đặt vào biến môi trường (không commit)
+.\face\.venv\Scripts\python.exe -m face.prototype.enroll --new-key
+$env:FITCENTER_GALLERY_KEY = '<khóa vừa in>'
+
+# 2. Đăng ký khuôn mặt (nhìn camera, xoay nhẹ đầu); từ chối nếu giống thành viên khác
+.\face\.venv\Scripts\python.exe -m face.prototype.enroll --member-id M001
+
+# 3. Chạy nhận diện trên webcam
+.\face\.venv\Scripts\python.exe -m face.prototype.app --camera 0 --model face/models/blaze_face_short_range.tflite --config face/config.example.json --auth local
+```
+
+Xóa hồ sơ: `enroll --member-id M001 --remove`. Lần chạy đầu `InsightFaceEmbedder` tự tải model (~120 MB) vào thư mục người dùng của InsightFace.
+
+Giới hạn quan trọng:
+- **Chưa có liveness**: ảnh hoặc video của người đã đăng ký có thể vượt qua. Không dùng cho kiểm soát ra vào thật.
+- `match_threshold`/`match_margin` trong config **chưa hiệu chỉnh**; cần đo FAR/FRR trên dữ liệu có đồng ý trước khi tin kết quả.
+- Embedding chỉ so sánh được trong cùng một model; gallery ghi tên model và từ chối nạp nếu khác.
+- Giấy phép model pretrained của InsightFace có điều khoản phi thương mại: kiểm tra trước khi triển khai ở phòng gym thật.
+- `pip check` báo `insightface` cần `opencv-python`: cố ý bỏ qua, vì chỉ giữ `opencv-contrib-python` làm nguồn `cv2` duy nhất (import hoạt động bình thường).
+- Mới thử trên webcam thật với **một người** (đăng ký rồi nhận ra đúng, điểm khoảng 0,6 so với ngưỡng 0,5). Chưa thử người lạ, chưa đo FAR/FRR; test tự động dùng vector tổng hợp.
+- Preview lật gương, nhưng nhận diện và đăng ký dùng ảnh gốc không lật để embedding nhất quán.
+
+## Face Service (HTTP API cho kiosk)
+
+Bọc nhận diện 1:N thành API cục bộ để kiosk Flutter gọi. Hợp đồng đầy đủ: [API_CONTRACT.md](../docs/face/API_CONTRACT.md) (bản nháp, backend chưa xác nhận). Service chỉ nghe `127.0.0.1`, HTTP trần, tắt `/docs`, và **không có liveness**.
+
+```powershell
+$env:FITCENTER_GALLERY_KEY = '<khóa từ enroll --new-key>'
+$env:FITCENTER_KIOSK_TOKEN = '<chuỗi ngẫu nhiên >= 16 ký tự>'   # kiosk dùng cho /v1/identify
+$env:FITCENTER_ADMIN_TOKEN = '<chuỗi khác, >= 16 ký tự>'        # Admin dùng cho enroll/xóa
+.\face\.venv\Scripts\python.exe -m face.service
+```
+
+Đã có đủ 4 endpoint: `GET /v1/health`, `POST /v1/identify`, `POST /v1/enroll`, `DELETE /v1/members/{id}`. Ảnh gửi dạng `multipart/form-data` (1–5 frame cho nhận diện, 5–15 frame cho đăng ký). Có đăng ký thì mới nhận diện được; chưa ai đăng ký thì mọi mặt đều ra `REJECTED`. Gallery nằm ở `face/data/gallery.enc` (đổi bằng `--gallery`).
+
+Service không khởi động nếu thiếu biến nào, token ngắn hơn 16 ký tự hoặc hai token trùng nhau. Mỗi lần chỉ xử lý một thao tác nặng, yêu cầu thứ hai nhận `503 BUSY`. Enroll hoặc xóa lưu lại gallery và hoàn tác nếu ghi file lỗi. Chạy thử endpoint health: `Invoke-RestMethod http://127.0.0.1:8750/v1/health`.
 
 ## Cấu hình và quy tắc
 
