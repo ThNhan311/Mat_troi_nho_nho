@@ -1,5 +1,7 @@
 # Nghiệp vụ và quyết định chờ
 
+Cập nhật tiếp nhận 20/11/2026: người dùng đã chốt auto-confirm theo Topic11 và D01–D07 trong [sổ quyết định](decisions/2026-11-20_BOOKING_DECISIONS.md). Các mục chờ tương ứng trong bảng snapshot dưới đã được quyết định đó thay thế. Quy tắc được chốt không đồng nghĩa các luồng ghi đã triển khai; R01 mới thêm policy read.
+
 Phân loại dưới đây dựa trên schema/code và báo cáo có trong checkout; chưa xác minh tài liệu SRS/UC/BR đầy đủ hay quyết định mới nhất từ nhóm. Comment SQL không thay thế xác nhận nghiệp vụ.
 
 | Vấn đề | Bằng chứng và trạng thái |

@@ -23,6 +23,11 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+    @ExceptionHandler(BookingPolicyNotFoundException.class)
+    ResponseEntity<Object> bookingPolicyNotFound(BookingPolicyNotFoundException ex, HttpServletRequest request) {
+        return error(404, BookingPolicyNotFoundException.CODE, ex.getMessage(), Map.of(), request);
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     ResponseEntity<Object> authentication(AuthenticationException ex, HttpServletRequest request) {
         return error(401, "ERR_UNAUTHORIZED", "Invalid credentials or authentication required", Map.of(), request);

@@ -1,6 +1,6 @@
 # API hiện có
 
-Nguồn: [controllers](../../backend/src/main/java/vn/edu/tdtu/fitcenter/controller/), [security](../../backend/src/main/java/vn/edu/tdtu/fitcenter/config/SecurityConfig.java), [DTO](../../backend/src/main/java/vn/edu/tdtu/fitcenter/dto/). Mọi API trong bảng có code; trạng thái kiểm thử là bằng chứng lịch sử, không phải vừa chạy. Không có phân trang.
+Nguồn: [controllers](../../backend/src/main/java/vn/edu/tdtu/fitcenter/controller/), [security](../../backend/src/main/java/vn/edu/tdtu/fitcenter/config/SecurityConfig.java), [DTO](../../backend/src/main/java/vn/edu/tdtu/fitcenter/dto/). Phần bàn giao gốc phản ánh checkpoint 0ae542a; Task A có commit local 073e131, R01 là working tree sau commit đó. Phân biệt kết quả lịch sử với các lượt mới trong [báo cáo R01](evidence/R01_BOOKING_POLICY_READ.md). Không có phân trang.
 
 | Method, URL | Role/auth | Input | Response 200 | Service / bảng |
 |---|---|---|---|---|
@@ -15,6 +15,28 @@ Nguồn: [controllers](../../backend/src/main/java/vn/edu/tdtu/fitcenter/control
 | GET `/api/v1/pt/slots` | PT | `from`, `to`; `status` tùy chọn | mảng slot của PT đăng nhập | AvailabilityService / users, trainers, slots |
 | GET `/api/v1/bookings/me` | MEMBER | `from`, `to`; `status` tùy chọn | mảng booking của member đăng nhập | BookingQueryService / users, members, bookings |
 | GET `/api/v1/pt/bookings` | PT | `from`, `to`; `status` tùy chọn | mảng booking của PT đăng nhập | BookingQueryService / users, trainers, bookings |
+| GET `/api/v1/admin/booking-policy` | ADMIN, Bearer | không | policy hiệu lực, sáu trường DTO | BookingPolicyService / booking_policy |
+
+## Admin đọc Booking Policy
+
+R01 áp dụng [quyết định D01–D07](decisions/2026-11-20_BOOKING_DECISIONS.md) trong phạm vi đọc policy: `active=true AND effective_from <= Clock.instant()`. Dấu bằng được chấp nhận. Không có row, chỉ có row inactive hoặc chỉ có active trong tương lai đều trả 404 `BOOKING_POLICY_NOT_FOUND`; không tự seed hoặc fallback 14/2/4/5. Repository chỉ có phương thức đọc và service chạy transaction read-only. GET không cập nhật updated_at hoặc trạng thái.
+
+Ví dụ response 200 tổng hợp; các giá trị là dữ liệu DB, không phải default trong code:
+
+```json
+{
+  "id": "11111111-1111-4111-8111-111111111111",
+  "maxAdvanceDays": 14,
+  "minNoticeHours": 2,
+  "cancelDeadlineHours": 4,
+  "maxFutureBookings": 5,
+  "effectiveFrom": "2030-01-02T03:04:05.123456Z"
+}
+```
+
+effectiveFrom là thời điểm UTC, ISO-8601; maxAdvanceDays là số ngày cấu hình, khi áp vào booking sẽ dùng thời lượng ngày × 24 giờ theo D06. GET chỉ trả dữ liệu, chưa áp giới hạn vào booking. Không token trả 401 `ERR_UNAUTHORIZED`; MEMBER/PT trả 403 `ERR_FORBIDDEN`, kể cả khi chưa có policy. Lỗi 404 dùng nguyên envelope hiện có: `success=false`, `status=404`, `error.code=BOOKING_POLICY_NOT_FOUND`, message, details, correlationId và timestamp; header X-Correlation-Id khớp body. Không có endpoint PUT policy hoặc booking write trong R01.
+
+## Các API đọc hiện hữu
 
 `from` và `to` là ISO-8601 có offset, `from < to`; lọc theo `startAt` trong `[from,to)`, tăng dần. Slot status: AVAILABLE, BOOKED, DISABLED. Booking status: CONFIRMED, CANCELLED, COMPLETED; chữ hoa đúng enum. Các endpoint `/me` và `/pt` resolve profile từ token, không nhận ID chủ sở hữu tùy ý.
 

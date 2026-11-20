@@ -1,6 +1,6 @@
 # Fixture tổng hợp và HTTP baseline
 
-Harness này kiểm tra các API đã có tại source baseline `8eebb9b` bằng HTTP thật và PostgreSQL test riêng. Không phải E2E toàn hệ thống: không chạy frontend, Face Service, payment provider hoặc API nghiệp vụ mới. Không dùng script onboarding BLOCKED, profile alignment hoặc V7.
+Harness Task A kiểm tra các API tại source baseline `8eebb9b`, đã commit local 073e131. Working tree R01 mở rộng cùng harness để kiểm tra GET Admin Booking Policy theo [D01–D07](decisions/2026-11-20_BOOKING_DECISIONS.md). Đây là HTTP integration và PostgreSQL test riêng, không phải E2E toàn hệ thống; không chạy frontend, Face Service hoặc payment provider. Không dùng script onboarding BLOCKED, profile alignment hoặc V7.
 
 ## Thành phần
 
@@ -22,7 +22,9 @@ Harness này kiểm tra các API đã có tại source baseline `8eebb9b` bằng
 
 BCrypt được tạo và kiểm tra bằng chính bean PasswordEncoder của ứng dụng. Mật khẩu và JWT chỉ tồn tại trong bộ nhớ; không có tài khoản demo với mật khẩu cố định hoặc file chứa token/hash/password. Actor không có toString chứa credentials; assertions không dump response xác thực.
 
-Slot tương lai được tính từ đầu ngày UTC sau ba ngày, slot quá khứ ở trước ba ngày. Booking dùng đúng bốn cột của FK slot, các khoảng giờ không chồng nhau. CANCELLED do PT có lý do và timestamp; COMPLETED có completed_at. Trạng thái slot trong fixture chỉ là tổ hợp hợp lệ theo schema phục vụ query, không định nghĩa nghiệp vụ chuyển trạng thái sau hủy/hoàn thành. Không seed PENDING/REJECTED, policy hoặc các bảng V3/V5/V6 vì chưa có API trong phạm vi.
+Slot tương lai được tính từ đầu ngày UTC sau ba ngày, slot quá khứ ở trước ba ngày. Booking dùng đúng bốn cột của FK slot, các khoảng giờ không chồng nhau. CANCELLED do PT có lý do/timestamp và slot DISABLED theo D07; COMPLETED có completed_at và slot không mở lại. Fixture thể hiện trạng thái để kiểm tra đọc, không thực hiện lifecycle write. Không seed PENDING/REJECTED hoặc các bảng V3/V5/V6 chưa có API trong phạm vi.
+
+R01 còn tạo/dọn policy riêng từng ca: 14/2/4/5, inactive, active tương lai và ranh giới effective_from bằng now; một ca dùng bộ giá trị khác để phát hiện hardcode fallback. Toàn suite cần booking_policy ban đầu trống trên DB test riêng; nếu có dữ liệu, harness dừng và giữ nguyên dữ liệu đó. Policy test Clock kiểm soát ở độ chính xác microsecond tương thích PostgreSQL, reset về thời gian hệ thống sau mỗi ca. Test Clock không được đóng gói trong production.
 
 Seed là một transaction, commit để các kết nối HTTP nhìn thấy dữ liệu. Mỗi lượt dùng UUID/email/password mới; không upsert, sửa dữ liệu có sẵn hoặc TRUNCATE. AfterAll xóa đúng UUID của instance theo thứ tự FK trong một transaction. Nếu có FK ngoài fixture hoặc notification tham chiếu fixture user, cleanup từ chối và rollback thay vì cascade xóa dữ liệu đó. Một test tạo/dọn fixture thứ hai và so sánh tập ID ở cả bảy bảng để chứng minh fixture thứ nhất không bị xóa. Test khác thêm notification ngoài quyền sở hữu fixture, xác nhận cleanup từ chối, notification vẫn còn và các DELETE trước đó đã rollback.
 
@@ -79,6 +81,7 @@ Chạy Maven thông thường không bật HTTP harness: RUN_HTTP_BASELINE_TESTS
 - So ID, profile ownership, thứ tự, timestamp, trạng thái, trường cancellation/completion, thông tin gói/PT và membership dates. Catalog toàn cục có thể chứa dữ liệu khác: chỉ yêu cầu đúng các fixture rows; query sở hữu yêu cầu danh sách đúng hoàn toàn.
 - MEMBER A/B và PT A/B không nhận bookings của nhau, kể cả khi thêm query ID của người khác; PT slots cũng được kiểm tra ownership.
 - Bộ lọc ba trạng thái booking/slot, range [from,to), offset +07:00 được URL encode, kết quả rỗng, range/status sai và resource 404.
-- Error status, error code, envelope và correlation ID phải hiện diện. Không kiểm thử booking write, policy, payment hay race của nghiệp vụ chưa triển khai.
+- Error status, error code, envelope và correlation ID phải hiện diện. Không kiểm thử booking write, policy write, payment hay race của nghiệp vụ chưa triển khai.
+- R01 kiểm tra policy read và GET không ghi dữ liệu, không kiểm thử policy write. Quyền/404/time/payload theo [API documentation](05_API_DOCUMENTATION.md); kết quả mới ở [báo cáo R01](evidence/R01_BOOKING_POLICY_READ.md). Header/body correlation ID được so sánh trên mọi request có error envelope.
 
 Runner kiểm tra đúng container ID, label, named volume và port trước khởi động. Không dùng runner này trên tài nguyên dùng chung ngay cả khi đổi được các tham số. Kết quả và working tree cụ thể của lần nghiệm thu: [bằng chứng Task A](evidence/TASK_A_HTTP_BASELINE.md).

@@ -54,7 +54,7 @@ final class HttpBaselineFixture implements AutoCloseable {
     final OffsetDateTime past = future.minusDays(6);
     final Slot available = slot(ptA, future.plusHours(9), "AVAILABLE");
     final Slot booked = slot(ptA, future.plusHours(10), "BOOKED");
-    final Slot cancelled = slot(ptA, future.plusHours(11), "AVAILABLE");
+    final Slot cancelled = slot(ptA, future.plusHours(11), "DISABLED");
     final Slot completed = slot(ptA, past.plusHours(9), "DISABLED");
     final Slot pastAvailable = slot(ptA, past.plusHours(10), "AVAILABLE");
     final Slot other = slot(ptB, future.plusDays(1).plusHours(10), "BOOKED");

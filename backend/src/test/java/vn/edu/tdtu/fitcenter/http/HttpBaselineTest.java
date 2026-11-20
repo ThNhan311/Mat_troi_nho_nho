@@ -2,14 +2,20 @@ package vn.edu.tdtu.fitcenter.http;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -28,9 +34,14 @@ import java.nio.charset.StandardCharsets;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -42,8 +53,10 @@ import static org.junit.jupiter.api.Assertions.*;
         "logging.level.org.springframework.security=ERROR", "spring.main.banner-mode=off"
 })
 @ActiveProfiles("default")
+@Import(HttpBaselineTest.ClockConfiguration.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Execution(ExecutionMode.SAME_THREAD)
 @EnabledIfEnvironmentVariable(named = "RUN_HTTP_BASELINE_TESTS", matches = "true")
 class HttpBaselineTest {
     @LocalServerPort int port;
@@ -51,6 +64,7 @@ class HttpBaselineTest {
     @Autowired PasswordEncoder encoder;
     @Autowired PlatformTransactionManager transactions;
     @Autowired ObjectMapper json;
+    @Autowired ControllableClock testClock;
     private HttpBaselineFixture fixture;
     private HttpClient client;
     private final Map<String, String> accessTokens = new HashMap<>();
@@ -98,6 +112,9 @@ class HttpBaselineTest {
     }
 
     @BeforeAll void createFixture() {
+        if (jdbc.queryForObject("SELECT count(*) FROM booking_policy", Integer.class) != 0) {
+            throw new IllegalStateException("Policy scenarios require an empty booking_policy on the isolated test DB; do not clear existing data");
+        }
         client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NEVER).build();
         fixture = new HttpBaselineFixture(jdbc, new TransactionTemplate(transactions));
@@ -110,6 +127,119 @@ class HttpBaselineTest {
             accessTokens.clear();
             if (client != null) client.close();
         }
+    }
+
+    @AfterEach void restoreSystemTime() {
+        testClock.fixed.set(null);
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class ClockConfiguration {
+        @Bean @Primary ControllableClock httpBaselineClock() {
+            return new ControllableClock(new AtomicReference<>(), ZoneOffset.UTC);
+        }
+    }
+
+    static final class ControllableClock extends Clock {
+        private final AtomicReference<Instant> fixed;
+        private final ZoneId zone;
+
+        ControllableClock(AtomicReference<Instant> fixed, ZoneId zone) {
+            this.fixed = fixed;
+            this.zone = zone;
+        }
+        @Override public ZoneId getZone() { return zone; }
+        @Override public Clock withZone(ZoneId zone) { return new ControllableClock(fixed, Objects.requireNonNull(zone)); }
+        @Override public Instant instant() {
+            Instant value = fixed.get();
+            return value == null ? Instant.now() : value;
+        }
+    }
+
+    private static final String POLICY_PATH = "/api/v1/admin/booking-policy";
+    private static final Instant POLICY_NOW = Instant.parse("2030-01-02T03:04:05.123456Z");
+
+    @Test void adminReadsEffectivePolicyWithUtcPayloadAndNoWrites() throws Exception {
+        testClock.fixed.set(POLICY_NOW);
+        withPolicy(true, POLICY_NOW.minusSeconds(3600), id -> assertPolicy(id));
+    }
+
+    @Test void adminReadsActualLimitsRatherThanInitialDefaults() throws Exception {
+        testClock.fixed.set(POLICY_NOW);
+        withPolicy(true, POLICY_NOW, id -> {
+            jdbc.update("UPDATE booking_policy SET max_advance_days=21,min_notice_hours=3,cancel_deadline_hours=6,max_future_bookings=8 WHERE id=?", id);
+            assertPolicy(id);
+        });
+    }
+
+    @Test void effectiveFromExactlyNowIsEffective() throws Exception {
+        testClock.fixed.set(POLICY_NOW);
+        withPolicy(true, POLICY_NOW, id -> assertPolicy(id));
+    }
+
+    @ParameterizedTest(name = "policy unavailable: {0}")
+    @ValueSource(strings = {"absent", "inactive", "future"})
+    void noEffectivePolicyReturnsSpecific404WithoutCreatingDefaults(String state) throws Exception {
+        testClock.fixed.set(POLICY_NOW);
+        if (state.equals("absent")) {
+            error("GET", POLICY_PATH, token(fixture.admin), null, 404, "BOOKING_POLICY_NOT_FOUND");
+            assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM booking_policy", Integer.class));
+        } else {
+            Instant effective = state.equals("future") ? POLICY_NOW.plusNanos(1000) : POLICY_NOW.minusSeconds(3600);
+            withPolicy(state.equals("future"), effective, id -> {
+                var before = jdbc.queryForMap("SELECT * FROM booking_policy WHERE id=?", id);
+                error("GET", POLICY_PATH, token(fixture.admin), null, 404, "BOOKING_POLICY_NOT_FOUND");
+                assertEquals(before, jdbc.queryForMap("SELECT * FROM booking_policy WHERE id=?", id));
+                assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM booking_policy", Integer.class));
+            });
+        }
+    }
+
+    @Test void inactivePastPolicyIsNotFallbackForFutureActivePolicy() throws Exception {
+        testClock.fixed.set(POLICY_NOW);
+        withPolicy(false, POLICY_NOW.minusSeconds(3600), pastId ->
+                withPolicy(true, POLICY_NOW.plusSeconds(3600), futureId -> {
+                    error("GET", POLICY_PATH, token(fixture.admin), null, 404, "BOOKING_POLICY_NOT_FOUND");
+                    assertEquals(2, jdbc.queryForObject("SELECT count(*) FROM booking_policy", Integer.class));
+                }));
+    }
+
+    @ParameterizedTest(name = "policy forbidden for {0}")
+    @ValueSource(strings = {"memberA", "memberB", "ptA", "ptB"})
+    void onlyAdminCanReadBookingPolicy(String actorName) throws Exception {
+        error("GET", POLICY_PATH, token(actor(actorName)), null, 403, "ERR_FORBIDDEN");
+    }
+
+    @Test void anonymousPolicyReadIsUnauthorized() throws Exception {
+        error("GET", POLICY_PATH, null, null, 401, "ERR_UNAUTHORIZED");
+    }
+
+    @FunctionalInterface
+    private interface PolicyScenario { void run(UUID id) throws Exception; }
+
+    private void withPolicy(boolean active, Instant effective, PolicyScenario scenario) throws Exception {
+        UUID id = UUID.randomUUID();
+        jdbc.update("INSERT INTO booking_policy(id,max_advance_days,min_notice_hours,cancel_deadline_hours,max_future_bookings,effective_from,active,updated_by) VALUES(?,14,2,4,5,?,?,?)",
+                id, effective.atOffset(ZoneOffset.ofHours(7)), active, fixture.admin.userId);
+        try { scenario.run(id); }
+        finally {
+            assertEquals(1, jdbc.update("DELETE FROM booking_policy WHERE id=?", id), "Only this policy fixture must be removed");
+        }
+    }
+
+    private void assertPolicy(UUID id) throws Exception {
+        var stored = jdbc.queryForMap("SELECT * FROM booking_policy WHERE id=?", id);
+        var body = object(request("GET", POLICY_PATH, token(fixture.admin), null, 200));
+        assertEquals(Set.of("id","maxAdvanceDays","minNoticeHours","cancelDeadlineHours","maxFutureBookings","effectiveFrom"), body.keySet());
+        assertEquals(id.toString(), body.get("id"));
+        assertEquals(stored.get("max_advance_days"), body.get("maxAdvanceDays"));
+        assertEquals(stored.get("min_notice_hours"), body.get("minNoticeHours"));
+        assertEquals(stored.get("cancel_deadline_hours"), body.get("cancelDeadlineHours"));
+        assertEquals(stored.get("max_future_bookings"), body.get("maxFutureBookings"));
+        Instant effective = jdbc.queryForObject("SELECT effective_from FROM booking_policy WHERE id=?",
+                (result, row) -> result.getObject(1, OffsetDateTime.class).toInstant(), id);
+        assertEquals(effective.toString(), body.get("effectiveFrom"), "effectiveFrom must be ISO-8601 UTC");
+        assertEquals(stored, jdbc.queryForMap("SELECT * FROM booking_policy WHERE id=?", id), "GET must not modify policy");
     }
 
     @ParameterizedTest(name = "login {0}")
@@ -324,7 +454,7 @@ class HttpBaselineTest {
                 }
             }
             case 4 -> assertTrainer(object(body), fixture.ptA);
-            case 5, 6 -> assertSlots(body, List.of(fixture.available, fixture.cancelled));
+            case 5, 6 -> assertSlots(body, List.of(fixture.available));
             case 7 -> assertSlots(body, fixture.slots.stream().filter(row -> row.ptId().equals(actor.profileId)).toList());
             case 8 -> assertBookings(body, memberBookings(actor));
             case 9 -> assertBookings(body, ptBookings(actor));
@@ -423,14 +553,21 @@ class HttpBaselineTest {
 
     private Object request(String method, String path, String token, Object body, int expected) throws Exception {
         var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path)).timeout(Duration.ofSeconds(10));
+        String correlationId = "http-baseline-" + UUID.randomUUID();
+        request.header("X-Correlation-Id", correlationId);
         if (token != null) request.header("Authorization", "Bearer " + token);
         if (body != null) request.header("Content-Type", "application/json");
         request.method(method, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(json.writeValueAsString(body)));
         var response = client.send(request.build(), HttpResponse.BodyHandlers.ofString());
         assertEquals(expected, response.statusCode(), "Unexpected HTTP status for " + method + " " + path.split("\\?")[0]);
         assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("application/json"));
+        assertEquals(correlationId, response.headers().firstValue("X-Correlation-Id").orElse(""));
         // Never include raw response bodies/headers in assertions: auth responses contain tokens.
-        return json.readValue(response.body(), Object.class);
+        Object parsed = json.readValue(response.body(), Object.class);
+        if (parsed instanceof Map<?, ?> envelope && envelope.get("error") instanceof Map<?, ?> detail) {
+            assertEquals(correlationId, detail.get("correlationId"));
+        }
+        return parsed;
     }
 
     private void error(String method, String path, String token, Object body, int expected, String code) throws Exception {

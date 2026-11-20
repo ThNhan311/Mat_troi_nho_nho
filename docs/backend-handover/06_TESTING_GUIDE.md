@@ -17,3 +17,28 @@ Ví dụ focused: `.\mvnw.cmd '-Dtest=BookingControllerTest' test`; full: `.\mvn
 ## Smoke test nháp
 
 Automation được hoãn; smoke test nháp bị chặn và không thuộc bộ công bố mặc định, xem [trạng thái](scripts/README.md). Người tiếp nhận làm theo [hướng dẫn thủ công](12_MANUAL_QUICKSTART.md), tự xác nhận kết quả trên môi trường riêng. Các lệnh hướng dẫn chưa được kiểm thử đầu-cuối và không thay thế 90 HTTP checks lịch sử của Task 04.
+
+## Harness Task A và R01
+
+Task A đã đóng bằng commit local 073e131 với 285 tests đạt theo [bằng chứng Task A](evidence/TASK_A_HTTP_BASELINE.md). Không coi đây là số test của working tree R01. Script test-http-baseline.ps1 mới là runner đã kiểm thử, khác các onboarding scripts nháp BLOCKED; xem [cách chạy](14_HTTP_BASELINE.md).
+
+R01 bổ sung BookingPolicyServiceTest với Clock cố định/tiến lên, và các ca HTTP thật trong HttpBaselineTest: ADMIN đọc đúng DTO/giá trị khác bộ ban đầu, MEMBER/PT 403, ẩn danh 401, thiếu/inactive/tương lai 404 BOOKING_POLICY_NOT_FOUND, inactive cũ không fallback cho active tương lai, effective_from bằng now, UTC với dữ liệu offset +07:00, header/body correlation ID và GET không ghi dữ liệu. Clock tùy chỉnh chỉ nằm trong test configuration; production vẫn dùng Clock.systemUTC.
+
+Policy scenarios cần booking_policy trống trên DB test riêng; harness dừng trước seed nếu có dữ liệu, không tự xóa policy có sẵn. Mỗi ca tự tạo UUID policy và cleanup đúng UUID trong finally; 14/2/4/5 chỉ dùng cho fixture. Fixture PT hủy dùng slot DISABLED theo D07; đây không phải triển khai cancel lifecycle.
+
+Unit tests R01 không cần DB, từ backend với JDK 21 đã chọn:
+
+```powershell
+.\mvnw.cmd -B -ntp '-Dtest=BookingPolicyServiceTest' test
+```
+
+HTTP focused và full regression dùng cùng runner/guard JDK 21 + container/volume/port/role/V1–V6. Chạy từ repository root, thay đường dẫn và container ID đã xác minh; runner hỏi mật khẩu role test nếu chưa cấp qua process environment:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/test-http-baseline.ps1 `
+  -JavaHome '<absolute-path-to-jdk-21>' -ExpectedContainerId '<verified-full-container-id>' -StartDatabase
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/test-http-baseline.ps1 `
+  -JavaHome '<absolute-path-to-jdk-21>' -ExpectedContainerId '<verified-full-container-id>' -StartDatabase -FullSuite
+```
+
+Không cộng focused vào full. Surefire reports ghi đè theo lượt; kết quả, source hashes và phạm vi chưa triển khai nằm ở [báo cáo R01](evidence/R01_BOOKING_POLICY_READ.md).

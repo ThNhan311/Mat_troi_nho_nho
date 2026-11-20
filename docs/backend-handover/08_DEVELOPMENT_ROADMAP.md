@@ -1,5 +1,7 @@
 # Backlog tiếp nhận
 
+Cập nhật 20/11/2026: [D01–D07](decisions/2026-11-20_BOOKING_DECISIONS.md) đã được người dùng chốt. R01 được giao và triển khai trong working tree sau Task A commit 073e131; contract đọc policy không còn chờ OPEN-POL-01. Bảng/đặc tả đề xuất ban đầu bên dưới là snapshot bàn giao; các luồng ghi R02–R07 vẫn chưa triển khai và không thuộc R01. Xem [API hiện tại](05_API_DOCUMENTATION.md) và [báo cáo R01](evidence/R01_BOOKING_POLICY_READ.md).
+
 Đây là đề xuất, không cấp quyền triển khai. Trước mỗi task xác nhận phạm vi và quy tắc tại [nghiệp vụ](07_BUSINESS_RULES_AND_BLOCKERS.md). File dự kiến là vị trí đề xuất, không khẳng định đã tồn tại.
 
 | ID / ưu tiên | Mục tiêu, trạng thái và phụ thuộc | Source, API/file dự kiến | Kiểm thử và tiêu chí chấp nhận |

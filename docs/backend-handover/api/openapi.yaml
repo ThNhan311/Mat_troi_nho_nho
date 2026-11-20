@@ -1,11 +1,62 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: 0ae542a
-  description: Mô tả từ source; chưa xác thực bằng runtime; không có API đề xuất.
+  version: r01-working-tree
+  description: Source baseline 0ae542a, Task A commit local 073e131 và policy read R01 trong working tree; không bao gồm API ghi đề xuất.
 servers:
 - url: http://localhost:18081
 paths:
+  /api/v1/admin/booking-policy:
+    get:
+      operationId: getEffectiveBookingPolicy
+      summary: ADMIN đọc Booking Policy hiệu lực
+      description: >-
+        Chỉ đọc active=true và effective_from <= Clock.instant(), bao gồm equality.
+        Không tự seed/cập nhật/fallback. effectiveFrom trả ISO-8601 UTC.
+        Không có policy hiệu lực trả BOOKING_POLICY_NOT_FOUND.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Policy hiệu lực; các giá trị lấy từ database
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingPolicy'
+        '401':
+          description: ERR_UNAUTHORIZED, chưa có access token hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: ERR_FORBIDDEN, người dùng không có role ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: BOOKING_POLICY_NOT_FOUND, không có row active đã tới thời điểm hiệu lực
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: BOOKING_POLICY_NOT_FOUND
+                  message: Effective booking policy not found
+                  details: {}
+                  correlationId: synthetic-policy-request
+                timestamp: '2030-01-02T03:04:05Z'
+                status: 404
+                message: Effective booking policy not found
+        '500':
+          description: ERR_INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/auth/login:
     post:
       summary: Public
@@ -563,6 +614,46 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    BookingPolicy:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - maxAdvanceDays
+      - minNoticeHours
+      - cancelDeadlineHours
+      - maxFutureBookings
+      - effectiveFrom
+      properties:
+        id:
+          type: string
+          format: uuid
+        maxAdvanceDays:
+          type: integer
+          format: int32
+          minimum: 1
+          example: 14
+          description: Khi áp vào booking sẽ tính bằng thời lượng ngày nhân 24 giờ, không phải ngày lịch
+        minNoticeHours:
+          type: integer
+          format: int32
+          minimum: 0
+          example: 2
+        cancelDeadlineHours:
+          type: integer
+          format: int32
+          minimum: 0
+          example: 4
+        maxFutureBookings:
+          type: integer
+          format: int32
+          minimum: 1
+          example: 5
+        effectiveFrom:
+          type: string
+          format: date-time
+          example: '2030-01-02T03:04:05.123456Z'
+          description: UTC; bao gồm policy có effective_from đúng bằng now
     LoginRequest:
       type: object
       properties:
