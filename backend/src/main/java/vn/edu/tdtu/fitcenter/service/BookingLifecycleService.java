@@ -35,8 +35,9 @@ public class BookingLifecycleService {
     public BookingResponse memberCancel(String email, UUID id) {
         var locked = lock(email, id, Role.MEMBER);
         var booking = locked.booking();
-        var now = clock.instant();
-        var policy = policies.getEffectivePolicyAt(now);
+        var snapshot = policies.getEffectiveSnapshot();
+        var now = snapshot.now();
+        var policy = snapshot.policy();
         validator.memberCancellation(booking.getStartAt().toInstant(), now, policy.cancelDeadlineHours());
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancelledBy("MEMBER");

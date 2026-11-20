@@ -1,5 +1,7 @@
 # Nghiệp vụ và quyết định chờ
 
+Cập nhật Policy write: D05 immediate PUT đã có working tree, không scheduling/full versioning; không còn blocker schema cho phạm vi này. UPDATE active tại chỗ không giữ lịch sử từng lần sửa. Không tự sửa/hủy booking cũ; Member cancel vẫn áp deadline policy lúc yêu cầu hủy, nên đổi deadline ảnh hưởng yêu cầu hủy sau PUT đối với booking cũ. [Quyết định](decisions/2026-11-20_BOOKING_POLICY_WRITE.md) phân biệt tác động này với hồi tố đổi trạng thái booking. D01 service-start check và membership/payment write vẫn chưa triển khai. Những trạng thái thiếu PUT phía dưới là checkpoint lịch sử.
+
 Cập nhật R04: đã có Member/PT cancel và PT complete trên working tree. **OPEN-R04-PT-TIME đã đóng bởi quyết định người dùng**: PT chỉ hủy CONFIRMED khi now < startAt; đúng bằng/sau startAt trả 409 ERR_PT_CANCELLATION_WINDOW_CLOSED. Đây là quyết định bổ sung vì Topic11 UC-11/15/16 không xác định tình huống này. Xem [contract R04](decisions/2026-11-20_R04_BOOKING_LIFECYCLE.md). D01 service-start recheck vẫn chưa có; completion không thay thế bước này.
 
 Cập nhật R03: eligibility lúc đặt, policy notice/advance/count, auto-confirm và concurrency đã có working tree theo [D01–D07](decisions/2026-11-20_BOOKING_DECISIONS.md) và [quy tắc DATE/lock R03](decisions/2026-11-20_R03_BOOKING_CREATE.md). Không có blocker schema cho phạm vi này; giữ nguyên V1–V6. Kiểm tra membership trước bắt đầu dịch vụ, cancel/complete và policy/membership write vẫn chưa có. Các bảng “chờ chốt/chưa booking write” bên dưới là snapshot lịch sử, không phủ nhận cập nhật R03.

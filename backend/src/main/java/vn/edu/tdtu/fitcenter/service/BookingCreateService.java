@@ -15,7 +15,6 @@ import vn.edu.tdtu.fitcenter.dto.booking.BookingResponse;
 import vn.edu.tdtu.fitcenter.exception.BookingConflictException;
 import vn.edu.tdtu.fitcenter.repository.*;
 
-import java.time.Clock;
 import java.time.ZoneOffset;
 
 @Service
@@ -29,7 +28,6 @@ public class BookingCreateService {
     private final BookingRepository bookings;
     private final BookingPolicyService policies;
     private final BookingEligibilityValidator validator;
-    private final Clock clock;
 
     @Transactional(isolation = Isolation.READ_COMMITTED, timeout = 10)
     public BookingResponse create(String email, BookingCreateRequest request) {
@@ -56,7 +54,7 @@ public class BookingCreateService {
                 || bookings.existsBySlotIdAndStatus(slot.getId(), BookingStatus.CONFIRMED)) {
             throw new BookingConflictException("ERR_SLOT_NO_LONGER_AVAILABLE", "Slot changed or is no longer available");
         }
-        var now = clock.instant();
+        var now = policies.lockAndGetTime();
         var start = slot.getStartAt().toInstant();
         var end = slot.getEndAt().toInstant();
         validator.validateMembership(membership, start, end, now);

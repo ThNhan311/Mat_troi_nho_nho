@@ -1,5 +1,11 @@
 # Kiểm thử
 
+Cập nhật Policy write: R04 đã đóng local `8cb95e2`; working tree mở rộng BookingPolicyWriteCases cho PUT/GET, hai Admin độc lập và policy snapshot R03/R04. [Báo cáo](evidence/BOOKING_POLICY_WRITE.md) ghi kết quả thực, failure fixture đã sửa, source hashes và giới hạn; các số R04 phía dưới là lịch sử, không tính thành test PUT đã chạy.
+
+Unit focused từ backend/JDK 21: `.\mvnw.cmd -B -ntp '-Dtest=BookingPolicyServiceTest,BookingPolicyWriteServiceTest' test`. HTTP/DB focused và full dùng nguyên guarded runner ở hướng dẫn dưới; không thêm profile/dependency. Policy IDs tạo qua PUT/SQL được registry cleanup đúng UUID; Admin thứ hai có email example.invalid/password ngẫu nhiên/BCrypt ứng dụng và được xóa đúng UUID sau test. Không truncate/xóa theo khoảng hoặc dữ liệu ngoài fixture.
+
+Hai PUT giữ exclusive advisory lock `(20261120,22)` bên ngoài, quan sát hai HTTP requests cùng chờ trước release; kiểm empty/existing và đảo hai Admin. Reader/booking create/cancel chờ PUT giữ transaction chưa commit, dùng latch và quan sát DB Lock; sau commit lấy Clock/policy mới. Kiểm rollback cả first-insert và in-place update bằng service thật trong PostgreSQL outer transaction, đọc thấy SQL đã ghi trong transaction rồi rollback; HTTP GET chờ và thấy cấu hình cũ/404 sau rollback. Đây là HTTP/DB integration, không gọi toàn bộ ca rollback là HTTP writer failure. Focused là tập con của full, không cộng dồn. D01 service-start check vẫn chưa triển khai.
+
 Cập nhật R04: R03 đã commit local `394a21f` sau review 25 file/15 source hashes và evidence 437 tests; không chạy lại full chỉ để commit khi code không đổi. R04 có Member cancel, PT cancel và PT complete. Người dùng chốt PT cancel chỉ trước startAt; xem [contract R04](decisions/2026-11-20_R04_BOOKING_LIFECYCLE.md) và [evidence R04](evidence/R04_BOOKING_LIFECYCLE.md). D01 service-start check vẫn chưa có.
 
 Unit R04 từ backend với JDK 21: `.\mvnw.cmd -B -ntp '-Dtest=BookingLifecycleValidatorTest' test`. HTTP focused/full dùng nguyên runner đã guard và lệnh trong phần R03/R02 dưới đây; không thêm profile/dependency/test endpoint. Nhóm BookingLifecycleCases dùng Clock, UUID riêng cho booking/slot/policy và khôi phục mutation fixture sau từng ca.

@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: r04-working-tree
-  description: R03 394a21f; R04 working tree có Member/PT cancel và PT complete. PT cancel chỉ trước startAt theo quyết định người dùng; D01 service-start check, policy PUT, membership write chưa có.
+  version: policy-write-working-tree
+  description: R04 8cb95e2; working tree thêm Admin PUT Booking Policy hiệu lực ngay theo D05. Member/PT cancel và PT complete đã có; D01 service-start check và membership/payment write chưa có.
 servers:
 - url: http://localhost:18081
 paths:
@@ -336,6 +336,7 @@ paths:
         Chỉ đọc active=true và effective_from <= Clock.instant(), bao gồm equality.
         Không tự seed/cập nhật/fallback. effectiveFrom trả ISO-8601 UTC.
         Không có policy hiệu lực trả BOOKING_POLICY_NOT_FOUND.
+        Lấy policy shared transaction lock rồi mới lấy Clock, chờ PUT commit/rollback để đọc bộ cấu hình nhất quán.
       security:
       - bearerAuth: []
       responses:
@@ -373,8 +374,71 @@ paths:
                 timestamp: '2030-01-02T03:04:05Z'
                 status: 404
                 message: Effective booking policy not found
+        '409':
+          description: ERR_CONFLICT khi lock timeout/concurrency, không retry tự động
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: ERR_INTERNAL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      operationId: updateImmediateBookingPolicy
+      summary: ADMIN ACTIVE cấu hình Booking Policy có hiệu lực ngay
+      description: >-
+        Chỉ nhận đúng bốn giá trị integer, không coercion từ string/decimal; không nhận effectiveFrom,
+        lịch tương lai/hồi tố hoặc field ngoài contract. Không thêm quan hệ giữa các giới hạn.
+        Clock lấy sau policy exclusive transaction lock; effectiveFrom UTC truncate microseconds.
+        UPDATE active tại chỗ giữ ID; chưa có active thì INSERT mới, kể cả bảng trống.
+        Giữ nguyên inactive rows nhưng không lưu lịch sử các lần sửa active, không phải full versioning.
+        Hai PUT tuần tự hóa bằng transaction advisory lock, last-write-wins theo thứ tự khóa/commit.
+        GET và create/Member cancel dùng shared lock cùng key, không thấy nửa cập nhật.
+        Không sửa booking/slot cũ hoặc tự hủy khi giảm giới hạn. Create tiếp theo dùng policy mới;
+        Member cancel dùng deadline hiệu lực lúc yêu cầu hủy, kể cả booking tạo trước cập nhật.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingPolicyWrite'
+            example:
+              maxAdvanceDays: 14
+              minNoticeHours: 2
+              cancelDeadlineHours: 4
+              maxFutureBookings: 5
+      responses:
+        '200':
+          description: Bộ cấu hình hiệu lực ngay, DTO sáu fields theo R01; không phải fallback
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingPolicy'
+        '400':
+          description: ERR_VALIDATION, thiếu/null/sai kiểu/ngoài miền INTEGER hoặc field ngoài contract
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: ERR_UNAUTHORIZED, thiếu token hoặc account không ACTIVE khi auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: ERR_FORBIDDEN, sai role hoặc account không còn ACTIVE sau chờ khóa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: ERR_CONFLICT cho constraint/concurrency/lock timeout; không SQL/stack trace, không retry mù
           content:
             application/json:
               schema:
@@ -994,6 +1058,31 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    BookingPolicyWrite:
+      type: object
+      additionalProperties: false
+      required: [maxAdvanceDays, minNoticeHours, cancelDeadlineHours, maxFutureBookings]
+      properties:
+        maxAdvanceDays:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+        minNoticeHours:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2147483647
+        cancelDeadlineHours:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2147483647
+        maxFutureBookings:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
     BookingCreate:
       type: object
       required: [ptId, slotId]

@@ -1,5 +1,7 @@
 # Fixture tổng hợp và HTTP baseline
 
+Cập nhật Policy write: R04 đã commit `8cb95e2`; harness thêm PUT Admin/GET readback, validation, hai Admin cạnh tranh trên bảng trống/đã có, reader/create/cancel chờ PUT và rollback PostgreSQL. Runner/datasource/container guard không đổi. [Evidence](evidence/BOOKING_POLICY_WRITE.md) tách kết quả lượt có lỗi fixture khỏi focused/full cuối, không cộng dồn; R04 và các con số phía dưới là lịch sử. D01 service-start check vẫn chưa có.
+
 Cập nhật R04: R03 đã commit `394a21f`. Harness mở rộng Member/PT cancel và PT complete, metadata/UTC, rebook, lifecycle/PATCH/DELETE races và rollback. PT cancel tests được thêm và chạy sau quyết định chỉ hủy trước startAt, gồm Clock sau chờ khóa. Runner/DB guard không đổi; xem [evidence R04](evidence/R04_BOOKING_LIFECYCLE.md) và [testing guide](06_TESTING_GUIDE.md). Các con số/giới hạn R03 và lượt R04 chưa có PT cancel là checkpoint lịch sử; không dùng làm bằng chứng PT cancel đã đạt trước đó.
 
 Cập nhật R03: R02 đã commit local `4d137d7`; harness kiểm thêm Member POST booking auto-confirm với PostgreSQL thật, transaction/lock phối hợp availability và rollback constraint. Lệnh runner không đổi; xem [testing](06_TESTING_GUIDE.md) và [evidence R03](evidence/R03_BOOKING_CREATE.md). Các mục “chưa booking write/chưa race giữa hai API” trong checkpoint Task A/R01/R02 là giới hạn lịch sử; R03 đã kiểm booking create với PATCH/DELETE thật, chưa kiểm cancel/complete/policy write/payment.
