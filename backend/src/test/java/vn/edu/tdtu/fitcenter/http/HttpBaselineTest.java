@@ -1,0 +1,458 @@
+package vn.edu.tdtu.fitcenter.http;
+
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import tools.jackson.databind.ObjectMapper;
+
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/** Actual HTTP + PostgreSQL, opt-in only. No MockMvc, test endpoints or production overrides. */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+        "server.address=127.0.0.1", "logging.level.org.springframework.boot=ERROR",
+        "logging.level.org.springframework.security=ERROR", "spring.main.banner-mode=off"
+})
+@ActiveProfiles("default")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@EnabledIfEnvironmentVariable(named = "RUN_HTTP_BASELINE_TESTS", matches = "true")
+class HttpBaselineTest {
+    @LocalServerPort int port;
+    @Autowired JdbcTemplate jdbc;
+    @Autowired PasswordEncoder encoder;
+    @Autowired PlatformTransactionManager transactions;
+    @Autowired ObjectMapper json;
+    private HttpBaselineFixture fixture;
+    private HttpClient client;
+    private final Map<String, String> accessTokens = new HashMap<>();
+
+    @DynamicPropertySource
+    static void guardedDatasource(DynamicPropertyRegistry properties) {
+        if (Runtime.version().feature() != 21) throw new IllegalStateException("JDK 21 required");
+        if (!"true".equals(System.getenv("HTTP_BASELINE_GUARD_VERIFIED"))) {
+            throw new IllegalStateException("Run through backend/scripts/test-http-baseline.ps1");
+        }
+        String url = required("DB_URL"), user = required("DB_USERNAME"), password = required("DB_PASSWORD");
+        String expectedDb = required("HTTP_BASELINE_EXPECTED_DATABASE");
+        var matcher = Pattern.compile("^jdbc:postgresql://127\\.0\\.0\\.1:[0-9]+/(fitcenter_(?:baseline|http)_[a-z0-9_]+_test)$").matcher(url);
+        if (!matcher.matches() || !matcher.group(1).equals(expectedDb)) {
+            throw new IllegalStateException("Only an explicitly verified loopback test database is allowed");
+        }
+        // Runs before Spring creates its datasource/Flyway: do not migrate an unverified target.
+        try (var connection = DriverManager.getConnection(url, user, password);
+             var statement = connection.createStatement()) {
+            try (var result = statement.executeQuery("SELECT current_database(),current_user,rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls FROM pg_roles WHERE rolname=current_user")) {
+                if (!result.next() || !expectedDb.equals(result.getString(1)) || !user.equals(result.getString(2)) || result.getBoolean(3)) {
+                    throw new IllegalStateException("Database/role verification failed");
+                }
+            }
+            try (var result = statement.executeQuery("SELECT string_agg(version,',' ORDER BY installed_rank),bool_and(success) FROM flyway_schema_history WHERE version IS NOT NULL")) {
+                if (!result.next() || !"1,2,3,4,5,6".equals(result.getString(1)) || !result.getBoolean(2)) {
+                    throw new IllegalStateException("An existing verified canonical V1-V6 schema is required; V7 is forbidden");
+                }
+            }
+        } catch (SQLException error) {
+            throw new IllegalStateException("Database preflight failed; SQLSTATE=" + error.getSQLState());
+        }
+        properties.add("spring.datasource.url", () -> url);
+        properties.add("spring.datasource.username", () -> user);
+        properties.add("spring.datasource.password", () -> password);
+        properties.add("spring.flyway.locations", () -> "classpath:db/migration");
+        String jwtSecret = HttpBaselineFixture.randomSecret();
+        properties.add("jwt.secret", () -> jwtSecret);
+    }
+
+    private static String required(String name) {
+        String value = System.getenv(name);
+        if (value == null || value.isBlank()) throw new IllegalStateException("Missing environment variable " + name);
+        return value;
+    }
+
+    @BeforeAll void createFixture() {
+        client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5))
+                .followRedirects(HttpClient.Redirect.NEVER).build();
+        fixture = new HttpBaselineFixture(jdbc, new TransactionTemplate(transactions));
+        fixture.seed(encoder);
+    }
+
+    @AfterAll void removeOnlyThisFixture() {
+        try { if (fixture != null) fixture.close(); }
+        finally {
+            accessTokens.clear();
+            if (client != null) client.close();
+        }
+    }
+
+    @ParameterizedTest(name = "login {0}")
+    @ValueSource(strings = {"admin", "memberA", "memberB", "ptA", "ptB"})
+    void loginWithRealBcrypt(String name) throws Exception {
+        assertLogin(login(actor(name)), actor(name).role);
+    }
+
+    @Test void wrongPasswordIsRejected() throws Exception {
+        error("POST", "/api/v1/auth/login", null,
+                Map.of("email", fixture.memberA.email, "password", HttpBaselineFixture.randomSecret()), 401, "ERR_UNAUTHORIZED");
+    }
+
+    @Test void emptyLoginIsValidationError() throws Exception {
+        error("POST", "/api/v1/auth/login", null, Map.of(), 400, "ERR_VALIDATION");
+    }
+
+    @ParameterizedTest(name = "refresh {0}")
+    @ValueSource(strings = {"admin", "memberA", "ptA"})
+    void refreshProducesUsableAccessToken(String name) throws Exception {
+        var actor = actor(name);
+        Map<String, Object> original = login(actor);
+        Map<String, Object> refreshed = object(request("POST", "/api/v1/auth/refresh", null,
+                Map.of("refreshToken", original.get("refreshToken")), 200));
+        assertLogin(refreshed, actor.role);
+        int index = actor.role.equals("PT") ? 7 : actor.role.equals("MEMBER") ? 8 : 0;
+        assertRead(index, actor, (String) refreshed.get("accessToken"));
+        // Baseline is stateless: do not require rotation/revocation absent from its contract.
+    }
+
+    @Test void invalidRefreshIsRejected() throws Exception {
+        error("POST", "/api/v1/auth/refresh", null, Map.of("refreshToken", "invalid"), 401, "ERR_UNAUTHORIZED");
+    }
+
+    @Test void accessTokenCannotBeUsedForRefresh() throws Exception {
+        error("POST", "/api/v1/auth/refresh", null, Map.of("refreshToken", token(fixture.memberA)), 401, "ERR_UNAUTHORIZED");
+    }
+
+    @Test void refreshTokenCannotAuthorizeRead() throws Exception {
+        error("GET", "/api/v1/memberships/me", (String) login(fixture.memberA).get("refreshToken"), null, 401, "ERR_UNAUTHORIZED");
+    }
+
+    static Stream<Arguments> roles() {
+        return Stream.of("admin", "memberA", "ptA")
+                .flatMap(role -> IntStream.range(0, 10).mapToObj(index -> Arguments.of(role, index)));
+    }
+
+    @ParameterizedTest(name = "role {0}, read API {1}")
+    @MethodSource("roles")
+    void roleMatrixChecksPayloadWhenAllowed(String name, int index) throws Exception {
+        var actor = actor(name);
+        boolean allowed = index < 2 ? !actor.role.equals("PT")
+                : index == 7 || index == 9 ? actor.role.equals("PT") : actor.role.equals("MEMBER");
+        if (allowed) assertRead(index, actor, token(actor));
+        else error("GET", path(index), token(actor), null, 403, "ERR_FORBIDDEN");
+    }
+
+    @ParameterizedTest(name = "anonymous read API {0}")
+    @ValueSource(ints = {0,1,2,3,4,5,6,7,8,9})
+    void anonymousCannotRead(int index) throws Exception {
+        error("GET", path(index), null, null, 401, "ERR_UNAUTHORIZED");
+    }
+
+    @ParameterizedTest(name = "member ownership {0}")
+    @ValueSource(strings = {"memberA", "memberB"})
+    void memberCannotReadOtherMembersBookings(String name) throws Exception {
+        var actor = actor(name);
+        var other = name.equals("memberA") ? fixture.memberB : fixture.memberA;
+        List<HttpBaselineFixture.Booking> expected = memberBookings(actor);
+        Object body = request("GET", path(8) + "&memberId=" + other.profileId, token(actor), null, 200);
+        assertBookings(body, expected);
+        assertTrue(expected.stream().allMatch(row -> row.memberId().equals(actor.profileId)));
+    }
+
+    @ParameterizedTest(name = "membership profile {0}")
+    @ValueSource(strings = {"memberA", "memberB"})
+    void membershipUsesTheAuthenticatedMembersProfile(String name) throws Exception {
+        var actor = actor(name);
+        assertNotEquals(actor.userId, actor.profileId);
+        assertRead(2, actor, token(actor));
+    }
+
+    @ParameterizedTest(name = "PT ownership {0}")
+    @ValueSource(strings = {"ptA", "ptB"})
+    void trainerCannotReadOtherTrainersBookings(String name) throws Exception {
+        var actor = actor(name);
+        var other = name.equals("ptA") ? fixture.ptB : fixture.ptA;
+        Object body = request("GET", path(9) + "&ptId=" + other.profileId, token(actor), null, 200);
+        assertBookings(body, ptBookings(actor));
+        assertSlots(request("GET", path(7) + "&ptId=" + other.profileId, token(actor), null, 200),
+                fixture.slots.stream().filter(row -> row.ptId().equals(actor.profileId)).toList());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"CONFIRMED", "CANCELLED", "COMPLETED"})
+    void bookingStatusFiltersMatchFixture(String status) throws Exception {
+        List<HttpBaselineFixture.Booking> expected = memberBookings(fixture.memberA).stream()
+                .filter(row -> row.status().equals(status)).toList();
+        assertBookings(request("GET", path(8) + "&status=" + status, token(fixture.memberA), null, 200), expected);
+        assertBookings(request("GET", path(9) + "&status=" + status, token(fixture.ptA), null, 200), expected);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"AVAILABLE", "BOOKED", "DISABLED"})
+    void slotStatusFiltersMatchFixture(String status) throws Exception {
+        assertSlots(request("GET", path(7) + "&status=" + status, token(fixture.ptA), null, 200),
+                fixture.slots.stream().filter(row -> row.ptId().equals(fixture.ptA.profileId) && row.status().equals(status)).toList());
+    }
+
+    @Test void dateRangeIsInclusiveFromExclusiveTo() throws Exception {
+        String range = range(fixture.booked.start().withOffsetSameInstant(java.time.ZoneOffset.ofHours(7)),
+                fixture.cancelled.start().withOffsetSameInstant(java.time.ZoneOffset.ofHours(7)));
+        assertBookings(request("GET", "/api/v1/bookings/me" + range, token(fixture.memberA), null, 200), List.of(fixture.confirmedA));
+        assertBookings(request("GET", "/api/v1/pt/bookings" + range, token(fixture.ptA), null, 200), List.of(fixture.confirmedA));
+        assertSlots(request("GET", "/api/v1/pt/slots" + range, token(fixture.ptA), null, 200), List.of(fixture.booked));
+        String availableRange = range(fixture.available.start(), fixture.booked.start());
+        assertSlots(request("GET", "/api/v1/trainers/" + fixture.ptA.profileId + "/slots" + availableRange,
+                token(fixture.memberA), null, 200), List.of(fixture.available));
+    }
+
+    @Test void validEmptyRangeReturnsEmptyArray() throws Exception {
+        String range = range(fixture.future.plusDays(10), fixture.future.plusDays(11));
+        assertBookings(request("GET", "/api/v1/bookings/me" + range, token(fixture.memberA), null, 200), List.of());
+        assertBookings(request("GET", "/api/v1/pt/bookings" + range, token(fixture.ptA), null, 200), List.of());
+        assertSlots(request("GET", "/api/v1/pt/slots" + range, token(fixture.ptA), null, 200), List.of());
+    }
+
+    @Test void invalidRangeAndStatusAreValidationErrors() throws Exception {
+        error("GET", "/api/v1/bookings/me" + range(fixture.future, fixture.past), token(fixture.memberA), null, 400, "ERR_VALIDATION");
+        error("GET", path(8) + "&status=PENDING", token(fixture.memberA), null, 400, "ERR_VALIDATION");
+        error("GET", path(9) + "&status=REJECTED", token(fixture.ptA), null, 400, "ERR_VALIDATION");
+        error("GET", path(7) + "&status=UNKNOWN", token(fixture.ptA), null, 400, "ERR_VALIDATION");
+    }
+
+    @Test void inactiveAndMissingResourcesAreNotFound() throws Exception {
+        error("GET", "/api/v1/membership-plans/" + fixture.inactivePlanId, token(fixture.memberA), null, 404, "ERR_NOT_FOUND");
+        error("GET", "/api/v1/membership-plans/" + UUID.randomUUID(), token(fixture.admin), null, 404, "ERR_NOT_FOUND");
+        error("GET", "/api/v1/trainers/" + UUID.randomUUID(), token(fixture.memberA), null, 404, "ERR_NOT_FOUND");
+    }
+
+    @Test void repeatFixtureLifecyclePreservesExistingRows() {
+        List<String> tables = List.of("users", "members", "personal_trainers", "membership_plans", "memberships", "availability_slots", "bookings");
+        Map<String, Set<UUID>> before = new HashMap<>();
+        for (String table : tables) before.put(table, new HashSet<>(jdbc.queryForList("SELECT id FROM " + table, UUID.class)));
+        // The main fixture is unrelated pre-existing data from this second fixture's perspective.
+        try (var second = new HttpBaselineFixture(jdbc, new TransactionTemplate(transactions))) {
+            second.seed(encoder);
+            assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM bookings WHERE id=?", Integer.class, second.confirmedA.id()));
+        }
+        for (String table : tables) {
+            assertEquals(before.get(table), new HashSet<>(jdbc.queryForList("SELECT id FROM " + table, UUID.class)), "Rows changed outside second fixture: " + table);
+        }
+    }
+
+    @Test void cleanupRefusesToCascadeIntoUnownedNotifications() {
+        UUID notificationId = UUID.randomUUID();
+        try (var second = new HttpBaselineFixture(jdbc, new TransactionTemplate(transactions))) {
+            second.seed(encoder);
+            try {
+                jdbc.update("INSERT INTO notifications(id,user_id,type,title) VALUES(?,?,'TEST','Outside fixture ownership')",
+                        notificationId, second.memberA.userId);
+                assertThrows(IllegalStateException.class, second::close);
+                assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM notifications WHERE id=?", Integer.class, notificationId));
+                assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM bookings WHERE id=?", Integer.class, second.confirmedA.id()),
+                        "A refused cleanup must roll back earlier deletions");
+            } finally {
+                jdbc.update("DELETE FROM notifications WHERE id=?", notificationId);
+            }
+        }
+    }
+
+    private String path(int index) {
+        String range = range(fixture.past.minusDays(1), fixture.future.plusDays(3));
+        return switch (index) {
+            case 0 -> "/api/v1/membership-plans";
+            case 1 -> "/api/v1/membership-plans/" + fixture.planId;
+            case 2 -> "/api/v1/memberships/me";
+            case 3 -> "/api/v1/trainers";
+            case 4 -> "/api/v1/trainers/" + fixture.ptA.profileId;
+            case 5 -> "/api/v1/trainers/" + fixture.ptA.profileId + "/slots" + range;
+            case 6 -> "/api/v1/trainers/" + fixture.ptA.profileId + "/availability" + range;
+            case 7 -> "/api/v1/pt/slots" + range;
+            case 8 -> "/api/v1/bookings/me" + range;
+            case 9 -> "/api/v1/pt/bookings" + range;
+            default -> throw new IllegalArgumentException("Unknown read case");
+        };
+    }
+
+    private void assertRead(int index, HttpBaselineFixture.Actor actor, String accessToken) throws Exception {
+        Object body = request("GET", path(index), accessToken, null, 200);
+        switch (index) {
+            case 0 -> {
+                var rows = array(body);
+                assertFalse(rows.stream().anyMatch(row -> fixture.inactivePlanId.toString().equals(row.get("id"))));
+                assertPlan(rows.stream().filter(row -> fixture.planId.toString().equals(row.get("id"))).findFirst().orElseThrow());
+            }
+            case 1 -> assertPlan(object(body));
+            case 2 -> {
+                var rows = array(body);
+                assertEquals(1, rows.size());
+                var row = rows.getFirst();
+                assertEquals((actor == fixture.memberA ? fixture.membershipA : fixture.membershipB).toString(), row.get("id"));
+                assertEquals(fixture.planId.toString(), row.get("planId"));
+                assertEquals(fixture.planName, row.get("planName"));
+                assertEquals(fixture.today.toString(), row.get("startDate"));
+                assertEquals(fixture.expiry.toString(), row.get("endDate"));
+                assertEquals("ACTIVE", row.get("status"));
+            }
+            case 3 -> {
+                for (var trainer : List.of(fixture.ptA, fixture.ptB)) {
+                    assertTrainer(array(body).stream().filter(row -> trainer.profileId.toString().equals(row.get("id"))).findFirst().orElseThrow(), trainer);
+                }
+            }
+            case 4 -> assertTrainer(object(body), fixture.ptA);
+            case 5, 6 -> assertSlots(body, List.of(fixture.available, fixture.cancelled));
+            case 7 -> assertSlots(body, fixture.slots.stream().filter(row -> row.ptId().equals(actor.profileId)).toList());
+            case 8 -> assertBookings(body, memberBookings(actor));
+            case 9 -> assertBookings(body, ptBookings(actor));
+            default -> fail("Unknown read case");
+        }
+    }
+
+    private void assertPlan(Map<String, Object> row) {
+        assertEquals(fixture.planId.toString(), row.get("id"));
+        assertEquals(fixture.planName, row.get("name"));
+        assertEquals("Synthetic plan", row.get("description"));
+        assertEquals(30, ((Number) row.get("durationDays")).intValue());
+        assertEquals(0, new java.math.BigDecimal("100000.00").compareTo(new java.math.BigDecimal(row.get("price").toString())));
+    }
+
+    private void assertTrainer(Map<String, Object> row, HttpBaselineFixture.Actor trainer) {
+        assertEquals(trainer.profileId.toString(), row.get("id"));
+        assertEquals(trainer.label, row.get("fullName"));
+        assertEquals("Synthetic bio", row.get("bio"));
+        assertEquals("Synthetic training", row.get("specialization"));
+        assertEquals("Fixture only", row.get("experienceSummary"));
+    }
+
+    private void assertSlots(Object body, List<HttpBaselineFixture.Slot> expected) {
+        var ordered = expected.stream().sorted(Comparator.comparing(HttpBaselineFixture.Slot::start)).toList();
+        var rows = array(body);
+        assertEquals(ordered.stream().map(row -> row.id().toString()).toList(), rows.stream().map(row -> row.get("id")).toList());
+        for (int index = 0; index < ordered.size(); index++) {
+            var actual = rows.get(index);
+            var wanted = ordered.get(index);
+            assertEquals(wanted.ptId().toString(), actual.get("ptId"));
+            assertTime(wanted.start(), actual.get("startAt"));
+            assertTime(wanted.end(), actual.get("endAt"));
+            assertEquals(wanted.status(), actual.get("status"));
+        }
+    }
+
+    private void assertBookings(Object body, List<HttpBaselineFixture.Booking> expected) {
+        var ordered = expected.stream().sorted(Comparator.comparing(row -> row.slot().start())).toList();
+        var rows = array(body);
+        assertEquals(ordered.stream().map(row -> row.id().toString()).toList(), rows.stream().map(row -> row.get("id")).toList());
+        for (int index = 0; index < ordered.size(); index++) {
+            var actual = rows.get(index);
+            var wanted = ordered.get(index);
+            assertEquals(wanted.memberId().toString(), actual.get("memberId"));
+            assertEquals(wanted.slot().ptId().toString(), actual.get("ptId"));
+            assertEquals(wanted.slot().id().toString(), actual.get("slotId"));
+            assertTime(wanted.slot().start(), actual.get("startAt"));
+            assertTime(wanted.slot().end(), actual.get("endAt"));
+            assertEquals(wanted.status(), actual.get("status"));
+            assertEquals(wanted.cancelledBy(), actual.get("cancelledBy"));
+            assertEquals(wanted.reason(), actual.get("cancelReason"));
+            assertTime(wanted.cancelledAt(), actual.get("cancelledAt"));
+            assertTime(wanted.completedAt(), actual.get("completedAt"));
+        }
+    }
+
+    private static void assertTime(OffsetDateTime expected, Object actual) {
+        if (expected == null) assertNull(actual);
+        else assertEquals(expected.toInstant(), OffsetDateTime.parse((String) actual).toInstant());
+    }
+
+    private List<HttpBaselineFixture.Booking> memberBookings(HttpBaselineFixture.Actor actor) {
+        return fixture.bookings.stream().filter(row -> row.memberId().equals(actor.profileId)).toList();
+    }
+    private List<HttpBaselineFixture.Booking> ptBookings(HttpBaselineFixture.Actor actor) {
+        return fixture.bookings.stream().filter(row -> row.slot().ptId().equals(actor.profileId)).toList();
+    }
+    private HttpBaselineFixture.Actor actor(String name) {
+        return switch (name) {
+            case "admin" -> fixture.admin;
+            case "memberA" -> fixture.memberA;
+            case "memberB" -> fixture.memberB;
+            case "ptA" -> fixture.ptA;
+            case "ptB" -> fixture.ptB;
+            default -> throw new IllegalArgumentException("Unknown synthetic actor");
+        };
+    }
+
+    private Map<String, Object> login(HttpBaselineFixture.Actor actor) throws Exception {
+        return object(request("POST", "/api/v1/auth/login", null, Map.of("email", actor.email, "password", actor.password), 200));
+    }
+    private String token(HttpBaselineFixture.Actor actor) throws Exception {
+        if (!accessTokens.containsKey(actor.email)) {
+            var login = login(actor);
+            assertLogin(login, actor.role);
+            accessTokens.put(actor.email, (String) login.get("accessToken"));
+        }
+        return accessTokens.get(actor.email);
+    }
+    private void assertLogin(Map<String, Object> body, String role) {
+        assertEquals(role, body.get("role"));
+        assertTrue(body.get("accessToken") instanceof String value && !value.isBlank(), "Missing access token");
+        assertTrue(body.get("refreshToken") instanceof String value && !value.isBlank(), "Missing refresh token");
+    }
+
+    private Object request(String method, String path, String token, Object body, int expected) throws Exception {
+        var request = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path)).timeout(Duration.ofSeconds(10));
+        if (token != null) request.header("Authorization", "Bearer " + token);
+        if (body != null) request.header("Content-Type", "application/json");
+        request.method(method, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(json.writeValueAsString(body)));
+        var response = client.send(request.build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(expected, response.statusCode(), "Unexpected HTTP status for " + method + " " + path.split("\\?")[0]);
+        assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("application/json"));
+        // Never include raw response bodies/headers in assertions: auth responses contain tokens.
+        return json.readValue(response.body(), Object.class);
+    }
+
+    private void error(String method, String path, String token, Object body, int expected, String code) throws Exception {
+        var response = object(request(method, path, token, body, expected));
+        assertEquals(false, response.get("success"));
+        assertEquals(expected, ((Number) response.get("status")).intValue());
+        var detail = object(response.get("error"));
+        assertEquals(code, detail.get("code"));
+        assertTrue(detail.get("correlationId") instanceof String value && !value.isBlank());
+        assertTrue(detail.get("details") instanceof Map);
+    }
+
+    private static String range(OffsetDateTime from, OffsetDateTime to) {
+        return "?from=" + URLEncoder.encode(from.toString(), StandardCharsets.UTF_8)
+                + "&to=" + URLEncoder.encode(to.toString(), StandardCharsets.UTF_8);
+    }
+    @SuppressWarnings("unchecked") private static Map<String, Object> object(Object value) {
+        assertTrue(value instanceof Map, "Expected JSON object");
+        return (Map<String, Object>) value;
+    }
+    @SuppressWarnings("unchecked") private static List<Map<String, Object>> array(Object value) {
+        assertTrue(value instanceof List, "Expected JSON array");
+        return (List<Map<String, Object>>) value;
+    }
+}
