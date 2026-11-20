@@ -1,5 +1,7 @@
 # Nghiệp vụ và quyết định chờ
 
+Cập nhật R03: eligibility lúc đặt, policy notice/advance/count, auto-confirm và concurrency đã có working tree theo [D01–D07](decisions/2026-11-20_BOOKING_DECISIONS.md) và [quy tắc DATE/lock R03](decisions/2026-11-20_R03_BOOKING_CREATE.md). Không có blocker schema cho phạm vi này; giữ nguyên V1–V6. Kiểm tra membership trước bắt đầu dịch vụ, cancel/complete và policy/membership write vẫn chưa có. Các bảng “chờ chốt/chưa booking write” bên dưới là snapshot lịch sử, không phủ nhận cập nhật R03.
+
 Cập nhật R02: đã đọc Topic11_FITCENTER.docx do người dùng cung cấp ngày 20/11/2026; UC-13 xác nhận PT quản lý availability và Core session 90 phút. Contract ghi và lựa chọn bảo toàn FK/lịch sử ở [quyết định R02](decisions/2026-11-20_R02_AVAILABILITY.md). Không còn blocker quyết định cho phạm vi availability đã giao; các tuyên bố thiếu nguồn/chưa có availability write bên dưới là snapshot trước R02, không phải kết luận mới.
 
 Cập nhật tiếp nhận 20/11/2026: người dùng đã chốt auto-confirm theo Topic11 và D01–D07 trong [sổ quyết định](decisions/2026-11-20_BOOKING_DECISIONS.md). Các mục chờ tương ứng trong bảng snapshot dưới đã được quyết định đó thay thế. Quy tắc được chốt không đồng nghĩa các luồng ghi đã triển khai; R01 mới thêm policy read.

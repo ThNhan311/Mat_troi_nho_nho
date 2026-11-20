@@ -19,6 +19,16 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
             """, nativeQuery = true)
     boolean overlapsConfirmed(UUID ptId, OffsetDateTime startAt, OffsetDateTime endAt);
 
+    @Query(value = """
+            select exists(select 1 from bookings where member_id=:memberId and status='CONFIRMED'
+              and start_at<:endAt and end_at>:startAt)
+            """, nativeQuery = true)
+    boolean overlapsMember(UUID memberId, OffsetDateTime startAt, OffsetDateTime endAt);
+
+    @Query(value = "select count(*) from bookings where member_id=:memberId and status='CONFIRMED' and start_at>:now",
+            nativeQuery = true)
+    long countFutureConfirmed(UUID memberId, OffsetDateTime now);
+
     List<Booking> findByMemberIdAndStartAtGreaterThanEqualAndStartAtLessThanOrderByStartAtAsc(
             UUID memberId, OffsetDateTime from, OffsetDateTime to);
 

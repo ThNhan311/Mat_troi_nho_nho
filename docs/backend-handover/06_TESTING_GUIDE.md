@@ -52,3 +52,15 @@ R01 đã đóng bằng commit local 9ae0a50 sau review 19 file và đối chiế
 R02 scenarios tự đăng ký UUID slot/booking đã tạo và cleanup đúng UUID sau từng test, theo thứ tự FK, trong transaction; không xóa theo khoảng giờ hoặc pt_id. Actor thiếu profile dùng email tổng hợp hợp lệ và BCrypt của bean ứng dụng. Tài khoản bị đổi status được khôi phục trong finally. Các slot legacy của fixture Task A vẫn là dữ liệu đọc một giờ hợp lệ theo V4; mọi slot tạo qua API R02 dài 90 phút. Không sửa lịch sử fixture để giả định đã có booking write/lifecycle.
 
 Kết quả cuối: HTTP focused 142 passed và full regression 359 passed, 0 failed/errors/skipped; focused là tập con. Lượt HTTP đầu 138 passed/3 failed do email fixture vượt 64 ký tự ở local-part, đã sửa và chạy lại; không che lượt lỗi hoặc cộng dồn các lượt. Thời điểm, source hashes, giới hạn và hướng dẫn chạy lại nằm ở [báo cáo R02](evidence/R02_PT_AVAILABILITY_WRITE.md).
+
+## Regression R03
+
+R02 đã commit local 4d137d7 sau review 18 file và đối chiếu tám source hashes/Surefire 359 tests. Không thay code hoặc chạy lại full chỉ để đóng R02. Working tree R03 dùng nguyên runner và guard JDK 21/PostgreSQL test riêng ở trên; không thêm endpoint test, dependency hoặc profile.
+
+Unit focused từ backend với JDK 21: `.\mvnw.cmd -B -ntp '-Dtest=BookingEligibilityValidatorTest,BookingPolicyServiceTest' test`. HTTP focused dùng runner không -FullSuite; full dùng -FullSuite như các lệnh phía trên. Không chạy Maven HTTP trực tiếp bỏ qua DB guard.
+
+HTTP group BookingCreateCases nằm trong HttpBaselineTest: 56 invocations mới, tổng HTTP 198. Surefire hiện ghi một XML 198 testcase; console có thể gán aggregate vào nested class và outer class 0, không cộng lại tên suite hoặc gọi 198 là số HTTP requests. Unit mới có 22 invocations; 3 policy unit là regression cũ. Full 437 = R02 359 + 56 HTTP + 22 unit, không cộng focused/full hoặc test trùng nhau.
+
+Các race giữ khóa PostgreSQL trên kết nối riêng, chờ một request rồi request thứ hai cùng bị block trước nhả khóa; quan sát pg_stat_activity wait_event_type=Lock, không gửi request tuần tự giả concurrency. Kiểm cả hai thứ tự thắng của booking/PATCH và booking/DELETE. Rollback test giữ INSERT booking xung đột chưa commit, cho HTTP tới INSERT và bị chặn bởi exclusion, sau đó commit xung đột; yêu cầu 409 và slot gốc AVAILABLE/không có booking. Không dùng trigger mới hoặc sửa schema để ép lỗi.
+
+Policy dùng UUID riêng từng ca, Clock kiểm soát; membership fixture được snapshot/khôi phục trạng thái và ngày, tài khoản test được khôi phục sau mutation. Booking và slot tạo qua HTTP/SQL được đăng ký UUID chính xác để cleanup theo FK; không xóa theo Member/PT/range. Các ca intentionally inconsistent nhưng hợp lệ V4 kiểm phòng vệ service, không định nghĩa lifecycle mới. Evidence, failure/skipped và giới hạn nằm ở [báo cáo R03](evidence/R03_BOOKING_CREATE.md).

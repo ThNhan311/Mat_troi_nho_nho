@@ -32,3 +32,9 @@ R01 chỉ SELECT trong transaction read-only. Không tạo hoặc sửa policy, 
 R01 đã commit local `9ae0a50593a921ae6c629c93bd9f36f0b373ace9` sau khi đối chiếu evidence; các mô tả “chưa commit/chưa có Topic11” phía trên ghi trạng thái lúc nghiệm thu R01. Ngày 20/11/2026 người dùng cung cấp bản Topic11_FITCENTER.docx; đã đọc nội dung OOXML, đặc biệt UC-13 (1.5.4), auto-confirm (1.5.5), cancel/complete (1.5.6), API (5.2), duration (6.3) và locking minh họa (7.2). SHA256 bản được đọc: `5E2164806B4927390E986712E04D53BEE09255A3EAC9AB33997BC4FF6F6A47B5`. Không suy ra số trang từ OOXML hoặc sao chép tài liệu nguồn vào Git.
 
 Nguồn xác nhận auto-confirm, session Core 90 phút, sửa/xóa slot chưa bị CONFIRMED ràng buộc, Member cancel cho rebook và PT cancel không tự reopen. D01–D07 vẫn là quyết định người dùng đã chốt; không tự thay đổi bằng ví dụ/pseudocode trong tài liệu. R02 chỉ triển khai availability write theo [quyết định triển khai](2026-11-20_R02_AVAILABILITY.md). D01, booking limits/eligibility/lifecycle, policy PUT/scheduling vẫn chưa triển khai. D07 không được coi là hoàn tất chỉ vì availability dùng DISABLED.
+
+## Trạng thái khi triển khai R03
+
+R02 đã commit local `4d137d703ab522e6f977d0e297f5a939a1011bcc`; R03 là working tree trên nhánh feature/backend-booking-create. Đã triển khai auto-confirm; phần D01 ACTIVE tại lúc đặt và bao phủ session theo DATE Việt Nam; D02 notice/advance/max future từ policy; D03 equality của notice/advance và membership end; D04 booking từ chối khi thiếu policy; D06 UTC/thời lượng ngày × 24 giờ. [Quyết định và traceability R03](2026-11-20_R03_BOOKING_CREATE.md) mô tả chi tiết và giới hạn. Không sửa quyết định nghiệp vụ đã chốt.
+
+Chưa triển khai phần D01 kiểm tra lại trước bắt đầu dịch vụ; D05 PUT policy hiệu lực ngay; cancel deadline và D07 cancel/complete/completedAt. Scheduling/versioning vẫn hoãn. Những cột “trạng thái trong R01” và cập nhật R02 ở trên là checkpoint lịch sử, không dùng làm trạng thái hiện hành R03.

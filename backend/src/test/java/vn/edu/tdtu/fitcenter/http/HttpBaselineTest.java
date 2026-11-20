@@ -170,6 +170,420 @@ class HttpBaselineTest {
     private static final String AVAILABILITY_PATH = "/api/v1/pt/availability";
     private static final Instant POLICY_NOW = Instant.parse("2030-01-02T03:04:05.123456Z");
 
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    class BookingCreateCases {
+        private static final String PATH = "/api/v1/bookings";
+        private UUID policyId;
+        private Instant now;
+        private Map<String, Object> originalMembership;
+
+        @BeforeEach void bookingSetup() {
+            now = fixture.future.toInstant();
+            testClock.fixed.set(now);
+            originalMembership = jdbc.queryForMap("SELECT * FROM memberships WHERE id=?", fixture.membershipA);
+            policyId = UUID.randomUUID();
+            jdbc.update("INSERT INTO booking_policy(id,max_advance_days,min_notice_hours,cancel_deadline_hours,max_future_bookings,effective_from,active,updated_by) VALUES(?,14,2,4,5,?,true,?)",
+                    policyId, now.atOffset(ZoneOffset.UTC), fixture.admin.userId);
+        }
+
+        @AfterEach void bookingRestore() {
+            jdbc.update("DELETE FROM booking_policy WHERE id=?", policyId);
+            jdbc.update("UPDATE memberships SET status=?,start_date=?,expiry_date=? WHERE id=?",
+                    originalMembership.get("status"), originalMembership.get("start_date"), originalMembership.get("expiry_date"), fixture.membershipA);
+            for (var actor : List.of(fixture.memberA, fixture.memberB, fixture.ptA, fixture.ptB)) {
+                jdbc.update("UPDATE users SET status='ACTIVE' WHERE id=?", actor.userId);
+            }
+        }
+
+        private OffsetDateTime start() { return fixture.future.plusDays(2).plusHours(9); }
+
+        private UUID slot(HttpBaselineFixture.Actor pt, OffsetDateTime start, String status) {
+            UUID id = UUID.randomUUID();
+            jdbc.update("INSERT INTO availability_slots(id,pt_id,start_at,end_at,status) VALUES(?,?,?,?,?)",
+                    id, pt.profileId, start, start.plusMinutes(90), status);
+            writeSlots.add(id);
+            return id;
+        }
+
+        private UUID booking(HttpBaselineFixture.Actor member, UUID slot, String status) {
+            UUID id = UUID.randomUUID();
+            jdbc.update("""
+                    INSERT INTO bookings(id,member_id,pt_id,slot_id,start_at,end_at,status,cancelled_by,cancelled_at,completed_at)
+                    SELECT ?,?,pt_id,id,start_at,end_at,?,case when ?='CANCELLED' then 'MEMBER' end,
+                      case when ?='CANCELLED' then now() end,case when ?='COMPLETED' then end_at end
+                    FROM availability_slots WHERE id=?
+                    """, id, member.profileId, status, status, status, status, slot);
+            writeBookings.add(id);
+            return id;
+        }
+
+        private Map<String, Object> input(HttpBaselineFixture.Actor pt, UUID slot) {
+            return Map.of("ptId", pt.profileId.toString(), "slotId", slot.toString());
+        }
+
+        private Map<String, Object> book(HttpBaselineFixture.Actor member, HttpBaselineFixture.Actor pt, UUID slot,
+                                         int expected, String code) throws Exception {
+            var response = writeExchange("POST", PATH, token(member), input(pt, slot));
+            remember(response);
+            assertEquals(expected, response.statusCode());
+            var body = object(json.readValue(response.body(), Object.class));
+            if (expected == 201) assertBookingCreated(body, member, pt, slot);
+            else {
+                assertEquals(false, body.get("success"));
+                assertEquals(expected, body.get("status"));
+                assertEquals(code, object(body.get("error")).get("code"));
+            }
+            return body;
+        }
+
+        private void remember(HttpResponse<String> response) {
+            if (response.statusCode() == 201) {
+                var body = object(json.readValue(response.body(), Object.class));
+                UUID id = UUID.fromString((String) body.get("id"));
+                if (body.containsKey("memberId")) writeBookings.add(id); else writeSlots.add(id);
+            }
+        }
+
+        private void assertBookingCreated(Map<String, Object> body, HttpBaselineFixture.Actor member,
+                                          HttpBaselineFixture.Actor pt, UUID slot) {
+            assertEquals(Set.of("id", "memberId", "ptId", "slotId", "startAt", "endAt", "status",
+                    "cancelledBy", "cancelReason", "cancelledAt", "completedAt"), body.keySet());
+            assertEquals(member.profileId.toString(), body.get("memberId"));
+            assertEquals(pt.profileId.toString(), body.get("ptId"));
+            assertEquals(slot.toString(), body.get("slotId"));
+            assertEquals("CONFIRMED", body.get("status"));
+            for (String field : List.of("cancelledBy", "cancelReason", "cancelledAt", "completedAt")) assertNull(body.get(field));
+            var stored = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", UUID.fromString((String) body.get("id")));
+            assertEquals(member.profileId, stored.get("member_id"));
+            assertEquals(pt.profileId, stored.get("pt_id"));
+            assertEquals(slot, stored.get("slot_id"));
+            assertEquals("CONFIRMED", stored.get("status"));
+            var times = jdbc.queryForObject("SELECT start_at,end_at FROM availability_slots WHERE id=?",
+                    (rs, row) -> List.of(rs.getObject(1, OffsetDateTime.class), rs.getObject(2, OffsetDateTime.class)), slot);
+            assertEquals(times.get(0).toInstant().toString(), body.get("startAt"));
+            assertEquals(times.get(1).toInstant().toString(), body.get("endAt"));
+            assertEquals("BOOKED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slot));
+        }
+
+        @Test void happyPathAutoConfirmsCorrectOwnerAndRemovesAvailability() throws Exception {
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            var payload = new HashMap<>(input(fixture.ptA, slot));
+            payload.put("memberId", fixture.memberB.profileId.toString());
+            payload.put("status", "PENDING");
+            var response = writeExchange("POST", PATH, token(fixture.memberA), payload);
+            remember(response);
+            assertEquals(201, response.statusCode());
+            var body = object(json.readValue(response.body(), Object.class));
+            assertBookingCreated(body, fixture.memberA, fixture.ptA, slot);
+            String range = range(start(), start().plusHours(2));
+            assertTrue(array(request("GET", "/api/v1/trainers/" + fixture.ptA.profileId + "/slots" + range,
+                    token(fixture.memberB), null, 200)).isEmpty());
+            assertEquals(List.of(body), array(request("GET", PATH + "/me" + range, token(fixture.memberA), null, 200)));
+            assertTrue(array(request("GET", PATH + "/me" + range, token(fixture.memberB), null, 200)).isEmpty());
+            assertEquals(List.of(body), array(request("GET", "/api/v1/pt/bookings" + range, token(fixture.ptA), null, 200)));
+            book(fixture.memberB, fixture.ptA, slot, 409, "ERR_SLOT_NO_LONGER_AVAILABLE");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"admin", "ptA", "ptB"})
+        void bookingIsMemberOnly(String actor) throws Exception {
+            error("POST", PATH, token(actor(actor)), input(fixture.ptA, fixture.available.id()), 403, "ERR_FORBIDDEN");
+        }
+
+        @Test void bookingWithoutTokenIs401() throws Exception {
+            error("POST", PATH, null, input(fixture.ptA, fixture.available.id()), 401, "ERR_UNAUTHORIZED");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"missingPt", "missingSlot", "badPt", "badSlot", "nullPt"})
+        void inputMustContainBothUuids(String state) throws Exception {
+            var body = new HashMap<String, Object>(input(fixture.ptA, fixture.available.id()));
+            switch (state) {
+                case "missingPt" -> body.remove("ptId");
+                case "missingSlot" -> body.remove("slotId");
+                case "badPt" -> body.put("ptId", "PT-001");
+                case "badSlot" -> body.put("slotId", "SLOT-001");
+                default -> body.put("ptId", null);
+            }
+            error("POST", PATH, token(fixture.memberA), body, 400, "ERR_VALIDATION");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"SUSPENDED", "DISABLED"})
+        void previouslyIssuedTokenCannotBookForInactiveMember(String state) throws Exception {
+            String access = token(fixture.memberA);
+            jdbc.update("UPDATE users SET status=? WHERE id=?", state, fixture.memberA.userId);
+            error("POST", PATH, access, input(fixture.ptA, fixture.available.id()), 401, "ERR_UNAUTHORIZED");
+        }
+
+        @Test void activeMemberWithoutProfileIs404() throws Exception {
+            var member = new HttpBaselineFixture.Actor("MEMBER", "r03-no-m");
+            jdbc.update("INSERT INTO users(id,email,password_hash,role,status) VALUES(?,?,?,'MEMBER','ACTIVE')",
+                    member.userId, member.email, encoder.encode(member.password));
+            try { book(member, fixture.ptA, fixture.available.id(), 404, "ERR_NOT_FOUND"); }
+            finally { accessTokens.remove(member.email); assertEquals(1, jdbc.update("DELETE FROM users WHERE id=?", member.userId)); }
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"SUSPENDED", "DISABLED"})
+        void inactivePtCannotReceiveBooking(String state) throws Exception {
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            jdbc.update("UPDATE users SET status=? WHERE id=?", state, fixture.ptA.userId);
+            book(fixture.memberA, fixture.ptA, slot, 404, "ERR_NOT_FOUND");
+        }
+
+        @Test void missingPtSlotOrMismatchedPairIs404() throws Exception {
+            book(fixture.memberA, fixture.ptA, UUID.randomUUID(), 404, "ERR_NOT_FOUND");
+            book(fixture.memberA, fixture.ptB, fixture.available.id(), 404, "ERR_NOT_FOUND");
+            error("POST", PATH, token(fixture.memberA), Map.of("ptId", UUID.randomUUID().toString(), "slotId", fixture.available.id().toString()), 404, "ERR_NOT_FOUND");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"BOOKED", "DISABLED"})
+        void unavailableSlotHasStableCode(String status) throws Exception {
+            UUID slot = slot(fixture.ptA, start(), status);
+            book(fixture.memberA, fixture.ptA, slot, 409, "ERR_SLOT_NO_LONGER_AVAILABLE");
+            assertEquals(status, jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slot));
+        }
+
+        @Test void legacy60MinuteSlotCannotBeBooked() throws Exception {
+            book(fixture.memberA, fixture.ptA, fixture.available.id(), 409, "ERR_SLOT_INVALID_DURATION");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"PENDING_ACTIVATION", "SUSPENDED", "EXPIRED", "CANCELLED", "missing", "future", "past", "notCovered"})
+        void membershipMustBeActiveNowAndCoverSession(String state) throws Exception {
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            String code = "ERR_MEMBERSHIP_INACTIVE";
+            switch (state) {
+                case "missing" -> jdbc.update("UPDATE memberships SET status='CANCELLED' WHERE id=?", fixture.membershipA);
+                case "future" -> jdbc.update("UPDATE memberships SET start_date=? WHERE id=?", fixture.future.toLocalDate().plusDays(1), fixture.membershipA);
+                case "past" -> jdbc.update("UPDATE memberships SET expiry_date=? WHERE id=?", fixture.future.toLocalDate().minusDays(1), fixture.membershipA);
+                case "notCovered" -> {
+                    jdbc.update("UPDATE memberships SET expiry_date=? WHERE id=?", start().toLocalDate().minusDays(1), fixture.membershipA);
+                    code = "ERR_MEMBERSHIP_NOT_COVERED";
+                }
+                default -> jdbc.update("UPDATE memberships SET status=? WHERE id=?", state, fixture.membershipA);
+            }
+            var before = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slot);
+            book(fixture.memberA, fixture.ptA, slot, 409, code);
+            assertEquals(before, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slot));
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0, 1})
+        void expiryIsInclusiveVietnamDateAndEndEqualityIsAllowed(long microseconds) throws Exception {
+            var expiry = now.atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDate();
+            jdbc.update("UPDATE memberships SET expiry_date=? WHERE id=?", expiry, fixture.membershipA);
+            var end = expiry.plusDays(1).atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toOffsetDateTime().plusNanos(microseconds * 1000);
+            UUID slot = slot(fixture.ptA, end.minusMinutes(90), "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, slot, microseconds > 0 ? 409 : 201,
+                    microseconds > 0 ? "ERR_MEMBERSHIP_NOT_COVERED" : null);
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0})
+        void activationUsesMidnightInVietnam(long microseconds) throws Exception {
+            var activationDate = fixture.future.toLocalDate();
+            now = activationDate.atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant().plusNanos(microseconds * 1000);
+            testClock.fixed.set(now);
+            jdbc.update("UPDATE memberships SET start_date=? WHERE id=?", activationDate, fixture.membershipA);
+            jdbc.update("UPDATE booking_policy SET effective_from=? WHERE id=?", now.atOffset(ZoneOffset.UTC), policyId);
+            UUID slot = slot(fixture.ptA, fixture.future.plusDays(2), "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, slot, microseconds < 0 ? 409 : 201,
+                    microseconds < 0 ? "ERR_MEMBERSHIP_INACTIVE" : null);
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"absent", "inactive", "future"})
+        void missingEffectivePolicyRejectsWithoutFallback(String state) throws Exception {
+            if (state.equals("absent")) jdbc.update("DELETE FROM booking_policy WHERE id=?", policyId);
+            if (state.equals("inactive")) jdbc.update("UPDATE booking_policy SET active=false WHERE id=?", policyId);
+            if (state.equals("future")) jdbc.update("UPDATE booking_policy SET effective_from=? WHERE id=?", now.plusNanos(1000).atOffset(ZoneOffset.UTC), policyId);
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, slot, 404, "BOOKING_POLICY_NOT_FOUND");
+            assertEquals("AVAILABLE", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slot));
+            assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM bookings WHERE slot_id=?", Integer.class, slot));
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0, 1})
+        void minimumNoticeBoundaryUsesControlledClock(long microseconds) throws Exception {
+            var start = now.plus(Duration.ofHours(2)).plusNanos(microseconds * 1000).atOffset(ZoneOffset.UTC);
+            // Fixture has an unrelated CONFIRMED slot at +10h, so these intervals do not overlap it.
+            UUID slot = slot(fixture.ptA, start, "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, slot, microseconds < 0 ? 409 : 201,
+                    microseconds < 0 ? "ERR_BOOKING_NOTICE" : null);
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0, 1})
+        void maximumAdvanceIs14Times24HoursFromExactNow(long microseconds) throws Exception {
+            var start = now.plus(Duration.ofDays(14)).plusNanos(microseconds * 1000).atOffset(ZoneOffset.UTC);
+            UUID slot = slot(fixture.ptA, start, "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, slot, microseconds > 0 ? 409 : 201,
+                    microseconds > 0 ? "ERR_BOOKING_ADVANCE" : null);
+        }
+
+        @Test void customPolicyIsAppliedInsteadOfInitialConstants() throws Exception {
+            jdbc.update("UPDATE booking_policy SET max_advance_days=1,min_notice_hours=3,max_future_bookings=1 WHERE id=?", policyId);
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, slot, 409, "ERR_BOOKING_ADVANCE");
+            jdbc.update("UPDATE booking_policy SET max_advance_days=14 WHERE id=?", policyId);
+            book(fixture.memberA, fixture.ptA, slot, 409, "ERR_MAX_FUTURE_BOOKINGS");
+        }
+
+        private void futureCount(int desired) {
+            int existing = jdbc.queryForObject("SELECT count(*) FROM bookings WHERE member_id=? AND status='CONFIRMED' AND start_at>?",
+                    Integer.class, fixture.memberA.profileId, now.atOffset(ZoneOffset.UTC));
+            for (int i = existing; i < desired; i++) {
+                UUID slot = slot(fixture.ptB, fixture.future.plusDays(3).plusHours(i * 2L), "BOOKED");
+                booking(fixture.memberA, slot, "CONFIRMED");
+            }
+        }
+
+        @ParameterizedTest @ValueSource(ints = {4, 5})
+        void fourAllowsOneMoreButFiveRejects(int existing) throws Exception {
+            futureCount(existing);
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, slot, existing == 4 ? 201 : 409,
+                    existing == 4 ? null : "ERR_MAX_FUTURE_BOOKINGS");
+            assertEquals(5, jdbc.queryForObject("SELECT count(*) FROM bookings WHERE member_id=? AND status='CONFIRMED' AND start_at>?",
+                    Integer.class, fixture.memberA.profileId, now.atOffset(ZoneOffset.UTC)));
+        }
+
+        @Test void onlyFutureConfirmedBookingsCountTowardLimit() throws Exception {
+            futureCount(4);
+            booking(fixture.memberA, slot(fixture.ptB, fixture.future.minusDays(1), "DISABLED"), "CONFIRMED");
+            booking(fixture.memberA, slot(fixture.ptB, fixture.future.plusDays(5), "DISABLED"), "CANCELLED");
+            booking(fixture.memberA, slot(fixture.ptB, fixture.future.plusDays(6), "DISABLED"), "COMPLETED");
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, slot, 201, null);
+        }
+
+        @Test void memberOverlapAcrossDifferentPtsIsRejected() throws Exception {
+            booking(fixture.memberA, slot(fixture.ptB, start().plusMinutes(30), "BOOKED"), "CONFIRMED");
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, slot, 409, "ERR_BOOKING_OVERLAP");
+        }
+
+        @Test void ptOverlapIsCheckedEvenForInconsistentDisabledBookingSlot() throws Exception {
+            booking(fixture.memberB, slot(fixture.ptA, start().plusMinutes(30), "DISABLED"), "CONFIRMED");
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, slot, 409, "ERR_BOOKING_OVERLAP");
+        }
+
+        @Test void touchingSessionsAreAllowedForMemberAndPt() throws Exception {
+            booking(fixture.memberA, slot(fixture.ptA, start().minusMinutes(90), "BOOKED"), "CONFIRMED");
+            UUID first = slot(fixture.ptA, start(), "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, first, 201, null);
+            UUID next = slot(fixture.ptA, start().plusMinutes(90), "AVAILABLE");
+            book(fixture.memberA, fixture.ptA, next, 201, null);
+        }
+
+        private void awaitWaiters(int count) throws Exception {
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (System.nanoTime() < deadline) {
+                int waiting = jdbc.queryForObject("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND usename=current_user AND wait_event_type='Lock' AND pid<>pg_backend_pid()", Integer.class);
+                if (waiting >= count) return;
+                Thread.sleep(20);
+            }
+            fail("Expected concurrent HTTP requests blocked on the held database lock");
+        }
+
+        private List<HttpResponse<String>> race(String table, UUID lockedId, Callable<HttpResponse<String>> first,
+                                                Callable<HttpResponse<String>> second) throws Exception {
+            assertTrue(Set.of("members", "personal_trainers").contains(table));
+            try (var connection = jdbc.getDataSource().getConnection(); var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+                connection.setAutoCommit(false);
+                try (var statement = connection.prepareStatement("SELECT id FROM " + table + " WHERE id=? FOR NO KEY UPDATE")) {
+                    statement.setObject(1, lockedId);
+                    try (var rows = statement.executeQuery()) { assertTrue(rows.next()); }
+                }
+                var a = pool.submit(first);
+                try {
+                    awaitWaiters(1);
+                    var b = pool.submit(second);
+                    awaitWaiters(2); // Both requests are pending before releasing; no sequential-request pseudo-race.
+                    connection.commit();
+                    var responses = List.of(a.get(15, TimeUnit.SECONDS), b.get(15, TimeUnit.SECONDS));
+                    responses.forEach(this::remember);
+                    return responses;
+                } finally { connection.rollback(); }
+            }
+        }
+
+        @Test void twoMembersCompeteForOneSlotWithExactlyOneWinner() throws Exception {
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            String a = token(fixture.memberA), b = token(fixture.memberB);
+            var responses = race("personal_trainers", fixture.ptA.profileId,
+                    () -> writeExchange("POST", PATH, a, input(fixture.ptA, slot)),
+                    () -> writeExchange("POST", PATH, b, input(fixture.ptA, slot)));
+            assertEquals(201, responses.getFirst().statusCode());
+            assertBookingCreated(object(json.readValue(responses.getFirst().body(), Object.class)), fixture.memberA, fixture.ptA, slot);
+            assertEquals(409, responses.getLast().statusCode());
+            assertEquals("ERR_SLOT_NO_LONGER_AVAILABLE", object(object(json.readValue(responses.getLast().body(), Object.class)).get("error")).get("code"));
+            assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM bookings WHERE slot_id=?", Integer.class, slot));
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"limit", "overlap"})
+        void sameMemberConcurrentDifferentSlotsAreSerialized(String kind) throws Exception {
+            if (kind.equals("limit")) futureCount(4);
+            UUID a = slot(fixture.ptA, start(), "AVAILABLE");
+            UUID b = slot(fixture.ptB, kind.equals("limit") ? start().plusHours(3) : start().plusMinutes(30), "AVAILABLE");
+            String access = token(fixture.memberA);
+            var responses = race("members", fixture.memberA.profileId,
+                    () -> writeExchange("POST", PATH, access, input(fixture.ptA, a)),
+                    () -> writeExchange("POST", PATH, access, input(fixture.ptB, b)));
+            assertEquals(201, responses.getFirst().statusCode());
+            assertEquals(409, responses.getLast().statusCode());
+            String expected = kind.equals("limit") ? "ERR_MAX_FUTURE_BOOKINGS" : "ERR_BOOKING_OVERLAP";
+            assertEquals(expected, object(object(json.readValue(responses.getLast().body(), Object.class)).get("error")).get("code"));
+            assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM bookings WHERE slot_id IN (?,?)", Integer.class, a, b));
+            assertEquals("AVAILABLE", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, b));
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"PATCH-booking", "PATCH-slot", "DELETE-booking", "DELETE-slot"})
+        void bookingAndAvailabilityRacePreservesStatusAndTime(String scenario) throws Exception {
+            String method = scenario.split("-")[0];
+            boolean bookingFirst = scenario.endsWith("booking");
+            UUID slot = slot(fixture.ptA, start(), "AVAILABLE");
+            String member = token(fixture.memberA), pt = token(fixture.ptA);
+            Callable<HttpResponse<String>> book = () -> writeExchange("POST", PATH, member, input(fixture.ptA, slot));
+            Callable<HttpResponse<String>> change = () -> writeExchange(method, AVAILABILITY_PATH + "/" + slot, pt,
+                    method.equals("DELETE") ? null : times(start().plusHours(3)));
+            var responses = race("personal_trainers", fixture.ptA.profileId, bookingFirst ? book : change, bookingFirst ? change : book);
+            if (bookingFirst) {
+                assertEquals(201, responses.getFirst().statusCode());
+                assertBookingCreated(object(json.readValue(responses.getFirst().body(), Object.class)), fixture.memberA, fixture.ptA, slot);
+                assertWriteConflict(responses.getLast());
+            } else {
+                assertEquals(method.equals("DELETE") ? 204 : 200, responses.getFirst().statusCode());
+                assertEquals(409, responses.getLast().statusCode());
+                assertEquals("ERR_SLOT_NO_LONGER_AVAILABLE", object(object(json.readValue(responses.getLast().body(), Object.class)).get("error")).get("code"));
+                assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM bookings WHERE slot_id=?", Integer.class, slot));
+                assertEquals(method.equals("DELETE") ? "DISABLED" : "AVAILABLE", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slot));
+                if (method.equals("PATCH")) {
+                    var stored = jdbc.queryForObject("SELECT start_at FROM availability_slots WHERE id=?", (rs, row) -> rs.getObject(1, OffsetDateTime.class), slot);
+                    assertEquals(start().plusHours(3).toInstant(), stored.toInstant());
+                }
+            }
+        }
+
+        @Test void databaseConstraintConflictRollsBackPreviouslyFlushedBookedStatus() throws Exception {
+            UUID target = slot(fixture.ptA, start(), "AVAILABLE");
+            UUID competitor = slot(fixture.ptB, start().plusMinutes(30), "BOOKED");
+            String access = token(fixture.memberA);
+            try (var connection = jdbc.getDataSource().getConnection(); var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+                connection.setAutoCommit(false);
+                UUID external = UUID.randomUUID();
+                try (var statement = connection.prepareStatement("INSERT INTO bookings(id,member_id,pt_id,slot_id,start_at,end_at,status) SELECT ?,?,pt_id,id,start_at,end_at,'CONFIRMED' FROM availability_slots WHERE id=?")) {
+                    statement.setObject(1, external); statement.setObject(2, fixture.memberA.profileId); statement.setObject(3, competitor);
+                    assertEquals(1, statement.executeUpdate());
+                }
+                var response = pool.submit(() -> writeExchange("POST", PATH, access, input(fixture.ptA, target)));
+                try {
+                    awaitWaiters(1); // INSERT is blocked on an uncommitted exclusion competitor invisible to the read query.
+                    connection.commit();
+                    writeBookings.add(external);
+                    assertWriteConflict(response.get(15, TimeUnit.SECONDS));
+                    assertEquals("AVAILABLE", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, target));
+                    assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM bookings WHERE slot_id=?", Integer.class, target));
+                } finally { connection.rollback(); }
+            }
+        }
+    }
+
     private OffsetDateTime writeStart() { return fixture.future.plusDays(10).plusHours(9); }
     private static Map<String, Object> times(OffsetDateTime start) {
         return Map.of("startAt", start.toString(), "endAt", start.plusMinutes(90).toString());

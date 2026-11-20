@@ -8,6 +8,7 @@ import vn.edu.tdtu.fitcenter.exception.BookingPolicyNotFoundException;
 import vn.edu.tdtu.fitcenter.repository.BookingPolicyRepository;
 
 import java.time.Clock;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +18,13 @@ public class BookingPolicyService {
 
     @Transactional(readOnly = true)
     public BookingPolicyResponse getEffectivePolicy() {
-        var policy = repository.findByActiveTrueAndEffectiveFromLessThanEqual(clock.instant())
+        return getEffectivePolicyAt(clock.instant());
+    }
+
+    /** Share the same time sample with a booking transaction; no fallback or write. */
+    @Transactional(readOnly = true)
+    public BookingPolicyResponse getEffectivePolicyAt(Instant now) {
+        var policy = repository.findByActiveTrueAndEffectiveFromLessThanEqual(now)
                 .orElseThrow(BookingPolicyNotFoundException::new);
         return new BookingPolicyResponse(policy.getId(), policy.getMaxAdvanceDays(), policy.getMinNoticeHours(),
                 policy.getCancelDeadlineHours(), policy.getMaxFutureBookings(), policy.getEffectiveFrom());

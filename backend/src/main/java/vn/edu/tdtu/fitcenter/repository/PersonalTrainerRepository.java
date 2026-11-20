@@ -25,4 +25,7 @@ public interface PersonalTrainerRepository
     // NO KEY UPDATE also permits FK key-share checks by a concurrent booking transaction.
     @Query(value = "select * from personal_trainers where user_id=:userId for no key update", nativeQuery = true)
     Optional<PersonalTrainer> findByUserIdForUpdate(UUID userId);
+
+    @Query(value = "select * from personal_trainers where id=:id for no key update", nativeQuery = true)
+    Optional<PersonalTrainer> findByIdForUpdate(UUID id);
 }

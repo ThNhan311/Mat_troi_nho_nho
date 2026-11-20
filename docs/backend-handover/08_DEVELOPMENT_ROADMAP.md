@@ -1,5 +1,7 @@
 # Backlog tiếp nhận
 
+Cập nhật R03: R02 đã đóng bằng commit local `4d137d7`. R03 được giao và triển khai auto-confirm Member booking trong working tree `feature/backend-booking-create`, cùng kiểm tra membership/policy, khóa Member/PT/slot và rollback. Xem [báo cáo](evidence/R03_BOOKING_CREATE.md), [traceability](decisions/2026-11-20_R03_BOOKING_CREATE.md). Các mô tả R03 bị chặn trong snapshot bên dưới đã được cập nhật này thay thế. Cancel/complete, policy PUT và membership write chưa triển khai; PT approve/reject không thuộc baseline đã chốt.
+
 Cập nhật R02: R01 đã commit local `9ae0a50`. R02 đã được người dùng giao chính thức, triển khai availability POST/PATCH/DELETE và kiểm thử trên working tree `feature/backend-pt-availability-write`; xem [báo cáo](evidence/R02_PT_AVAILABILITY_WRITE.md) và [contract](05_API_DOCUMENTATION.md). Các trạng thái R01/R02 chờ duyệt trong snapshot bên dưới đã được cập nhật này thay thế. R03 trở đi chưa triển khai; không thêm PT approve/reject trái auto-confirm D01–D07.
 
 Cập nhật 20/11/2026: [D01–D07](decisions/2026-11-20_BOOKING_DECISIONS.md) đã được người dùng chốt. R01 được giao và triển khai trong working tree sau Task A commit 073e131; contract đọc policy không còn chờ OPEN-POL-01. Bảng/đặc tả đề xuất ban đầu bên dưới là snapshot bàn giao; các luồng ghi R02–R07 vẫn chưa triển khai và không thuộc R01. Xem [API hiện tại](05_API_DOCUMENTATION.md) và [báo cáo R01](evidence/R01_BOOKING_POLICY_READ.md).

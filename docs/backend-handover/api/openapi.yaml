@@ -1,11 +1,80 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: r02-working-tree
-  description: Source baseline 0ae542a, Task A 073e131, R01 9ae0a50 và PT availability write R02 trong working tree; không bao gồm booking write/policy PUT.
+  version: r03-working-tree
+  description: Task A 073e131, R01 9ae0a50, R02 4d137d7 và Member booking auto-confirm R03 working tree; chưa có cancel/complete, policy PUT, membership write.
 servers:
 - url: http://localhost:18081
 paths:
+  /api/v1/bookings:
+    post:
+      operationId: createConfirmedBooking
+      summary: MEMBER ACTIVE tạo booking auto-confirm
+      description: >-
+        Owner từ principal, không dùng memberId/status client. UUID ptId phải khớp slot.
+        Membership ACTIVE hiện tại và bao phủ session theo DATE Việt Nam inclusive expiry.
+        Slot AVAILABLE, không đổi version trong lúc chờ, dài 90 phút; PT ACTIVE.
+        Policy R01 hiệu lực, không default; notice và advance có equality, ngày là thời lượng 24 giờ.
+        Giới hạn CONFIRMED có start_at>now; không overlap Member/PT, tiếp giáp được phép.
+        READ_COMMITTED; khóa Member -> membership -> PT -> slot; BOOKED + CONFIRMED nguyên tử.
+        Response dùng id theo DTO hiện hữu, UTC. Không PENDING/REJECTED hoặc PT approval.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingCreate'
+      responses:
+        '201':
+          description: Booking CONFIRMED; slot BOOKED cùng transaction, không còn available
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Booking'
+                - type: object
+                  properties:
+                    status:
+                      type: string
+                      enum: [CONFIRMED]
+        '400':
+          description: ERR_VALIDATION, thiếu/null/UUID/body sai
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: ERR_UNAUTHORIZED, thiếu token hợp lệ hoặc account không ACTIVE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: ERR_FORBIDDEN, ADMIN/PT hoặc Member không còn ACTIVE khi recheck
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: >-
+            ERR_NOT_FOUND cho Member profile/PT ACTIVE/slot không có hoặc cặp ptId-slotId không khớp.
+            BOOKING_POLICY_NOT_FOUND khi thiếu policy hiệu lực, giữ nguyên contract R01.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: >-
+            ERR_SLOT_NO_LONGER_AVAILABLE cho BOOKED/DISABLED/CONFIRMED hoặc đổi version lúc chờ;
+            ERR_SLOT_INVALID_DURATION; ERR_MEMBERSHIP_INACTIVE; ERR_MEMBERSHIP_NOT_COVERED;
+            ERR_BOOKING_NOTICE; ERR_BOOKING_ADVANCE; ERR_MAX_FUTURE_BOOKINGS; ERR_BOOKING_OVERLAP;
+            ERR_CONFLICT cho constraint/lock/concurrency. Không retry mù; rollback BOOKED và booking.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/pt/availability:
     post:
       operationId: createPtAvailability
@@ -743,6 +812,19 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    BookingCreate:
+      type: object
+      required: [ptId, slotId]
+      description: UUID theo schema; memberId/status ngoài DTO không được dùng để thay owner hoặc trạng thái
+      properties:
+        ptId:
+          type: string
+          format: uuid
+          example: '22222222-2222-4222-8222-222222222222'
+        slotId:
+          type: string
+          format: uuid
+          example: '33333333-3333-4333-8333-333333333333'
     AvailabilityCreate:
       type: object
       required: [startAt, endAt]
@@ -906,6 +988,7 @@ components:
           - DISABLED
     Booking:
       type: object
+      required: [id, memberId, ptId, slotId, startAt, endAt, status, cancelledBy, cancelReason, cancelledAt, completedAt]
       properties:
         id: *id001
         memberId: *id001

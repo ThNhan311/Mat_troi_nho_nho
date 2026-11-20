@@ -25,6 +25,11 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+    @ExceptionHandler(BookingConflictException.class)
+    ResponseEntity<Object> bookingConflict(BookingConflictException ex, HttpServletRequest request) {
+        return error(409, ex.getCode(), ex.getMessage(), Map.of(), request);
+    }
+
     @ExceptionHandler(BookingPolicyNotFoundException.class)
     ResponseEntity<Object> bookingPolicyNotFound(BookingPolicyNotFoundException ex, HttpServletRequest request) {
         return error(404, BookingPolicyNotFoundException.CODE, ex.getMessage(), Map.of(), request);

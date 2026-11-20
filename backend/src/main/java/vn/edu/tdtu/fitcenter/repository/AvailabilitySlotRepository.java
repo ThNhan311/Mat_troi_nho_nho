@@ -20,6 +20,10 @@ public interface AvailabilitySlotRepository
     @Query("select s from AvailabilitySlot s where s.id = :id and s.personalTrainer.id = :ptId")
     Optional<AvailabilitySlot> findOwnedByIdForUpdate(UUID id, UUID ptId);
 
+    // Scalar read avoids caching a stale entity before waiting for the PT/slot locks.
+    @Query("select s.version from AvailabilitySlot s where s.id=:id and s.personalTrainer.id=:ptId")
+    Optional<Long> findOwnedVersion(UUID id, UUID ptId);
+
     @Query(value = """
             select exists(select 1 from availability_slots
               where pt_id=:ptId and id<>:excludedId and status<>'DISABLED'
