@@ -1,5 +1,7 @@
 # Backlog tiếp nhận
 
+Cập nhật D01: policy write commit `63fe394`; nhánh feature/backend-service-eligibility triển khai phương án A (chưa commit), API kiểm tra hiện tại không lưu bắt đầu. [Contract](decisions/2026-11-20_SERVICE_ELIGIBILITY.md), [báo cáo](evidence/SERVICE_ELIGIBILITY.md). Bước Frontend hiển thị/tuân thủ kết quả còn thiếu; không tuyên bố chặn dịch vụ end-to-end. Không triển khai phương án B, schema/state/migration mới; R04 completion giữ nguyên. Các dòng D01 chưa triển khai trước checkpoint này là lịch sử.
+
 Cập nhật Policy write: R04 commit local `8cb95e2`; nhánh feature/backend-booking-policy-write thêm Admin PUT hiệu lực ngay theo D05, [contract](decisions/2026-11-20_BOOKING_POLICY_WRITE.md), [báo cáo](evidence/BOOKING_POLICY_WRITE.md). Giữ task chưa commit; không có scheduling/versioning đầy đủ, membership/payment write hoặc D01 service-start check. Các dòng chưa PUT ở checkpoint R04 trở về trước là lịch sử.
 
 Cập nhật R04: R03 đã commit local `394a21f`; nhánh feature/backend-booking-lifecycle có Member/PT cancellation và PT completion, chưa commit. OPEN-R04-PT-TIME đã chốt PT chỉ hủy trước startAt; xem [báo cáo R04](evidence/R04_BOOKING_LIFECYCLE.md). Snapshot R04 “PT duyệt/từ chối” bên dưới không thuộc quy trình auto-confirm đã chốt; R04 thực tế được người dùng giao ở phiên này là cancel/complete, không thêm PENDING/REJECTED. D01 service-start recheck, policy PUT và membership/payment write vẫn chưa có.

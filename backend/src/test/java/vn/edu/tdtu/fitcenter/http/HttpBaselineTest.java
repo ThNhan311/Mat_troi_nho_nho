@@ -155,6 +155,7 @@ class HttpBaselineTest {
     static final class ControllableClock extends Clock {
         private final AtomicReference<Instant> fixed;
         private final ZoneId zone;
+        private final AtomicReference<SnapshotGate> snapshotGate = new AtomicReference<>();
 
         ControllableClock(AtomicReference<Instant> fixed, ZoneId zone) {
             this.fixed = fixed;
@@ -164,13 +165,260 @@ class HttpBaselineTest {
         @Override public Clock withZone(ZoneId zone) { return new ControllableClock(fixed, Objects.requireNonNull(zone)); }
         @Override public Instant instant() {
             Instant value = fixed.get();
+            var gate = snapshotGate.get();
+            if (gate != null && org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly()
+                    && Objects.equals(java.sql.Connection.TRANSACTION_REPEATABLE_READ,
+                    org.springframework.transaction.support.TransactionSynchronizationManager.getCurrentTransactionIsolationLevel())
+                    && gate.used.compareAndSet(false, true)) {
+                gate.entered.countDown();
+                try { if (!gate.release.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("Snapshot test gate timed out"); }
+                catch (InterruptedException error) { Thread.currentThread().interrupt(); throw new IllegalStateException(error); }
+            }
             return value == null ? Instant.now() : value;
         }
+    }
+
+    static final class SnapshotGate {
+        final CountDownLatch entered = new CountDownLatch(1), release = new CountDownLatch(1);
+        final java.util.concurrent.atomic.AtomicBoolean used = new java.util.concurrent.atomic.AtomicBoolean();
     }
 
     private static final String POLICY_PATH = "/api/v1/admin/booking-policy";
     private static final String AVAILABILITY_PATH = "/api/v1/pt/availability";
     private static final Instant POLICY_NOW = Instant.parse("2030-01-02T03:04:05.123456Z");
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    class ServiceEligibilityCases {
+        private UUID slotId, bookingId, policyId;
+        private Instant now;
+        private Map<String, Object> originalMembership;
+        private String ptAccess, memberAccess;
+
+        @BeforeEach void eligibilitySetup() throws Exception {
+            now = writeStart().toInstant(); testClock.fixed.set(now);
+            originalMembership = jdbc.queryForMap("SELECT * FROM memberships WHERE id=?", fixture.membershipA);
+            slotId = rawSlot("BOOKED"); bookingId = rawBooking(slotId, "CONFIRMED");
+            ptAccess = token(fixture.ptA); memberAccess = token(fixture.memberA);
+        }
+
+        @AfterEach void eligibilityRestore() {
+            testClock.snapshotGate.set(null);
+            jdbc.update("UPDATE users SET status='ACTIVE' WHERE id=?", fixture.memberA.userId);
+            jdbc.update("UPDATE users SET status='ACTIVE' WHERE id=?", fixture.ptA.userId);
+            if (jdbc.queryForObject("SELECT count(*) FROM memberships WHERE id=?", Integer.class, fixture.membershipA) == 0) {
+                jdbc.update("INSERT INTO memberships(id,member_id,plan_id,start_date,expiry_date,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",
+                        fixture.membershipA, fixture.memberA.profileId, fixture.planId, originalMembership.get("start_date"),
+                        originalMembership.get("expiry_date"), originalMembership.get("status"), originalMembership.get("created_at"), originalMembership.get("updated_at"));
+            } else jdbc.update("UPDATE memberships SET start_date=?,expiry_date=?,status=? WHERE id=?",
+                    originalMembership.get("start_date"), originalMembership.get("expiry_date"), originalMembership.get("status"), fixture.membershipA);
+            if (policyId != null) { jdbc.update("DELETE FROM booking_policy WHERE id=?", policyId); policyId = null; }
+        }
+
+        private String path(UUID id) { return "/api/v1/pt/bookings/" + id + "/service-eligibility"; }
+
+        private Map<String, Object> state() {
+            return Map.of("booking", jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId),
+                    "slot", jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId),
+                    "membership", jdbc.queryForList("SELECT * FROM memberships WHERE member_id=? ORDER BY id", fixture.memberA.profileId),
+                    "account", jdbc.queryForMap("SELECT id,role,status,updated_at FROM users WHERE id=?", fixture.memberA.userId),
+                    "policy", jdbc.queryForList("SELECT * FROM booking_policy ORDER BY id"));
+        }
+
+        private Map<String, Object> assertBody(HttpResponse<String> response, Instant checkedAt, String... reasons) throws Exception {
+            assertEquals(200, response.statusCode());
+            assertEquals("no-store", response.headers().firstValue("Cache-Control").orElse(""));
+            var body = object(json.readValue(response.body(), Object.class));
+            assertEquals(Set.of("eligible", "checkedAt", "reasonCodes"), body.keySet());
+            assertEquals(reasons.length == 0, body.get("eligible")); assertEquals(checkedAt.toString(), body.get("checkedAt"));
+            assertEquals(List.of(reasons), body.get("reasonCodes"));
+            return body;
+        }
+
+        private void check(String... reasons) throws Exception {
+            var before = state(); assertBody(writeExchange("GET", path(bookingId), ptAccess, null), now, reasons);
+            assertEquals(before, state(), "Eligibility GET must not mutate any booking/slot/account/membership/policy row");
+        }
+
+        @Test void ownerReadsMinimalUtcPayloadWithoutPolicyOrMutationAndIgnoresClientOwnerIds() throws Exception {
+            assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM booking_policy", Integer.class));
+            check();
+            var before = state();
+            assertBody(writeExchange("GET", path(bookingId) + "?memberId=" + fixture.memberB.profileId + "&ptId=" + fixture.ptB.profileId, ptAccess, null), now);
+            assertEquals(before, state());
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"admin", "memberA"})
+        void onlyPtCanCheckEligibility(String actorName) throws Exception {
+            error("GET", path(bookingId), token(actor(actorName)), null, 403, "ERR_FORBIDDEN");
+        }
+
+        @Test void anonymousCannotCheckEligibility() throws Exception { error("GET", path(bookingId), null, null, 401, "ERR_UNAUTHORIZED"); }
+
+        @Test void ownershipAndIdsUsePrincipalAnd404Convention() throws Exception {
+            error("GET", path(bookingId) + "?ptId=" + fixture.ptA.profileId, token(fixture.ptB), null, 404, "ERR_NOT_FOUND");
+            error("GET", path(UUID.randomUUID()), ptAccess, null, 404, "ERR_NOT_FOUND");
+            error("GET", path(bookingId).replace(bookingId.toString(), "not-uuid"), ptAccess, null, 400, "ERR_VALIDATION");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"SUSPENDED", "DISABLED"})
+        void inactivePtCannotUseIssuedToken(String status) throws Exception {
+            jdbc.update("UPDATE users SET status=? WHERE id=?", status, fixture.ptA.userId);
+            error("GET", path(bookingId), ptAccess, null, 401, "ERR_UNAUTHORIZED");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"CANCELLED", "COMPLETED"})
+        void terminalBookingIs200WithReasonsWithoutChangingMetadata(String status) throws Exception {
+            now = writeStart().plusMinutes(90).toInstant(); testClock.fixed.set(now);
+            if (status.equals("CANCELLED")) jdbc.update("UPDATE bookings SET status='CANCELLED',cancelled_by='MEMBER',cancelled_at=? WHERE id=?",
+                    writeStart().minusHours(4), bookingId);
+            else jdbc.update("UPDATE bookings SET status='COMPLETED',completed_at=? WHERE id=?", writeStart().plusMinutes(90), bookingId);
+            jdbc.update("UPDATE availability_slots SET status='DISABLED' WHERE id=?", slotId);
+            check("BOOKING_NOT_CONFIRMED", "SESSION_ENDED");
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0, 1})
+        void startBoundaryIsInclusive(long microseconds) throws Exception {
+            now = writeStart().toInstant().plusNanos(microseconds * 1000); testClock.fixed.set(now);
+            if (microseconds < 0) check("SESSION_NOT_STARTED"); else check();
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0, 1})
+        void endBoundaryIsExclusive(long microseconds) throws Exception {
+            now = writeStart().plusMinutes(90).toInstant().plusNanos(microseconds * 1000); testClock.fixed.set(now);
+            if (microseconds < 0) check(); else check("SESSION_ENDED");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"SUSPENDED", "DISABLED"})
+        void memberAccountMustBeActiveMember(String status) throws Exception {
+            jdbc.update("UPDATE users SET status=? WHERE id=?", status, fixture.memberA.userId);
+            check("MEMBER_ACCOUNT_INACTIVE");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"PENDING_ACTIVATION", "SUSPENDED", "EXPIRED", "CANCELLED"})
+        void inactiveMembershipIsInformationalAndNotWrittenBack(String status) throws Exception {
+            jdbc.update("UPDATE memberships SET status=? WHERE id=?", status, fixture.membershipA);
+            check("MEMBERSHIP_INACTIVE");
+        }
+
+        @Test void missingCurrentMembershipIsInformational() throws Exception {
+            jdbc.update("DELETE FROM memberships WHERE id=?", fixture.membershipA); check("MEMBERSHIP_INACTIVE");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"notStarted", "expired"})
+        void storedActiveMembershipMustAlsoBeInCurrentBusinessDateRange(String scenario) throws Exception {
+            var date = now.atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDate();
+            jdbc.update("UPDATE memberships SET start_date=?,expiry_date=? WHERE id=?", scenario.equals("notStarted") ? date.plusDays(1) : date.minusDays(2),
+                    scenario.equals("notStarted") ? date.plusDays(2) : date.minusDays(1), fixture.membershipA);
+            check("MEMBERSHIP_INACTIVE");
+        }
+
+        private void session(OffsetDateTime start, OffsetDateTime end) {
+            jdbc.update("DELETE FROM bookings WHERE id=?", bookingId); writeBookings.remove(bookingId);
+            jdbc.update("DELETE FROM availability_slots WHERE id=?", slotId); writeSlots.remove(slotId);
+            slotId = UUID.randomUUID(); writeSlots.add(slotId);
+            jdbc.update("INSERT INTO availability_slots(id,pt_id,start_at,end_at,status) VALUES(?,?,?,?,'BOOKED')", slotId, fixture.ptA.profileId, start, end);
+            bookingId = rawBooking(slotId, "CONFIRMED");
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0, 1})
+        void expiryIncludesVietnamDayAndSessionMayEndExactlyAtNextMidnight(long microseconds) throws Exception {
+            var date = writeStart().atZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDate();
+            var until = date.plusDays(1).atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);
+            var end = until.plusNanos(microseconds * 1000);
+            session(end.minusMinutes(90), end); now = end.minusMinutes(90).toInstant(); testClock.fixed.set(now);
+            jdbc.update("UPDATE memberships SET start_date=?,expiry_date=? WHERE id=?", date, date, fixture.membershipA);
+            if (microseconds > 0) check("MEMBERSHIP_NOT_COVERED"); else check();
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0})
+        void membershipStartsAtVietnamMidnightRatherThanUtcMidnight(long microseconds) throws Exception {
+            var date = writeStart().atZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDate();
+            var from = date.atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);
+            session(from, from.plusMinutes(90)); now = from.toInstant().plusNanos(microseconds * 1000); testClock.fixed.set(now);
+            jdbc.update("UPDATE memberships SET start_date=?,expiry_date=? WHERE id=?", date, date.plusDays(1), fixture.membershipA);
+            if (microseconds < 0) check("SESSION_NOT_STARTED", "MEMBERSHIP_INACTIVE"); else check();
+        }
+
+        @Test void currentMembershipMustCoverSessionStartAsWellAsEnd() throws Exception {
+            var date = writeStart().atZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDate();
+            var from = date.atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toOffsetDateTime();
+            session(from.minusMinutes(30), from.plusMinutes(60)); now = from.toInstant(); testClock.fixed.set(now);
+            jdbc.update("UPDATE memberships SET start_date=?,expiry_date=? WHERE id=?", date, date.plusDays(1), fixture.membershipA);
+            check("MEMBERSHIP_NOT_COVERED");
+        }
+
+        @Test void freshRequestReflectsMembershipRestorationWithoutCaching() throws Exception {
+            jdbc.update("UPDATE memberships SET status='SUSPENDED' WHERE id=?", fixture.membershipA); check("MEMBERSHIP_INACTIVE");
+            jdbc.update("UPDATE memberships SET status='ACTIVE' WHERE id=?", fixture.membershipA);
+            now = now.plusNanos(1000); testClock.fixed.set(now); check();
+        }
+
+        @Test void allIndependentReasonsAreReturnedInStableOrder() throws Exception {
+            now = writeStart().minusSeconds(1).toInstant(); testClock.fixed.set(now);
+            jdbc.update("UPDATE bookings SET status='CANCELLED',cancelled_by='MEMBER',cancelled_at=? WHERE id=?", writeStart().minusHours(4), bookingId);
+            jdbc.update("UPDATE users SET status='SUSPENDED' WHERE id=?", fixture.memberA.userId);
+            jdbc.update("UPDATE memberships SET status='SUSPENDED' WHERE id=?", fixture.membershipA);
+            check("BOOKING_NOT_CONFIRMED", "SESSION_NOT_STARTED", "MEMBER_ACCOUNT_INACTIVE", "MEMBERSHIP_INACTIVE");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"noPolicy", "restrictivePolicy"})
+        void eligibilityDoesNotReapplyBookingOrCancellationPolicy(String scenario) throws Exception {
+            if (scenario.equals("restrictivePolicy")) {
+                policyId = UUID.randomUUID();
+                jdbc.update("INSERT INTO booking_policy(id,max_advance_days,min_notice_hours,cancel_deadline_hours,max_future_bookings,effective_from,active,updated_by) VALUES(?,1,10000,10001,1,?,true,?)",
+                        policyId, now.atOffset(ZoneOffset.UTC), fixture.admin.userId);
+            }
+            check();
+        }
+
+        @ParameterizedTest @ValueSource(booleans = {false, true})
+        void completionRemainsR04WithoutSuccessfulEligibilityOrStartMarker(boolean checkFirst) throws Exception {
+            now = writeStart().plusMinutes(90).toInstant(); testClock.fixed.set(now);
+            jdbc.update("UPDATE memberships SET status='EXPIRED' WHERE id=?", fixture.membershipA);
+            if (checkFirst) check("SESSION_ENDED", "MEMBERSHIP_INACTIVE");
+            var completed = object(request("POST", "/api/v1/pt/bookings/" + bookingId + "/complete", ptAccess, null, 200));
+            assertEquals("COMPLETED", completed.get("status")); assertEquals(now.toString(), completed.get("completedAt"));
+            assertEquals("DISABLED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slotId));
+        }
+
+        @Test void repeatableReadKeepsAccountAndMembershipSnapshotAcrossConcurrentCommit() throws Exception {
+            var gate = new SnapshotGate(); testClock.snapshotGate.set(gate); Instant checkedAt = now;
+            try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+                var pending = pool.submit(() -> writeExchange("GET", path(bookingId), ptAccess, null));
+                try {
+                    assertTrue(gate.entered.await(5, TimeUnit.SECONDS)); // First service SELECT has established the DB snapshot.
+                    new TransactionTemplate(transactions).executeWithoutResult(status -> {
+                        jdbc.update("UPDATE users SET status='SUSPENDED' WHERE id=?", fixture.memberA.userId);
+                        jdbc.update("UPDATE memberships SET status='SUSPENDED' WHERE id=?", fixture.membershipA);
+                    });
+                    var committed = state(); gate.release.countDown();
+                    assertBody(pending.get(15, TimeUnit.SECONDS), checkedAt);
+                    assertEquals(committed, state(), "Reader must not undo concurrent writer commits");
+                } finally { gate.release.countDown(); testClock.snapshotGate.set(null); }
+            }
+            now = now.plusNanos(1000); testClock.fixed.set(now);
+            check("MEMBER_ACCOUNT_INACTIVE", "MEMBERSHIP_INACTIVE");
+        }
+
+        @Test void cancellationCanCommitDuringEligibilityAndNextRequestSeesNewBookingState() throws Exception {
+            policyId = UUID.randomUUID();
+            jdbc.update("INSERT INTO booking_policy(id,max_advance_days,min_notice_hours,cancel_deadline_hours,max_future_bookings,effective_from,active,updated_by) VALUES(?,14,2,0,5,?,true,?)",
+                    policyId, now.atOffset(ZoneOffset.UTC), fixture.admin.userId);
+            var gate = new SnapshotGate(); testClock.snapshotGate.set(gate); Instant checkedAt = now;
+            try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+                var pending = pool.submit(() -> writeExchange("GET", path(bookingId), ptAccess, null));
+                try {
+                    assertTrue(gate.entered.await(5, TimeUnit.SECONDS));
+                    var cancelled = object(request("POST", "/api/v1/bookings/" + bookingId + "/cancel", memberAccess, null, 200));
+                    assertEquals("CANCELLED", cancelled.get("status")); var committed = state(); gate.release.countDown();
+                    assertBody(pending.get(15, TimeUnit.SECONDS), checkedAt);
+                    assertEquals(committed, state());
+                } finally { gate.release.countDown(); testClock.snapshotGate.set(null); }
+            }
+            check("BOOKING_NOT_CONFIRMED");
+        }
+    }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

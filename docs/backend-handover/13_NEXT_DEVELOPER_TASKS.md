@@ -1,5 +1,7 @@
 # Công việc cho người tiếp nhận
 
+Cập nhật D01: người dùng đã chọn A, API service-eligibility Backend có working tree trên base `63fe394`; không cần tiếp tục chốt A/B hoặc tự triển khai B. Xem [contract/snapshot](decisions/2026-11-20_SERVICE_ELIGIBILITY.md), [kết quả](evidence/SERVICE_ELIGIBILITY.md). Việc còn thiếu là Frontend tích hợp kiểm tra trước buổi tập/refresh khi dữ liệu đổi; chưa là luồng chặn end-to-end. Complete không yêu cầu GET, không có startedAt/startedBy hoặc IN_PROGRESS. Các đề xuất D01 chưa chốt phía dưới là lịch sử.
+
 Cập nhật Policy write: R04 đã commit `8cb95e2`. Working tree hiện có PUT Admin Booking Policy hiệu lực ngay, validation bốn số nguyên, last-write-wins có khóa cả trường hợp bảng trống và shared read R03/R04; xem [contract](decisions/2026-11-20_BOOKING_POLICY_WRITE.md), [kết quả](evidence/BOOKING_POLICY_WRITE.md). Các đoạn R03/R04 phía dưới là checkpoint lịch sử. Task tiếp theo nên tập trung D01 recheck membership trước bắt đầu dịch vụ sau khi chốt trigger/contract service-start; không coi completion là check này.
 
 Cập nhật R04: R03 đã commit `394a21f`; working tree có Member/PT cancel và PT complete. Người dùng đã chốt PT chỉ hủy trước startAt; endpoint và tests được bổ sung sau quyết định. [Contract và lock R04](decisions/2026-11-20_R04_BOOKING_LIFECYCLE.md), [kết quả](evidence/R04_BOOKING_LIFECYCLE.md) là trạng thái hiện tại; đoạn R03 bên dưới là checkpoint trước lifecycle. D01 service-start check vẫn cần triển khai riêng.

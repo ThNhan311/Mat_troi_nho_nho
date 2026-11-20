@@ -1,11 +1,74 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: policy-write-working-tree
-  description: R04 8cb95e2; working tree thêm Admin PUT Booking Policy hiệu lực ngay theo D05. Member/PT cancel và PT complete đã có; D01 service-start check và membership/payment write chưa có.
+  version: service-eligibility-working-tree
+  description: Policy write 63fe394; working tree thêm D01 phương án A kiểm tra eligibility phía Backend. Không lưu dấu bắt đầu, completion giữ R04; Frontend chưa tích hợp, chưa hoàn tất chặn dịch vụ end-to-end. Membership/payment write chưa có.
 servers:
 - url: http://localhost:18081
 paths:
+  /api/v1/pt/bookings/{id}/service-eligibility:
+    get:
+      operationId: getOwnBookingServiceEligibility
+      summary: PT ACTIVE kiểm tra eligibility hiện tại của booking sở hữu
+      description: >-
+        Ownership từ principal/profile/booking, không nhận memberId/ptId để xác định chủ sở hữu.
+        PT được phép truy cập nhận 200 kể cả không eligible. Chỉ đủ điều kiện khi CONFIRMED,
+        startAt<=Clock.now<endAt, account Member ACTIVE và membership ACTIVE hiện tại/phủ toàn session.
+        DATE theo Asia/Ho_Chi_Minh, expiry inclusive, end session đúng midnight sau expiry được phép.
+        reasonCodes đầy đủ, không trùng, theo thứ tự enum; nhóm membership chỉ kiểm coverage nếu đang hợp lệ hiện tại.
+        REPEATABLE_READ read-only, query không khóa hàng; một MVCC snapshot cho actor/booking/account/membership.
+        checkedAt từ server Clock trong transaction, không chứng nhận dữ liệu không đổi sau response.
+        Không đọc policy hoặc áp notice/advance/count/cancellation. Không mutation/cache, không lưu startedAt/startedBy.
+        Completion giữ R04, không yêu cầu GET trước đó; chưa tuyên bố frontend chặn dịch vụ end-to-end.
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Kết quả tại thời điểm checkedAt trên snapshot đọc, không có PII/membership details
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceEligibility'
+              example:
+                eligible: false
+                checkedAt: '2030-01-02T03:04:05.123456Z'
+                reasonCodes: [MEMBERSHIP_INACTIVE]
+        '400':
+          description: ERR_VALIDATION, UUID sai
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: ERR_UNAUTHORIZED, không có token hợp lệ hoặc account không ACTIVE khi auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: ERR_FORBIDDEN, sai role hoặc PT không ACTIVE trong service snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: ERR_NOT_FOUND, booking/profile không tồn tại hoặc booking không thuộc PT đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/bookings/{id}/cancel:
     post:
       operationId: cancelOwnMemberBooking
@@ -1058,6 +1121,25 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    ServiceEligibility:
+      type: object
+      additionalProperties: false
+      required: [eligible, checkedAt, reasonCodes]
+      properties:
+        eligible:
+          type: boolean
+          description: true khi và chỉ khi reasonCodes rỗng
+        checkedAt:
+          type: string
+          format: date-time
+          description: Server Clock ISO-8601 UTC, thời điểm đánh giá snapshot hiện tại
+        reasonCodes:
+          type: array
+          uniqueItems: true
+          description: Thứ tự cố định như enum; MEMBERSHIP_NOT_COVERED chỉ khi membership hợp lệ hiện tại
+          items:
+            type: string
+            enum: [BOOKING_NOT_CONFIRMED, SESSION_NOT_STARTED, SESSION_ENDED, MEMBER_ACCOUNT_INACTIVE, MEMBERSHIP_INACTIVE, MEMBERSHIP_NOT_COVERED]
     BookingPolicyWrite:
       type: object
       additionalProperties: false

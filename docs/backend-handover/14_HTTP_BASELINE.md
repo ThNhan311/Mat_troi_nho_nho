@@ -1,5 +1,7 @@
 # Fixture tổng hợp và HTTP baseline
 
+Cập nhật D01: base `63fe394`, harness thêm GET service-eligibility chỉ đọc, membership/date/account/time boundaries, no-store/no-mutation, membership phục hồi và concurrency REPEATABLE_READ có latch sau first SELECT. Runner/container guard không đổi. [Evidence](evidence/SERVICE_ELIGIBILITY.md) tách lỗi fixture FK V1 trước sửa khỏi kết quả cuối; không cộng focused/full. Chỉ Backend API, chưa tích hợp Frontend/end-to-end; completion giữ R04.
+
 Cập nhật Policy write: R04 đã commit `8cb95e2`; harness thêm PUT Admin/GET readback, validation, hai Admin cạnh tranh trên bảng trống/đã có, reader/create/cancel chờ PUT và rollback PostgreSQL. Runner/datasource/container guard không đổi. [Evidence](evidence/BOOKING_POLICY_WRITE.md) tách kết quả lượt có lỗi fixture khỏi focused/full cuối, không cộng dồn; R04 và các con số phía dưới là lịch sử. D01 service-start check vẫn chưa có.
 
 Cập nhật R04: R03 đã commit `394a21f`. Harness mở rộng Member/PT cancel và PT complete, metadata/UTC, rebook, lifecycle/PATCH/DELETE races và rollback. PT cancel tests được thêm và chạy sau quyết định chỉ hủy trước startAt, gồm Clock sau chờ khóa. Runner/DB guard không đổi; xem [evidence R04](evidence/R04_BOOKING_LIFECYCLE.md) và [testing guide](06_TESTING_GUIDE.md). Các con số/giới hạn R03 và lượt R04 chưa có PT cancel là checkpoint lịch sử; không dùng làm bằng chứng PT cancel đã đạt trước đó.

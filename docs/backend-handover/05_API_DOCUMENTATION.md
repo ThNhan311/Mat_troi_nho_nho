@@ -1,5 +1,7 @@
 # API hiện có
 
+Cập nhật D01: policy write đã commit local `63fe394`. Working tree feature/backend-service-eligibility thêm GET kiểm tra điều kiện hiện tại cho PT sở hữu booking, phương án A; không lưu dấu bắt đầu, không đổi completion. Frontend chưa tích hợp nên chưa hoàn tất luồng chặn dịch vụ end-to-end. Các trạng thái D01 “chưa triển khai” ở checkpoint phía dưới được thay bằng cập nhật này. [Contract D01](decisions/2026-11-20_SERVICE_ELIGIBILITY.md), [báo cáo](evidence/SERVICE_ELIGIBILITY.md).
+
 Cập nhật Policy write: R04 đã commit local `8cb95e2`. Working tree feature/backend-booking-policy-write thêm PUT Admin Booking Policy hiệu lực ngay theo D05, xem [quyết định](decisions/2026-11-20_BOOKING_POLICY_WRITE.md) và [báo cáo](evidence/BOOKING_POLICY_WRITE.md). Các cập nhật R01–R04 phía dưới là checkpoint theo task; trạng thái hiện tại gồm GET/PUT policy, booking create và ba lifecycle endpoints. D01 service-start check vẫn chưa triển khai.
 
 Cập nhật R04: R03 đã commit local `394a21f`. Working tree feature/backend-booking-lifecycle triển khai Member cancel, PT cancel và PT complete. Người dùng chốt PT chỉ được hủy khi `now < startAt`; lấy Clock sau khi chờ khóa. Xem [contract/quyết định R04](decisions/2026-11-20_R04_BOOKING_LIFECYCLE.md), [báo cáo R04](evidence/R04_BOOKING_LIFECYCLE.md). Các giới hạn “chưa cancel/complete” ở checkpoint R03 bên dưới là lịch sử; D01 service-start check vẫn chưa triển khai.
@@ -21,6 +23,33 @@ Nguồn: [controllers](../../backend/src/main/java/vn/edu/tdtu/fitcenter/control
 | GET `/api/v1/pt/bookings` | PT | `from`, `to`; `status` tùy chọn | mảng booking của PT đăng nhập | BookingQueryService / users, trainers, bookings |
 | GET `/api/v1/admin/booking-policy` | ADMIN, Bearer | không | policy hiệu lực, sáu trường DTO | BookingPolicyService / booking_policy |
 
+## D01 — kiểm tra service eligibility hiện tại
+
+GET `/api/v1/pt/bookings/{id}/service-eligibility`, Bearer của PT ACTIVE có profile sở hữu booking; UUID path. Không dùng memberId/ptId từ query để xác định ownership. PT khác/thiếu booking/profile trả 404 ERR_NOT_FOUND; MEMBER/ADMIN 403 ERR_FORBIDDEN, không token/account bị khóa khi auth 401 ERR_UNAUTHORIZED, UUID sai 400 ERR_VALIDATION. Dùng error envelope/correlation hiện có.
+
+PT được phép truy cập nhận 200 với đúng ba fields, kể cả khi không đủ điều kiện:
+
+```json
+{"eligible":false,"checkedAt":"2030-01-02T03:04:05.123456Z","reasonCodes":["MEMBERSHIP_INACTIVE"]}
+```
+
+`eligible=true` khi và chỉ khi reasonCodes rỗng. checkedAt lấy một lần từ server Clock trong transaction, ISO-8601 UTC. `Cache-Control: no-store`, không cache server. Không trả ID/name/profile/account/membership details hoặc dữ liệu cá nhân vượt mức cần đánh giá.
+
+| Reason code | Điều kiện từ chối |
+|---|---|
+| BOOKING_NOT_CONFIRMED | CANCELLED hoặc COMPLETED |
+| SESSION_NOT_STARTED | now < startAt |
+| SESSION_ENDED | now >= endAt |
+| MEMBER_ACCOUNT_INACTIVE | Account Member không ACTIVE (hoặc role không còn MEMBER) |
+| MEMBERSHIP_INACTIVE | Thiếu membership hiện hành chưa CANCELLED, stored status khác ACTIVE, dates thiếu hoặc không hiệu lực hiện tại |
+| MEMBERSHIP_NOT_COVERED | Membership hiện tại hợp lệ nhưng không bao phủ toàn session |
+
+Thu thập các lý do độc lập theo thứ tự bảng, không trùng; nhóm membership kiểm coverage sau khi xác nhận ACTIVE/hiệu lực hiện tại như R03. Cửa sổ `[startAt,endAt)`: đúng start được phép, đúng end bị từ chối. Tái dùng riêng membership DATE Asia/Ho_Chi_Minh, expiry inclusive; session end đúng midnight sau expiry hợp lệ. Không tái áp notice/advance/max-future hoặc cancellation policy, không yêu cầu tồn tại policy.
+
+Read-only REPEATABLE_READ, timeout 10 giây: SELECT actor đầu tiên thiết lập snapshot, Clock lấy trong transaction, mọi read booking/account/membership cùng MVCC snapshot. Query membership riêng không có khóa PESSIMISTIC_READ của R03; không khóa hàng/policy, không mutation booking/slot/membership/completion. Writer commit trong lúc GET chạy không làm các reads trộn dữ liệu; GET mới thấy snapshot mới. Kết quả là đánh giá tại checkedAt trên snapshot đó, không phải quyền sử dụng lâu dài hoặc bảo đảm dữ liệu không đổi sau response.
+
+D01 đã có API kiểm tra phía Backend; Frontend chưa tích hợp thì không tuyên bố luồng chặn dịch vụ end-to-end hoàn tất. Không có startedAt/startedBy, IN_PROGRESS hoặc phương án B; complete vẫn theo R04, không bắt buộc gọi GET trước.
+
 ## Booking lifecycle R04 — phần đã triển khai
 
 | Method, URL | Quyền và input | Thành công |
@@ -35,7 +64,7 @@ Chỉ CONFIRMED được chuyển. CANCELLED/COMPLETED, kể cả request lặp,
 
 Member cancel lấy policy R01 đang hiệu lực tại now; thiếu/inactive/tương lai trả 404 BOOKING_POLICY_NOT_FOUND và không mutation. Điều kiện `startAt-now >= cancelDeadlineHours`, equality được phép, không hardcode 4 giờ. Slot có startAt>now trở lại AVAILABLE cho Member khác đặt; tại startAt với deadline=0 chuyển DISABLED để không mở lại slot đã qua/đang bắt đầu. Membership EXPIRED/SUSPENDED/PENDING_ACTIVATION/CANCELLED không chặn cancellation; account xác thực vẫn phải ACTIVE. Không tái dùng create eligibility validator.
 
-Complete chỉ khi `now >= endAt`, equality được phép; slot DISABLED và không tự reopen. Không yêu cầu policy/membership ACTIVE cho completion. Đây là ghi hoàn thành sau session, **không thay thế D01 kiểm tra trước bắt đầu dịch vụ**, phần đó vẫn chưa triển khai.
+Complete chỉ khi `now >= endAt`, equality được phép; slot DISABLED và không tự reopen. Không yêu cầu policy/membership ACTIVE cho completion. Đây là ghi hoàn thành sau session, **không thay thế D01 kiểm tra trước bắt đầu dịch vụ**. API D01 phương án A ở trên không ghi marker và không thay điều kiện complete.
 
 Các mã lỗi: 400 ERR_VALIDATION cho UUID/input/reason sai; 401 ERR_UNAUTHORIZED khi không có token hợp lệ/account đã khóa lúc auth; 403 ERR_FORBIDDEN sai role hoặc account không ACTIVE khi recheck; 404 ERR_NOT_FOUND cho profile/booking không có hoặc không sở hữu. Business 409 gồm ERR_BOOKING_NOT_CONFIRMED, ERR_CANCELLATION_DEADLINE, ERR_PT_CANCELLATION_WINDOW_CLOSED, ERR_BOOKING_NOT_ENDED, ERR_BOOKING_SLOT_CONFLICT; constraint/concurrency 409 ERR_CONFLICT. Dùng envelope/correlation hiện hữu, không SQL/stack trace, không retry mù.
 
@@ -155,7 +184,7 @@ Authorization: Bearer <access-token>
 [{"id":"11111111-1111-4111-8111-111111111111","ptId":"22222222-2222-4222-8222-222222222222","startAt":"2027-01-02T09:00:00Z","endAt":"2027-01-02T10:00:00Z","status":"AVAILABLE"}]
 ```
 
-Lỗi thường gặp: 400 `ERR_VALIDATION` cho input sai; 401 `ERR_UNAUTHORIZED` cho xác thực thất bại; 403 `ERR_FORBIDDEN` sai quyền; 404 `ERR_NOT_FOUND` nếu profile/plan/PT không có; 409 `ERR_CONFLICT` khi vi phạm dữ liệu; 500 `ERR_INTERNAL` cho lỗi không xử lý. Áp dụng tùy đường code, không hứa mọi endpoint phát sinh mọi mã. Envelope gồm `success:false`, `error:{code,message,details,correlationId}`, `timestamp`, `status`, `message`; có `X-Correlation-Id`. Ví dụ login/refresh dùng placeholder trong [cài đặt](03_LOCAL_SETUP_GUIDE.md). Booking create, Member/PT cancel, PT complete và policy write đã có; membership/payment write và D01 service-start check chưa triển khai.
+Lỗi thường gặp: 400 `ERR_VALIDATION` cho input sai; 401 `ERR_UNAUTHORIZED` cho xác thực thất bại; 403 `ERR_FORBIDDEN` sai quyền; 404 `ERR_NOT_FOUND` nếu profile/plan/PT không có; 409 `ERR_CONFLICT` khi vi phạm dữ liệu; 500 `ERR_INTERNAL` cho lỗi không xử lý. Áp dụng tùy đường code, không hứa mọi endpoint phát sinh mọi mã. Envelope gồm `success:false`, `error:{code,message,details,correlationId}`, `timestamp`, `status`, `message`; có `X-Correlation-Id`. Ví dụ login/refresh dùng placeholder trong [cài đặt](03_LOCAL_SETUP_GUIDE.md). Booking create, Member/PT cancel, PT complete, policy write và API kiểm tra D01 đã có; membership/payment write và tích hợp Frontend chặn dịch vụ chưa triển khai.
 
 ## OpenAPI và giới hạn
 
