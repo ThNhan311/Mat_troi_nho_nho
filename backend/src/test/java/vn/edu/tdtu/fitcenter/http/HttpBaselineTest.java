@@ -42,6 +42,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -68,6 +69,8 @@ class HttpBaselineTest {
     private HttpBaselineFixture fixture;
     private HttpClient client;
     private final Map<String, String> accessTokens = new HashMap<>();
+    private final Set<UUID> writeSlots = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> writeBookings = ConcurrentHashMap.newKeySet();
 
     @DynamicPropertySource
     static void guardedDatasource(DynamicPropertyRegistry properties) {
@@ -131,6 +134,13 @@ class HttpBaselineTest {
 
     @AfterEach void restoreSystemTime() {
         testClock.fixed.set(null);
+        // Exact UUIDs produced by this scenario only; no broad delete by PT, time or status.
+        new TransactionTemplate(transactions).executeWithoutResult(status -> {
+            for (UUID id : writeBookings) assertEquals(1, jdbc.update("DELETE FROM bookings WHERE id=?", id));
+            for (UUID id : writeSlots) assertEquals(1, jdbc.update("DELETE FROM availability_slots WHERE id=?", id));
+        });
+        writeBookings.clear();
+        writeSlots.clear();
     }
 
     @TestConfiguration(proxyBeanMethods = false)
@@ -157,7 +167,378 @@ class HttpBaselineTest {
     }
 
     private static final String POLICY_PATH = "/api/v1/admin/booking-policy";
+    private static final String AVAILABILITY_PATH = "/api/v1/pt/availability";
     private static final Instant POLICY_NOW = Instant.parse("2030-01-02T03:04:05.123456Z");
+
+    private OffsetDateTime writeStart() { return fixture.future.plusDays(10).plusHours(9); }
+    private static Map<String, Object> times(OffsetDateTime start) {
+        return Map.of("startAt", start.toString(), "endAt", start.plusMinutes(90).toString());
+    }
+
+    private Map<String, Object> createSlot(HttpBaselineFixture.Actor actor, OffsetDateTime start) throws Exception {
+        var result = object(request("POST", AVAILABILITY_PATH, token(actor), times(start), 201));
+        writeSlots.add(UUID.fromString((String) result.get("id")));
+        assertSlotPayload(result, actor, start, "AVAILABLE");
+        return result;
+    }
+
+    private void assertSlotPayload(Map<String, Object> body, HttpBaselineFixture.Actor actor,
+                                   OffsetDateTime start, String status) {
+        assertEquals(Set.of("id", "ptId", "startAt", "endAt", "status"), body.keySet());
+        assertEquals(actor.profileId.toString(), body.get("ptId"));
+        assertEquals(start.toInstant().toString(), body.get("startAt"));
+        assertEquals(start.plusMinutes(90).toInstant().toString(), body.get("endAt"));
+        assertEquals(status, body.get("status"));
+        var stored = jdbc.queryForMap("SELECT pt_id,start_at,end_at,status FROM availability_slots WHERE id=?",
+                UUID.fromString((String) body.get("id")));
+        assertEquals(actor.profileId, stored.get("pt_id"));
+        assertEquals(status, stored.get("status"));
+        var storedStart = jdbc.queryForObject("SELECT start_at FROM availability_slots WHERE id=?",
+                (rs, row) -> rs.getObject(1, OffsetDateTime.class), UUID.fromString((String) body.get("id")));
+        assertEquals(start.toInstant(), storedStart.toInstant());
+        var storedEnd = jdbc.queryForObject("SELECT end_at FROM availability_slots WHERE id=?",
+                (rs, row) -> rs.getObject(1, OffsetDateTime.class), UUID.fromString((String) body.get("id")));
+        assertEquals(start.plusMinutes(90).toInstant(), storedEnd.toInstant());
+    }
+
+    private UUID rawSlot(String status) {
+        UUID id = UUID.randomUUID();
+        jdbc.update("INSERT INTO availability_slots(id,pt_id,start_at,end_at,status) VALUES(?,?,?,?,?)",
+                id, fixture.ptA.profileId, writeStart(), writeStart().plusMinutes(90), status);
+        writeSlots.add(id);
+        return id;
+    }
+
+    private UUID rawBooking(UUID slotId, String status) {
+        UUID id = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO bookings(id,member_id,pt_id,slot_id,start_at,end_at,status,cancelled_by,cancelled_at,completed_at)
+                SELECT ?,?,pt_id,id,start_at,end_at,?,case when ?='CANCELLED' then 'MEMBER' end,
+                  case when ?='CANCELLED' then now() end,case when ?='COMPLETED' then end_at end
+                FROM availability_slots WHERE id=?
+                """, id, fixture.memberA.profileId, status, status, status, status, slotId);
+        writeBookings.add(id);
+        return id;
+    }
+
+    @Test void ptCreates90MinuteSlotUsingAuthenticatedProfileAndExistingReads() throws Exception {
+        var payload = new HashMap<>(times(writeStart().withOffsetSameInstant(ZoneOffset.ofHours(7))));
+        payload.put("ptId", fixture.ptB.profileId.toString());
+        payload.put("status", "BOOKED");
+        var body = object(request("POST", AVAILABILITY_PATH, token(fixture.ptA), payload, 201));
+        writeSlots.add(UUID.fromString((String) body.get("id")));
+        assertSlotPayload(body, fixture.ptA, writeStart(), "AVAILABLE");
+        var range = range(writeStart(), writeStart().plusHours(2));
+        assertEquals(List.of(body), array(request("GET", "/api/v1/pt/slots" + range, token(fixture.ptA), null, 200)));
+        assertTrue(array(request("GET", "/api/v1/pt/slots" + range, token(fixture.ptB), null, 200)).isEmpty());
+        assertEquals(List.of(body), array(request("GET", "/api/v1/trainers/" + fixture.ptA.profileId + "/slots" + range,
+                token(fixture.memberA), null, 200)));
+    }
+
+    @Test void ptEditsUnbookedSlotAndKeepsId() throws Exception {
+        var before = createSlot(fixture.ptA, writeStart());
+        var after = object(request("PATCH", AVAILABILITY_PATH + "/" + before.get("id"), token(fixture.ptA),
+                times(writeStart().plusHours(3)), 200));
+        assertEquals(before.get("id"), after.get("id"));
+        assertSlotPayload(after, fixture.ptA, writeStart().plusHours(3), "AVAILABLE");
+        assertEquals(1L, jdbc.queryForObject("SELECT version FROM availability_slots WHERE id=?", Long.class,
+                UUID.fromString((String) before.get("id"))));
+        // A PATCH can omit an unchanged field, including an equivalent offset representation.
+        var same = object(request("PATCH", AVAILABILITY_PATH + "/" + before.get("id"), token(fixture.ptA),
+                Map.of("startAt", writeStart().plusHours(3).withOffsetSameInstant(ZoneOffset.ofHours(7)).toString()), 200));
+        assertEquals(after, same);
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"CANCELLED", "COMPLETED"})
+    void deleteDisablesSlotAndPreservesEveryHistoricalBooking(String historyStatus) throws Exception {
+        UUID slot = rawSlot("AVAILABLE"), booking = rawBooking(slot, historyStatus);
+        var history = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", booking);
+        request("DELETE", AVAILABILITY_PATH + "/" + slot, token(fixture.ptA), null, 204);
+        request("DELETE", AVAILABILITY_PATH + "/" + slot, token(fixture.ptA), null, 204);
+        assertEquals(history, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", booking));
+        assertEquals("DISABLED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slot));
+        var range = range(writeStart(), writeStart().plusHours(2));
+        assertTrue(array(request("GET", "/api/v1/trainers/" + fixture.ptA.profileId + "/slots" + range,
+                token(fixture.memberA), null, 200)).isEmpty());
+        var ptRows = array(request("GET", "/api/v1/pt/slots" + range, token(fixture.ptA), null, 200));
+        assertEquals(1, ptRows.size());
+        assertEquals("DISABLED", ptRows.getFirst().get("status"));
+        var bookings = array(request("GET", "/api/v1/bookings/me" + range, token(fixture.memberA), null, 200));
+        assertEquals(booking.toString(), bookings.getFirst().get("id"));
+        assertEquals(historyStatus, bookings.getFirst().get("status"));
+    }
+
+    @Test void patchWithHistoryReplacesSlotWithoutChangingBookingOrItsFk() throws Exception {
+        UUID old = rawSlot("AVAILABLE"), booking = rawBooking(old, "CANCELLED");
+        var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", booking);
+        var body = object(request("PATCH", AVAILABILITY_PATH + "/" + old, token(fixture.ptA),
+                times(writeStart().plusMinutes(30)), 200));
+        UUID replacement = UUID.fromString((String) body.get("id"));
+        writeSlots.add(replacement);
+        assertNotEquals(old, replacement);
+        assertSlotPayload(body, fixture.ptA, writeStart().plusMinutes(30), "AVAILABLE");
+        assertEquals("DISABLED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, old));
+        assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", booking));
+        error("PATCH", AVAILABILITY_PATH + "/" + old, token(fixture.ptA), times(writeStart().plusHours(4)), 409, "ERR_CONFLICT");
+    }
+
+    @Test void failedHistoricalPatchDoesNotDisableOldSlot() throws Exception {
+        UUID old = rawSlot("AVAILABLE"), booking = rawBooking(old, "CANCELLED");
+        createSlot(fixture.ptA, writeStart().plusHours(3));
+        var before = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", old);
+        error("PATCH", AVAILABILITY_PATH + "/" + old, token(fixture.ptA), times(writeStart().plusHours(3)), 409, "ERR_CONFLICT");
+        assertEquals(before, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", old));
+        assertEquals(old, jdbc.queryForObject("SELECT slot_id FROM bookings WHERE id=?", UUID.class, booking));
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"PATCH", "DELETE"})
+    void bookedSlotCannotBeEditedOrDisabledEvenWithoutBookingRow(String method) throws Exception {
+        UUID slot = rawSlot("BOOKED");
+        var before = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slot);
+        error(method, AVAILABILITY_PATH + "/" + slot, token(fixture.ptA),
+                method.equals("PATCH") ? times(writeStart().plusHours(3)) : null, 409, "ERR_CONFLICT");
+        assertEquals(before, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slot));
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"PATCH", "DELETE"})
+    void confirmedBookingBlocksChangesEvenWhenSlotStatusIsAvailable(String method) throws Exception {
+        UUID slot = rawSlot("AVAILABLE"), booking = rawBooking(slot, "CONFIRMED");
+        var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", booking);
+        error(method, AVAILABILITY_PATH + "/" + slot, token(fixture.ptA),
+                method.equals("PATCH") ? times(writeStart().plusHours(3)) : null, 409, "ERR_CONFLICT");
+        assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", booking));
+        assertEquals("AVAILABLE", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slot));
+    }
+
+    @Test void confirmedSessionPreventsOverlapEvenIfOriginalSlotIsDisabled() throws Exception {
+        UUID slot = rawSlot("DISABLED");
+        rawBooking(slot, "CONFIRMED"); // V4 permits this inconsistent state; service must still check bookings.
+        error("POST", AVAILABILITY_PATH, token(fixture.ptA), times(writeStart()), 409, "ERR_CONFLICT");
+    }
+
+    @Test void overlappingAvailableOrBookedSlotsAreRejectedButOtherPtMayUseSameTime() throws Exception {
+        UUID slot = rawSlot("AVAILABLE");
+        error("POST", AVAILABILITY_PATH, token(fixture.ptA), times(writeStart().plusMinutes(30)), 409, "ERR_CONFLICT");
+        jdbc.update("UPDATE availability_slots SET status='BOOKED' WHERE id=?", slot);
+        error("POST", AVAILABILITY_PATH, token(fixture.ptA), times(writeStart()), 409, "ERR_CONFLICT");
+        createSlot(fixture.ptB, writeStart());
+    }
+
+    @Test void touchingIntervalsAtEitherEndAreAllowed() throws Exception {
+        createSlot(fixture.ptA, writeStart());
+        createSlot(fixture.ptA, writeStart().minusMinutes(90));
+        createSlot(fixture.ptA, writeStart().plusMinutes(90));
+    }
+
+    @Test void newSlotOneMicrosecondAfterNowIsInFutureAndDoesNotUseBookingPolicyLimits() throws Exception {
+        testClock.fixed.set(writeStart().toInstant());
+        createSlot(fixture.ptA, writeStart().plusNanos(1000));
+        // Publication is not Member booking; R02 imposes neither min notice nor max advance.
+    }
+
+    @Test void disabledSlotDoesNotBlockNewPublicationAndCannotBeReopenedByPatch() throws Exception {
+        UUID disabled = rawSlot("DISABLED");
+        error("PATCH", AVAILABILITY_PATH + "/" + disabled, token(fixture.ptA), times(writeStart()), 409, "ERR_CONFLICT");
+        createSlot(fixture.ptA, writeStart());
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"past", "now", "reverse", "zero", "short", "long", "precision", "missingStart", "missingEnd", "offset", "format"})
+    void rejectsInvalidCreateTimes(String state) throws Exception {
+        testClock.fixed.set(fixture.future.toInstant());
+        Map<String, Object> body = new HashMap<>(times(writeStart()));
+        switch (state) {
+            case "past" -> body = times(fixture.future.minusMinutes(1));
+            case "now" -> body = times(fixture.future);
+            case "reverse" -> body.put("endAt", writeStart().minusMinutes(1).toString());
+            case "zero" -> body.put("endAt", writeStart().toString());
+            case "short" -> body.put("endAt", writeStart().plusMinutes(60).toString());
+            case "long" -> body.put("endAt", writeStart().plusMinutes(120).toString());
+            case "precision" -> body = times(writeStart().plusNanos(1));
+            case "missingStart" -> body.remove("startAt");
+            case "missingEnd" -> body.remove("endAt");
+            case "offset" -> body.put("startAt", "2030-01-02T10:00:00");
+            case "format" -> body.put("startAt", "invalid");
+        }
+        error("POST", AVAILABILITY_PATH, token(fixture.ptA), body, 400, "ERR_VALIDATION");
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"empty", "short", "past", "malformed"})
+    void rejectsInvalidPatchWithoutChangingStoredSlot(String state) throws Exception {
+        UUID slot = rawSlot("AVAILABLE");
+        var before = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slot);
+        Map<String, Object> body = switch (state) {
+            case "empty" -> Map.of();
+            case "short" -> Map.of("endAt", writeStart().plusMinutes(60).toString());
+            case "past" -> times(fixture.past);
+            default -> Map.of("startAt", "invalid");
+        };
+        error("PATCH", AVAILABILITY_PATH + "/" + slot, token(fixture.ptA), body, 400, "ERR_VALIDATION");
+        assertEquals(before, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slot));
+    }
+
+    @Test void patchCannotRepublishPastSlot() throws Exception {
+        UUID slot = rawSlot("AVAILABLE");
+        jdbc.update("UPDATE availability_slots SET start_at=?,end_at=? WHERE id=?", fixture.past, fixture.past.plusMinutes(90), slot);
+        error("PATCH", AVAILABILITY_PATH + "/" + slot, token(fixture.ptA), times(writeStart()), 409, "ERR_CONFLICT");
+    }
+
+    static Stream<Arguments> writeRoleCases() {
+        return Stream.of("POST", "PATCH", "DELETE").flatMap(method ->
+                Stream.of("admin", "memberA", "memberB").map(actor -> Arguments.of(method, actor)));
+    }
+
+    @ParameterizedTest @MethodSource("writeRoleCases")
+    void availabilityWritesRequirePtRole(String method, String name) throws Exception {
+        String path = AVAILABILITY_PATH + (method.equals("POST") ? "" : "/" + fixture.available.id());
+        error(method, path, token(actor(name)), method.equals("DELETE") ? null : times(writeStart()), 403, "ERR_FORBIDDEN");
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"POST", "PATCH", "DELETE"})
+    void anonymousAvailabilityWritesAreUnauthorized(String method) throws Exception {
+        String path = AVAILABILITY_PATH + (method.equals("POST") ? "" : "/" + fixture.available.id());
+        error(method, path, null, method.equals("DELETE") ? null : times(writeStart()), 401, "ERR_UNAUTHORIZED");
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"PATCH", "DELETE"})
+    void ptCannotChangeAnotherTrainersSlot(String method) throws Exception {
+        var before = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", fixture.available.id());
+        error(method, AVAILABILITY_PATH + "/" + fixture.available.id(), token(fixture.ptB),
+                method.equals("DELETE") ? null : times(writeStart()), 404, "ERR_NOT_FOUND");
+        assertEquals(before, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", fixture.available.id()));
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"PATCH", "DELETE"})
+    void missingSlotReturns404(String method) throws Exception {
+        error(method, AVAILABILITY_PATH + "/" + UUID.randomUUID(), token(fixture.ptA),
+                method.equals("DELETE") ? null : times(writeStart()), 404, "ERR_NOT_FOUND");
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"POST", "PATCH", "DELETE"})
+    void suspendedOrDisabledPtCannotWriteEvenWithPreviouslyIssuedToken(String method) throws Exception {
+        String access = token(fixture.ptA);
+        String path = AVAILABILITY_PATH + (method.equals("POST") ? "" : "/" + fixture.available.id());
+        for (String state : List.of("SUSPENDED", "DISABLED")) {
+            jdbc.update("UPDATE users SET status=? WHERE id=?", state, fixture.ptA.userId);
+            try { error(method, path, access, method.equals("DELETE") ? null : times(writeStart()), 401, "ERR_UNAUTHORIZED"); }
+            finally { jdbc.update("UPDATE users SET status='ACTIVE' WHERE id=?", fixture.ptA.userId); }
+        }
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"POST", "PATCH", "DELETE"})
+    void activePtWithoutProfileCannotWrite(String method) throws Exception {
+        var actor = new HttpBaselineFixture.Actor("PT", "r02-no-pt");
+        jdbc.update("INSERT INTO users(id,email,password_hash,role,status) VALUES(?,?,?,'PT','ACTIVE')",
+                actor.userId, actor.email, encoder.encode(actor.password));
+        try {
+            String path = AVAILABILITY_PATH + (method.equals("POST") ? "" : "/" + fixture.available.id());
+            error(method, path, token(actor), method.equals("DELETE") ? null : times(writeStart()), 404, "ERR_NOT_FOUND");
+        } finally {
+            accessTokens.remove(actor.email);
+            assertEquals(1, jdbc.update("DELETE FROM users WHERE id=?", actor.userId));
+        }
+    }
+
+    @ParameterizedTest @ValueSource(ints = {2, 8, 20})
+    void concurrentOverlappingCreatesHaveExactlyOneWinnerAndControlledConflicts(int count) throws Exception {
+        String access = token(fixture.ptA);
+        var gate = new CountDownLatch(1);
+        try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+            var futures = IntStream.range(0, count).mapToObj(index -> pool.submit(() -> {
+                assertTrue(gate.await(5, TimeUnit.SECONDS));
+                return writeExchange("POST", AVAILABILITY_PATH, access, times(writeStart().plusMinutes(index)));
+            })).toList();
+            gate.countDown();
+            int winners = 0;
+            for (var future : futures) {
+                var response = future.get(15, TimeUnit.SECONDS);
+                if (response.statusCode() == 201) { rememberCreated(response); winners++; }
+                else assertWriteConflict(response);
+            }
+            assertEquals(1, winners);
+        }
+        assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM availability_slots WHERE pt_id=? AND start_at>=? AND start_at<?",
+                Integer.class, fixture.ptA.profileId, writeStart(), writeStart().plusHours(1)));
+    }
+
+    @Test void concurrentPatchAndCreateCannotPublishOverlappingSlots() throws Exception {
+        var old = createSlot(fixture.ptA, writeStart());
+        String access = token(fixture.ptA);
+        var gate = new CountDownLatch(1);
+        try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+            var patch = pool.submit(() -> { gate.await(); return writeExchange("PATCH", AVAILABILITY_PATH + "/" + old.get("id"), access, times(writeStart().plusHours(4))); });
+            var create = pool.submit(() -> { gate.await(); return writeExchange("POST", AVAILABILITY_PATH, access, times(writeStart().plusHours(4))); });
+            gate.countDown();
+            var patched = patch.get(15, TimeUnit.SECONDS);
+            var created = create.get(15, TimeUnit.SECONDS);
+            if (created.statusCode() == 201) { rememberCreated(created); assertWriteConflict(patched); }
+            else { assertEquals(200, patched.statusCode()); assertWriteConflict(created); }
+        }
+    }
+
+    @ParameterizedTest @ValueSource(strings = {"PATCH", "DELETE"})
+    void slotLockMakesAvailabilityWaitForConcurrentConfirmationThenReject(String method) throws Exception {
+        UUID slot = rawSlot("AVAILABLE");
+        String access = token(fixture.ptA);
+        try (var connection = jdbc.getDataSource().getConnection(); var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+            connection.setAutoCommit(false);
+            try (var statement = connection.prepareStatement("SELECT id FROM availability_slots WHERE id=? FOR UPDATE")) {
+                statement.setObject(1, slot);
+                try (var result = statement.executeQuery()) { assertTrue(result.next()); }
+            }
+            var response = pool.submit(() -> writeExchange(method, AVAILABILITY_PATH + "/" + slot, access,
+                    method.equals("DELETE") ? null : times(writeStart().plusHours(3))));
+            try {
+                // Observe the application connection waiting on the row lock, rather than assuming a sleep proves it.
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                boolean waiting = false;
+                while (!waiting && System.nanoTime() < deadline) {
+                    waiting = jdbc.queryForObject("SELECT exists(SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND pid<>pg_backend_pid())", Boolean.class);
+                    if (!waiting) Thread.sleep(20);
+                }
+                assertTrue(waiting, "HTTP writer must wait for the locked slot");
+                UUID booking = UUID.randomUUID();
+                try (var statement = connection.prepareStatement("INSERT INTO bookings(id,member_id,pt_id,slot_id,start_at,end_at,status) SELECT ?,?,pt_id,id,start_at,end_at,'CONFIRMED' FROM availability_slots WHERE id=?")) {
+                    statement.setObject(1, booking); statement.setObject(2, fixture.memberA.profileId); statement.setObject(3, slot);
+                    assertEquals(1, statement.executeUpdate());
+                }
+                connection.commit();
+                writeBookings.add(booking);
+                assertWriteConflict(response.get(15, TimeUnit.SECONDS));
+                assertEquals("AVAILABLE", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slot));
+            } finally { connection.rollback(); }
+        }
+    }
+
+    private HttpResponse<String> writeExchange(String method, String path, String access, Object body) throws Exception {
+        String correlation = "http-baseline-" + UUID.randomUUID();
+        var builder = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + path)).timeout(Duration.ofSeconds(12))
+                .header("Authorization", "Bearer " + access).header("X-Correlation-Id", correlation);
+        if (body != null) builder.header("Content-Type", "application/json");
+        var response = client.send(builder.method(method, body == null ? HttpRequest.BodyPublishers.noBody()
+                : HttpRequest.BodyPublishers.ofString(json.writeValueAsString(body))).build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(correlation, response.headers().firstValue("X-Correlation-Id").orElse(""));
+        if (response.statusCode() >= 400) {
+            assertEquals(correlation, object(object(json.readValue(response.body(), Object.class)).get("error")).get("correlationId"));
+        }
+        return response;
+    }
+
+    private void rememberCreated(HttpResponse<String> response) {
+        var body = object(json.readValue(response.body(), Object.class));
+        UUID id = UUID.fromString((String) body.get("id"));
+        writeSlots.add(id);
+        assertEquals(fixture.ptA.profileId.toString(), body.get("ptId"));
+        assertEquals("AVAILABLE", body.get("status"));
+        assertEquals(Duration.ofMinutes(90), Duration.between(Instant.parse((String) body.get("startAt")), Instant.parse((String) body.get("endAt"))));
+    }
+
+    private void assertWriteConflict(HttpResponse<String> response) {
+        assertEquals(409, response.statusCode());
+        var body = object(json.readValue(response.body(), Object.class));
+        assertEquals(false, body.get("success"));
+        assertEquals(409, body.get("status"));
+        assertEquals("ERR_CONFLICT", object(body.get("error")).get("code"));
+    }
 
     @Test void adminReadsEffectivePolicyWithUtcPayloadAndNoWrites() throws Exception {
         testClock.fixed.set(POLICY_NOW);
@@ -560,8 +941,12 @@ class HttpBaselineTest {
         request.method(method, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(json.writeValueAsString(body)));
         var response = client.send(request.build(), HttpResponse.BodyHandlers.ofString());
         assertEquals(expected, response.statusCode(), "Unexpected HTTP status for " + method + " " + path.split("\\?")[0]);
-        assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("application/json"));
         assertEquals(correlationId, response.headers().firstValue("X-Correlation-Id").orElse(""));
+        if (expected == 204) {
+            assertTrue(response.body().isEmpty());
+            return null;
+        }
+        assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("application/json"));
         // Never include raw response bodies/headers in assertions: auth responses contain tokens.
         Object parsed = json.readValue(response.body(), Object.class);
         if (parsed instanceof Map<?, ?> envelope && envelope.get("error") instanceof Map<?, ?> detail) {

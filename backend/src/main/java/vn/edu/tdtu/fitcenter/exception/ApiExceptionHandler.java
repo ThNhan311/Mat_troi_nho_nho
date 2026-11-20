@@ -3,6 +3,8 @@ package vn.edu.tdtu.fitcenter.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.QueryTimeoutException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -46,6 +48,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<Object> conflict(DataIntegrityViolationException ex, HttpServletRequest request) {
         return error(409, "ERR_CONFLICT", "The request conflicts with existing data", Map.of(), request);
+    }
+
+    @ExceptionHandler({ConcurrencyFailureException.class, QueryTimeoutException.class})
+    ResponseEntity<Object> concurrentWrite(Exception ex, HttpServletRequest request) {
+        return error(409, "ERR_CONFLICT", "Concurrent change; refresh the resource and retry", Map.of(), request);
     }
 
     @Override

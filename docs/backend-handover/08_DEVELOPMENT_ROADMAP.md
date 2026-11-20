@@ -1,5 +1,7 @@
 # Backlog tiếp nhận
 
+Cập nhật R02: R01 đã commit local `9ae0a50`. R02 đã được người dùng giao chính thức, triển khai availability POST/PATCH/DELETE và kiểm thử trên working tree `feature/backend-pt-availability-write`; xem [báo cáo](evidence/R02_PT_AVAILABILITY_WRITE.md) và [contract](05_API_DOCUMENTATION.md). Các trạng thái R01/R02 chờ duyệt trong snapshot bên dưới đã được cập nhật này thay thế. R03 trở đi chưa triển khai; không thêm PT approve/reject trái auto-confirm D01–D07.
+
 Cập nhật 20/11/2026: [D01–D07](decisions/2026-11-20_BOOKING_DECISIONS.md) đã được người dùng chốt. R01 được giao và triển khai trong working tree sau Task A commit 073e131; contract đọc policy không còn chờ OPEN-POL-01. Bảng/đặc tả đề xuất ban đầu bên dưới là snapshot bàn giao; các luồng ghi R02–R07 vẫn chưa triển khai và không thuộc R01. Xem [API hiện tại](05_API_DOCUMENTATION.md) và [báo cáo R01](evidence/R01_BOOKING_POLICY_READ.md).
 
 Đây là đề xuất, không cấp quyền triển khai. Trước mỗi task xác nhận phạm vi và quy tắc tại [nghiệp vụ](07_BUSINESS_RULES_AND_BLOCKERS.md). File dự kiến là vị trí đề xuất, không khẳng định đã tồn tại.

@@ -1,6 +1,6 @@
 # API hiện có
 
-Nguồn: [controllers](../../backend/src/main/java/vn/edu/tdtu/fitcenter/controller/), [security](../../backend/src/main/java/vn/edu/tdtu/fitcenter/config/SecurityConfig.java), [DTO](../../backend/src/main/java/vn/edu/tdtu/fitcenter/dto/). Phần bàn giao gốc phản ánh checkpoint 0ae542a; Task A có commit local 073e131, R01 là working tree sau commit đó. Phân biệt kết quả lịch sử với các lượt mới trong [báo cáo R01](evidence/R01_BOOKING_POLICY_READ.md). Không có phân trang.
+Nguồn: [controllers](../../backend/src/main/java/vn/edu/tdtu/fitcenter/controller/), [security](../../backend/src/main/java/vn/edu/tdtu/fitcenter/config/SecurityConfig.java), [DTO](../../backend/src/main/java/vn/edu/tdtu/fitcenter/dto/). Phần bàn giao gốc phản ánh checkpoint 0ae542a; Task A có commit local 073e131, R01 đã commit local 9ae0a50. R02 là working tree sau R01; xem [báo cáo R02](evidence/R02_PT_AVAILABILITY_WRITE.md). Không có phân trang.
 
 | Method, URL | Role/auth | Input | Response 200 | Service / bảng |
 |---|---|---|---|---|
@@ -16,6 +16,30 @@ Nguồn: [controllers](../../backend/src/main/java/vn/edu/tdtu/fitcenter/control
 | GET `/api/v1/bookings/me` | MEMBER | `from`, `to`; `status` tùy chọn | mảng booking của member đăng nhập | BookingQueryService / users, members, bookings |
 | GET `/api/v1/pt/bookings` | PT | `from`, `to`; `status` tùy chọn | mảng booking của PT đăng nhập | BookingQueryService / users, trainers, bookings |
 | GET `/api/v1/admin/booking-policy` | ADMIN, Bearer | không | policy hiệu lực, sáu trường DTO | BookingPolicyService / booking_policy |
+
+## PT quản lý availability R02
+
+Nguồn đã đọc: Topic11_FITCENTER.docx do người dùng cung cấp ngày 20/11/2026, mục 1.5.4 UC-13, 5.2 và 6.3; [lựa chọn triển khai theo V4](decisions/2026-11-20_R02_AVAILABILITY.md). Các endpoint ghi sau đã có code và HTTP tests; GET hiện hữu vẫn là `/api/v1/pt/slots`, không thêm GET `/api/v1/pt/availability` trùng chức năng.
+
+| Method, URL | Input JSON | Thành công |
+|---|---|---|
+| POST `/api/v1/pt/availability` | bắt buộc startAt, endAt | 201, DTO slot AVAILABLE |
+| PATCH `/api/v1/pt/availability/{slotId}` | ít nhất một trong startAt/endAt; trường thiếu giữ giá trị cũ | 200, DTO slot sau sửa hoặc slot thay thế |
+| DELETE `/api/v1/pt/availability/{slotId}` | không body | 204, body rỗng; chuyển DISABLED, không xóa vật lý |
+
+Chỉ tài khoản PT ACTIVE có profile. ptId lấy từ danh tính đăng nhập. DTO request chỉ có startAt/endAt; trường ngoài DTO như ptId/status không được sử dụng, không chuyển ownership hoặc trạng thái theo client. ADMIN/MEMBER 403; không token hoặc token của tài khoản đã SUSPENDED/DISABLED 401. Profile không tồn tại 404. Slot không có hoặc thuộc PT khác đều 404 `ERR_NOT_FOUND`.
+
+```json
+{"startAt":"2030-01-02T16:00:00+07:00","endAt":"2030-01-02T17:30:00+07:00"}
+```
+
+Đổi ngày ví dụ sang tương lai khi chạy thử. Input phải có offset, độ chính xác tối đa microsecond để không làm tròn khi ghi PostgreSQL. Start phải **sau** Clock.instant(), duration chính xác 90 phút theo thời lượng UTC. Bắt đầu bằng now bị 400; đây là yêu cầu slot mới nằm trong tương lai, khác các ranh giới policy D03. Response dùng UTC, gồm id, ptId, startAt, endAt, status giống DTO đọc. Không áp min notice/max advance hay yêu cầu tồn tại Booking Policy vào việc PT công bố slot.
+
+Không chồng bất kỳ slot chưa DISABLED hoặc session CONFIRMED của cùng PT; so sánh khoảng `[start,end)` nên hai khoảng tiếp giáp được phép. Hai PT khác nhau được dùng cùng giờ. Vi phạm thời gian/body/UUID trả 400 `ERR_VALIDATION`; overlap hoặc trạng thái không cho sửa trả 409 `ERR_CONFLICT`, dùng envelope/correlation ID hiện có.
+
+Slot BOOKED hoặc có booking CONFIRMED không được PATCH/DELETE dù status slot không nhất quán. PATCH chỉ áp dụng slot AVAILABLE chưa bắt đầu; không mở lại DISABLED/slot đã qua. Nếu chưa có booking nào, PATCH đổi giờ giữ ID. Nếu có lịch sử CANCELLED/COMPLETED và đổi giờ, transaction chuyển dòng cũ DISABLED, giữ nguyên booking/FK/thời gian lịch sử, tạo slot AVAILABLE mới và trả **ID mới**. Client phải dùng ID trong response; gọi PATCH dòng cũ sẽ bị 409. PATCH không đổi thời điểm không tạo slot thay thế. DELETE slot DISABLED không có CONFIRMED lặp lại trả 204.
+
+DELETE loại slot khỏi GET danh sách khả dụng của MEMBER. GET PT không lọc status vẫn thấy DISABLED để xem lịch sử; `status=AVAILABLE` loại nó. Không ghi lại hoặc xóa booking. Transaction khóa theo PT, sau đó slot; constraint exclusion V4 tiếp tục bảo vệ overlap. Lock/optimistic/constraint conflict được chuyển thành 409 có kiểm soát. Xem giới hạn giao thức khóa cho booking write tương lai trong [quyết định R02](decisions/2026-11-20_R02_AVAILABILITY.md).
 
 ## Admin đọc Booking Policy
 

@@ -42,3 +42,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/test-htt
 ```
 
 Không cộng focused vào full. Surefire reports ghi đè theo lượt; kết quả, source hashes và phạm vi chưa triển khai nằm ở [báo cáo R01](evidence/R01_BOOKING_POLICY_READ.md).
+
+## Regression R02
+
+R01 đã đóng bằng commit local 9ae0a50 sau review 19 file và đối chiếu 10 SHA256 với evidence 300 tests; không chạy lại full để đóng R01 vì source không đổi. R02 mở rộng cùng [HTTP harness](../../backend/src/test/java/vn/edu/tdtu/fitcenter/http/HttpBaselineTest.java), dùng nguyên hai lệnh focused/full bên trên. Không cần runner, endpoint test hay profile mới.
+
+59 ca mới kiểm tra POST/PATCH/DELETE bằng HTTP thật: ownership hai PT, role/anonymous, PT bị khóa hoặc thiếu profile, UTC/offset/microsecond, tương lai và 90 phút, thời gian sai, overlap/tiếp giáp, BOOKED và CONFIRMED độc lập, lịch sử/FK, PATCH thay thế và không mở lại DISABLED/slot quá khứ. Các đợt 2/8/20 request tạo chồng nhau yêu cầu đúng một 201, còn lại 409 và đúng một row DB; race PATCH với POST yêu cầu tối đa một thay đổi thắng. Hai ca giữ row lock trên kết nối PostgreSQL riêng, quan sát HTTP connection chờ Lock trong pg_stat_activity, commit booking CONFIRMED, rồi yêu cầu PATCH/DELETE trả 409.
+
+R02 scenarios tự đăng ký UUID slot/booking đã tạo và cleanup đúng UUID sau từng test, theo thứ tự FK, trong transaction; không xóa theo khoảng giờ hoặc pt_id. Actor thiếu profile dùng email tổng hợp hợp lệ và BCrypt của bean ứng dụng. Tài khoản bị đổi status được khôi phục trong finally. Các slot legacy của fixture Task A vẫn là dữ liệu đọc một giờ hợp lệ theo V4; mọi slot tạo qua API R02 dài 90 phút. Không sửa lịch sử fixture để giả định đã có booking write/lifecycle.
+
+Kết quả cuối: HTTP focused 142 passed và full regression 359 passed, 0 failed/errors/skipped; focused là tập con. Lượt HTTP đầu 138 passed/3 failed do email fixture vượt 64 ký tự ở local-part, đã sửa và chạy lại; không che lượt lỗi hoặc cộng dồn các lượt. Thời điểm, source hashes, giới hạn và hướng dẫn chạy lại nằm ở [báo cáo R02](evidence/R02_PT_AVAILABILITY_WRITE.md).

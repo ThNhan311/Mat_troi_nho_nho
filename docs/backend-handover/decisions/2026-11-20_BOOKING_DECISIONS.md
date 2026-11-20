@@ -26,3 +26,9 @@ GET `/api/v1/admin/booking-policy`, chỉ ADMIN. Policy hiệu lực khi `active
 Response 200 là DTO với `id,maxAdvanceDays,minNoticeHours,cancelDeadlineHours,maxFutureBookings,effectiveFrom`. effectiveFrom là thời điểm ISO-8601 UTC. Nếu không có row hiệu lực, trả envelope hiện có với HTTP/status 404 và `error.code=BOOKING_POLICY_NOT_FOUND`; 401/403 tiếp tục dùng contract bảo mật hiện hữu.
 
 R01 chỉ SELECT trong transaction read-only. Không tạo hoặc sửa policy, không áp V7, không thay migrations V1–V6. Hành vi cập nhật policy và toàn bộ booking/membership lifecycle cần task triển khai tiếp theo dù quy tắc đã được chốt.
+
+## Bổ sung nguồn và trạng thái khi tiếp nhận R02
+
+R01 đã commit local `9ae0a50593a921ae6c629c93bd9f36f0b373ace9` sau khi đối chiếu evidence; các mô tả “chưa commit/chưa có Topic11” phía trên ghi trạng thái lúc nghiệm thu R01. Ngày 20/11/2026 người dùng cung cấp bản Topic11_FITCENTER.docx; đã đọc nội dung OOXML, đặc biệt UC-13 (1.5.4), auto-confirm (1.5.5), cancel/complete (1.5.6), API (5.2), duration (6.3) và locking minh họa (7.2). SHA256 bản được đọc: `5E2164806B4927390E986712E04D53BEE09255A3EAC9AB33997BC4FF6F6A47B5`. Không suy ra số trang từ OOXML hoặc sao chép tài liệu nguồn vào Git.
+
+Nguồn xác nhận auto-confirm, session Core 90 phút, sửa/xóa slot chưa bị CONFIRMED ràng buộc, Member cancel cho rebook và PT cancel không tự reopen. D01–D07 vẫn là quyết định người dùng đã chốt; không tự thay đổi bằng ví dụ/pseudocode trong tài liệu. R02 chỉ triển khai availability write theo [quyết định triển khai](2026-11-20_R02_AVAILABILITY.md). D01, booking limits/eligibility/lifecycle, policy PUT/scheduling vẫn chưa triển khai. D07 không được coi là hoàn tất chỉ vì availability dùng DISABLED.

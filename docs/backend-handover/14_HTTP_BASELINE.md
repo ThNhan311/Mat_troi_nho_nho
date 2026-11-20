@@ -2,6 +2,8 @@
 
 Harness Task A kiểm tra các API tại source baseline `8eebb9b`, đã commit local 073e131. Working tree R01 mở rộng cùng harness để kiểm tra GET Admin Booking Policy theo [D01–D07](decisions/2026-11-20_BOOKING_DECISIONS.md). Đây là HTTP integration và PostgreSQL test riêng, không phải E2E toàn hệ thống; không chạy frontend, Face Service hoặc payment provider. Không dùng script onboarding BLOCKED, profile alignment hoặc V7.
 
+Cập nhật R02: R01 đã commit local `9ae0a50`; working tree R02 kiểm tra thêm POST/PATCH/DELETE availability, FK/lịch sử và concurrency trên cùng runner/DB guard. Contract hiện tại ở [API](05_API_DOCUMENTATION.md), bằng chứng ở [R02](evidence/R02_PT_AVAILABILITY_WRITE.md). Các số test Task A/R01 bên dưới là checkpoint lịch sử, không cộng vào tổng R02.
+
 ## Thành phần
 
 - [Fixture Java](../../backend/src/test/java/vn/edu/tdtu/fitcenter/http/HttpBaselineFixture.java): dữ liệu tổng hợp và cleanup giới hạn bằng UUID.
@@ -81,7 +83,8 @@ Chạy Maven thông thường không bật HTTP harness: RUN_HTTP_BASELINE_TESTS
 - So ID, profile ownership, thứ tự, timestamp, trạng thái, trường cancellation/completion, thông tin gói/PT và membership dates. Catalog toàn cục có thể chứa dữ liệu khác: chỉ yêu cầu đúng các fixture rows; query sở hữu yêu cầu danh sách đúng hoàn toàn.
 - MEMBER A/B và PT A/B không nhận bookings của nhau, kể cả khi thêm query ID của người khác; PT slots cũng được kiểm tra ownership.
 - Bộ lọc ba trạng thái booking/slot, range [from,to), offset +07:00 được URL encode, kết quả rỗng, range/status sai và resource 404.
-- Error status, error code, envelope và correlation ID phải hiện diện. Không kiểm thử booking write, policy write, payment hay race của nghiệp vụ chưa triển khai.
+- Error status, error code, envelope và correlation ID phải hiện diện. Không kiểm thử booking write, policy write hoặc payment. R02 kiểm tra race availability, chưa có endpoint booking write để kiểm thử tích hợp hai API ghi với nhau.
 - R01 kiểm tra policy read và GET không ghi dữ liệu, không kiểm thử policy write. Quyền/404/time/payload theo [API documentation](05_API_DOCUMENTATION.md); kết quả mới ở [báo cáo R01](evidence/R01_BOOKING_POLICY_READ.md). Header/body correlation ID được so sánh trên mọi request có error envelope.
+- R02 thêm 59 ca HTTP/DB; 204 kiểm tra body rỗng, các response JSON kiểm tra status/payload/DB/correlation. UUID tạo động được cleanup riêng sau từng ca; lịch sử slot cũ và slot thay thế được đăng ký riêng. Concurrency confirmation dùng kết nối SQL giữ khóa và chèn booking tổng hợp để kiểm tra giao thức, không phải booking endpoint đã triển khai.
 
 Runner kiểm tra đúng container ID, label, named volume và port trước khởi động. Không dùng runner này trên tài nguyên dùng chung ngay cả khi đổi được các tham số. Kết quả và working tree cụ thể của lần nghiệm thu: [bằng chứng Task A](evidence/TASK_A_HTTP_BASELINE.md).

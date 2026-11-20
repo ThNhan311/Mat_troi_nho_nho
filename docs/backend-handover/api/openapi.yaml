@@ -1,11 +1,109 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: r01-working-tree
-  description: Source baseline 0ae542a, Task A commit local 073e131 và policy read R01 trong working tree; không bao gồm API ghi đề xuất.
+  version: r02-working-tree
+  description: Source baseline 0ae542a, Task A 073e131, R01 9ae0a50 và PT availability write R02 trong working tree; không bao gồm booking write/policy PUT.
 servers:
 - url: http://localhost:18081
 paths:
+  /api/v1/pt/availability:
+    post:
+      operationId: createPtAvailability
+      summary: PT ACTIVE tạo slot Core 90 phút của chính mình
+      description: >-
+        startAt sau Clock.instant(), input có offset và tối đa microsecond.
+        Không chồng slot chưa DISABLED hoặc session CONFIRMED cùng PT; tiếp giáp được phép.
+        ptId/status client không được sử dụng. Response UTC. Không áp booking policy vào publication.
+        Không thêm GET ở đường dẫn này; dùng GET /api/v1/pt/slots hiện có.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityCreate'
+      responses:
+        '201':
+          description: Slot AVAILABLE mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+        '400':
+          $ref: '#/components/responses/AvailabilityValidation'
+        '401':
+          $ref: '#/components/responses/AvailabilityUnauthorized'
+        '403':
+          $ref: '#/components/responses/AvailabilityForbidden'
+        '404':
+          $ref: '#/components/responses/AvailabilityNotFound'
+        '409':
+          $ref: '#/components/responses/AvailabilityConflict'
+  /api/v1/pt/availability/{slotId}:
+    parameters:
+    - name: slotId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    patch:
+      operationId: updatePtAvailability
+      summary: PT sửa slot AVAILABLE chưa bắt đầu của chính mình
+      description: >-
+        Không sửa BOOKED hoặc slot gắn CONFIRMED. Ít nhất một time field; field thiếu giữ giá trị cũ.
+        Thời gian mới vẫn trong tương lai, duration 90 phút và không overlap.
+        Không mở lại DISABLED hoặc slot đã qua. Nếu đổi giờ khi có lịch sử booking không CONFIRMED,
+        DISABLED dòng cũ và tạo slot AVAILABLE thay thế trong một transaction; response trả ID MỚI.
+        Booking lịch sử và FK giữ nguyên. Nếu chưa có booking, giữ ID. Không đổi thời điểm là no-op.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityPatch'
+      responses:
+        '200':
+          description: Slot sau cập nhật hoặc slot thay thế; client dùng ID trong response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Slot'
+        '400':
+          $ref: '#/components/responses/AvailabilityValidation'
+        '401':
+          $ref: '#/components/responses/AvailabilityUnauthorized'
+        '403':
+          $ref: '#/components/responses/AvailabilityForbidden'
+        '404':
+          $ref: '#/components/responses/AvailabilityNotFound'
+        '409':
+          $ref: '#/components/responses/AvailabilityConflict'
+    delete:
+      operationId: disablePtAvailability
+      summary: PT loại slot chưa booked khỏi khả năng đặt lịch
+      description: >-
+        Chuyển DISABLED, không xóa vật lý hoặc thay đổi booking lịch sử/FK.
+        BOOKED hoặc gắn CONFIRMED trả 409. Lặp lại DISABLED không có CONFIRMED trả 204.
+        GET PT không lọc status vẫn thấy lịch sử; GET MEMBER khả dụng loại slot DISABLED.
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Đã DISABLED hoặc đã DISABLED từ trước; body rỗng
+        '400':
+          $ref: '#/components/responses/AvailabilityValidation'
+        '401':
+          $ref: '#/components/responses/AvailabilityUnauthorized'
+        '403':
+          $ref: '#/components/responses/AvailabilityForbidden'
+        '404':
+          $ref: '#/components/responses/AvailabilityNotFound'
+        '409':
+          $ref: '#/components/responses/AvailabilityConflict'
   /api/v1/admin/booking-policy:
     get:
       operationId: getEffectiveBookingPolicy
@@ -608,12 +706,70 @@ paths:
           - CANCELLED
           - COMPLETED
 components:
+  responses:
+    AvailabilityValidation:
+      description: ERR_VALIDATION, input/body/UUID/time sai hoặc duration khác 90 phút
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    AvailabilityUnauthorized:
+      description: ERR_UNAUTHORIZED, thiếu token hợp lệ hoặc tài khoản không còn ACTIVE
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    AvailabilityForbidden:
+      description: ERR_FORBIDDEN, ADMIN/MEMBER không có quyền PT
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    AvailabilityNotFound:
+      description: ERR_NOT_FOUND, thiếu profile PT hoặc slot không có/không thuộc PT đăng nhập
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    AvailabilityConflict:
+      description: ERR_CONFLICT, overlap/BOOKED/CONFIRMED/slot không chỉnh được hoặc concurrent conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    AvailabilityCreate:
+      type: object
+      required: [startAt, endAt]
+      properties:
+        startAt:
+          type: string
+          format: date-time
+          example: '2030-01-02T16:00:00+07:00'
+          description: Có offset, sau now; tối đa microsecond, response UTC
+        endAt:
+          type: string
+          format: date-time
+          example: '2030-01-02T17:30:00+07:00'
+          description: Chính xác 90 phút sau startAt theo thời lượng UTC
+    AvailabilityPatch:
+      type: object
+      anyOf:
+      - required: [startAt]
+      - required: [endAt]
+      description: Field thiếu giữ giá trị cũ; không nhận ptId/status để thay ownership hoặc trạng thái
+      properties:
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
     BookingPolicy:
       type: object
       additionalProperties: false
@@ -736,6 +892,7 @@ components:
           nullable: true
     Slot:
       type: object
+      required: [id, ptId, startAt, endAt, status]
       properties:
         id: *id001
         ptId: *id001

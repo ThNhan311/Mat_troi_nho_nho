@@ -1,5 +1,7 @@
 # Nghiệp vụ và quyết định chờ
 
+Cập nhật R02: đã đọc Topic11_FITCENTER.docx do người dùng cung cấp ngày 20/11/2026; UC-13 xác nhận PT quản lý availability và Core session 90 phút. Contract ghi và lựa chọn bảo toàn FK/lịch sử ở [quyết định R02](decisions/2026-11-20_R02_AVAILABILITY.md). Không còn blocker quyết định cho phạm vi availability đã giao; các tuyên bố thiếu nguồn/chưa có availability write bên dưới là snapshot trước R02, không phải kết luận mới.
+
 Cập nhật tiếp nhận 20/11/2026: người dùng đã chốt auto-confirm theo Topic11 và D01–D07 trong [sổ quyết định](decisions/2026-11-20_BOOKING_DECISIONS.md). Các mục chờ tương ứng trong bảng snapshot dưới đã được quyết định đó thay thế. Quy tắc được chốt không đồng nghĩa các luồng ghi đã triển khai; R01 mới thêm policy read.
 
 Phân loại dưới đây dựa trên schema/code và báo cáo có trong checkout; chưa xác minh tài liệu SRS/UC/BR đầy đủ hay quyết định mới nhất từ nhóm. Comment SQL không thay thế xác nhận nghiệp vụ.
