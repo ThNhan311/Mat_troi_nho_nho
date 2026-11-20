@@ -1,11 +1,166 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: r03-working-tree
-  description: Task A 073e131, R01 9ae0a50, R02 4d137d7 và Member booking auto-confirm R03 working tree; chưa có cancel/complete, policy PUT, membership write.
+  version: r04-working-tree
+  description: R03 394a21f; R04 working tree có Member/PT cancel và PT complete. PT cancel chỉ trước startAt theo quyết định người dùng; D01 service-start check, policy PUT, membership write chưa có.
 servers:
 - url: http://localhost:18081
 paths:
+  /api/v1/bookings/{id}/cancel:
+    post:
+      operationId: cancelOwnMemberBooking
+      summary: MEMBER hủy booking CONFIRMED của chính mình
+      description: >-
+        Không yêu cầu membership ACTIVE. Policy R01 hiệu lực tại Clock now, không fallback.
+        startAt-now >= cancelDeadlineHours, equality cho phép. CANCELLED với cancelledBy=MEMBER,
+        cancelledAt=now, cancelReason/completedAt=null. Future slot AVAILABLE, startAt<=now DISABLED.
+        Chỉ từ CONFIRMED; lặp lại 409 không đổi metadata hoặc slot sau rebooking.
+        READ_COMMITTED; khóa Member -> PT -> slot -> booking, re-read sau khóa; mutation nguyên tử.
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Booking CANCELLED; metadata UTC và slot đồng bộ
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Booking'
+                - type: object
+                  properties:
+                    status:
+                      type: string
+                      enum: [CANCELLED]
+        '400':
+          $ref: '#/components/responses/LifecycleValidation'
+        '401':
+          $ref: '#/components/responses/LifecycleUnauthorized'
+        '403':
+          $ref: '#/components/responses/LifecycleForbidden'
+        '404':
+          description: ERR_NOT_FOUND khi thiếu profile/booking hoặc không sở hữu; BOOKING_POLICY_NOT_FOUND khi không có policy hiệu lực
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          $ref: '#/components/responses/LifecycleConflict'
+  /api/v1/pt/bookings/{id}/cancel:
+    post:
+      operationId: cancelOwnPtBooking
+      summary: PT hủy booking CONFIRMED của chính mình trước startAt
+      description: >-
+        PT ACTIVE có profile sở hữu booking; identity từ principal, không tin actor trong body.
+        Reason bắt buộc, không null/rỗng/chỉ whitespace kể cả Unicode; tối đa 500 Unicode code points,
+        giữ nguyên văn. Clock now lấy sau chờ khóa Member -> PT -> slot -> booking và recheck.
+        Chỉ now<startAt; bằng/sau startAt trả 409 ERR_PT_CANCELLATION_WINDOW_CLOSED.
+        Không yêu cầu policy hoặc membership Member ACTIVE. CANCELLED, cancelledBy=PT,
+        cancelledAt=now UTC, cancelReason=reason, completedAt=null; slot DISABLED không tự reopen.
+        Request lặp terminal với reason hợp lệ trả 409 ERR_BOOKING_NOT_CONFIRMED, metadata bất biến;
+        request cũ không tác động slot đã rebook. Hai rows cập nhật nguyên tử, rollback cùng nhau.
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                  description: Phải có ký tự ngoài Unicode whitespace; lưu nguyên văn, không trim
+            example:
+              reason: Lịch PT thay đổi — dữ liệu tổng hợp
+      responses:
+        '200':
+          description: Booking CANCELLED bởi PT, metadata UTC, slot DISABLED
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Booking'
+                - type: object
+                  properties:
+                    status:
+                      type: string
+                      enum: [CANCELLED]
+        '400':
+          $ref: '#/components/responses/LifecycleValidation'
+        '401':
+          $ref: '#/components/responses/LifecycleUnauthorized'
+        '403':
+          $ref: '#/components/responses/LifecycleForbidden'
+        '404':
+          description: ERR_NOT_FOUND khi thiếu profile/booking hoặc không thuộc PT đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          $ref: '#/components/responses/LifecycleConflict'
+  /api/v1/pt/bookings/{id}/complete:
+    post:
+      operationId: completeOwnPtBooking
+      summary: PT hoàn thành booking CONFIRMED của chính mình
+      description: >-
+        Clock now>=endAt, equality hợp lệ; COMPLETED với completedAt=now UTC và metadata hủy null.
+        Slot DISABLED, không mở lại slot đã qua. Không dùng membership/policy eligibility;
+        completion không thay thế D01 service-start check. Lặp CANCELLED/COMPLETED trả 409,
+        không đổi metadata lần hai. Khóa Member -> PT -> slot -> booking, mutation nguyên tử.
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Booking COMPLETED, completedAt UTC, slot DISABLED
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Booking'
+                - type: object
+                  properties:
+                    status:
+                      type: string
+                      enum: [COMPLETED]
+        '400':
+          $ref: '#/components/responses/LifecycleValidation'
+        '401':
+          $ref: '#/components/responses/LifecycleUnauthorized'
+        '403':
+          $ref: '#/components/responses/LifecycleForbidden'
+        '404':
+          description: ERR_NOT_FOUND khi thiếu profile/booking hoặc không thuộc PT đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          $ref: '#/components/responses/LifecycleConflict'
   /api/v1/bookings:
     post:
       operationId: createConfirmedBooking
@@ -776,6 +931,33 @@ paths:
           - COMPLETED
 components:
   responses:
+    LifecycleValidation:
+      description: ERR_VALIDATION, UUID/input không hợp lệ
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    LifecycleUnauthorized:
+      description: ERR_UNAUTHORIZED, thiếu token hợp lệ hoặc account không ACTIVE khi auth
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    LifecycleForbidden:
+      description: ERR_FORBIDDEN, sai role hoặc account không ACTIVE khi recheck
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    LifecycleConflict:
+      description: >-
+        ERR_BOOKING_NOT_CONFIRMED cho request cũ/lặp, ERR_CANCELLATION_DEADLINE,
+        ERR_PT_CANCELLATION_WINDOW_CLOSED, ERR_BOOKING_NOT_ENDED, ERR_BOOKING_SLOT_CONFLICT hoặc ERR_CONFLICT cho constraint/concurrency.
+        Không thay metadata lần hai, không tác động slot thuộc booking CONFIRMED khác.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     AvailabilityValidation:
       description: ERR_VALIDATION, input/body/UUID/time sai hoặc duration khác 90 phút
       content:

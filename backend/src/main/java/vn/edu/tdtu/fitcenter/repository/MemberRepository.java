@@ -15,4 +15,7 @@ public interface MemberRepository
 
     @Query(value = "select * from members where user_id=:userId for no key update", nativeQuery = true)
     Optional<Member> findByUserIdForUpdate(UUID userId);
+
+    @Query(value = "select * from members where id=:id for no key update", nativeQuery = true)
+    Optional<Member> findByIdForUpdate(UUID id);
 }

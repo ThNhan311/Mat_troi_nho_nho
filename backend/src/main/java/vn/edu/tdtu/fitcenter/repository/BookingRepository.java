@@ -2,14 +2,27 @@ package vn.edu.tdtu.fitcenter.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
+import vn.edu.tdtu.fitcenter.dto.booking.BookingLink;
 import vn.edu.tdtu.fitcenter.domain.entity.Booking;
 import vn.edu.tdtu.fitcenter.domain.enums.BookingStatus;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
+    @Query("select new vn.edu.tdtu.fitcenter.dto.booking.BookingLink(b.memberId,b.ptId,b.slotId) from Booking b where b.id=:id")
+    Optional<BookingLink> findLink(UUID id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select b from Booking b where b.id=:id")
+    Optional<Booking> findByIdForUpdate(UUID id);
+
+    boolean existsBySlotIdAndStatusAndIdNot(UUID slotId, BookingStatus status, UUID excludedId);
+
     boolean existsBySlotId(UUID slotId);
     boolean existsBySlotIdAndStatus(UUID slotId, BookingStatus status);
 

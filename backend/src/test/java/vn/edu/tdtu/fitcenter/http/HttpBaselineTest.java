@@ -66,6 +66,7 @@ class HttpBaselineTest {
     @Autowired PlatformTransactionManager transactions;
     @Autowired ObjectMapper json;
     @Autowired ControllableClock testClock;
+    @Autowired vn.edu.tdtu.fitcenter.service.BookingLifecycleService lifecycle;
     private HttpBaselineFixture fixture;
     private HttpClient client;
     private final Map<String, String> accessTokens = new HashMap<>();
@@ -169,6 +170,541 @@ class HttpBaselineTest {
     private static final String POLICY_PATH = "/api/v1/admin/booking-policy";
     private static final String AVAILABILITY_PATH = "/api/v1/pt/availability";
     private static final Instant POLICY_NOW = Instant.parse("2030-01-02T03:04:05.123456Z");
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    class BookingLifecycleCases {
+        private UUID slotId, bookingId, policyId;
+        private Instant now;
+        private String memberAccess, otherMemberAccess, ptAccess;
+
+        @BeforeEach void lifecycleSetup() throws Exception {
+            now = writeStart().minusDays(1).toInstant();
+            testClock.fixed.set(now);
+            policyId = UUID.randomUUID();
+            jdbc.update("INSERT INTO booking_policy(id,max_advance_days,min_notice_hours,cancel_deadline_hours,max_future_bookings,effective_from,active,updated_by) VALUES(?,14,2,4,5,?,true,?)",
+                    policyId, now.atOffset(ZoneOffset.UTC), fixture.admin.userId);
+            slotId = rawSlot("BOOKED");
+            bookingId = rawBooking(slotId, "CONFIRMED");
+            memberAccess = token(fixture.memberA); otherMemberAccess = token(fixture.memberB); ptAccess = token(fixture.ptA);
+        }
+
+        @AfterEach void lifecycleRestore() {
+            jdbc.update("DELETE FROM booking_policy WHERE id=?", policyId);
+            jdbc.update("UPDATE memberships SET status='ACTIVE' WHERE id=?", fixture.membershipA);
+            jdbc.update("UPDATE users SET status='ACTIVE' WHERE id=?", fixture.memberA.userId);
+            jdbc.update("UPDATE users SET status='ACTIVE' WHERE id=?", fixture.ptA.userId);
+        }
+
+        private String path(String operation, UUID id) {
+            return operation.equals("member") ? "/api/v1/bookings/" + id + "/cancel"
+                    : "/api/v1/pt/bookings/" + id + (operation.equals("pt") ? "/cancel" : "/complete");
+        }
+
+        private Map<String, Object> transition(String operation, int expected, String code) throws Exception {
+            var response = writeExchange("POST", path(operation, bookingId), operation.equals("member") ? memberAccess : ptAccess,
+                    operation.equals("pt") ? Map.of("reason", "PT unavailable") : null);
+            assertEquals(expected, response.statusCode());
+            var body = object(json.readValue(response.body(), Object.class));
+            if (expected >= 400) {
+                assertEquals(false, body.get("success")); assertEquals(expected, body.get("status"));
+                assertEquals(code, object(body.get("error")).get("code"));
+            }
+            return body;
+        }
+
+        private void assertTransition(Map<String, Object> body, String status, String by, String reason, String slotStatus) {
+            assertEquals(bookingId.toString(), body.get("id"));
+            assertEquals(fixture.memberA.profileId.toString(), body.get("memberId"));
+            assertEquals(fixture.ptA.profileId.toString(), body.get("ptId")); assertEquals(slotId.toString(), body.get("slotId"));
+            assertEquals(status, body.get("status")); assertEquals(by, body.get("cancelledBy")); assertEquals(reason, body.get("cancelReason"));
+            assertEquals(writeStart().toInstant().toString(), body.get("startAt"));
+            assertEquals(writeStart().plusMinutes(90).toInstant().toString(), body.get("endAt"));
+            assertEquals(status.equals("CANCELLED") ? now.toString() : null, body.get("cancelledAt"));
+            assertEquals(status.equals("COMPLETED") ? now.toString() : null, body.get("completedAt"));
+            var stored = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            assertEquals(status, stored.get("status")); assertEquals(by, stored.get("cancelled_by")); assertEquals(reason, stored.get("cancel_reason"));
+            var metadata = jdbc.queryForObject("SELECT cancelled_at,completed_at FROM bookings WHERE id=?", (rs, row) ->
+                    Arrays.asList(rs.getObject(1, OffsetDateTime.class), rs.getObject(2, OffsetDateTime.class)), bookingId);
+            assertEquals(status.equals("CANCELLED") ? now : null, metadata.get(0) == null ? null : metadata.get(0).toInstant());
+            assertEquals(status.equals("COMPLETED") ? now : null, metadata.get(1) == null ? null : metadata.get(1).toInstant());
+            assertEquals(slotStatus, jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slotId));
+        }
+
+        @Test void memberCancelPublishesSlotAndUpdatesBothCalendars() throws Exception {
+            var body = transition("member", 200, null);
+            assertTransition(body, "CANCELLED", "MEMBER", null, "AVAILABLE");
+            String range = range(writeStart(), writeStart().plusHours(2));
+            assertEquals(List.of(body), array(request("GET", "/api/v1/bookings/me" + range, memberAccess, null, 200)));
+            assertEquals(List.of(body), array(request("GET", "/api/v1/pt/bookings" + range, ptAccess, null, 200)));
+            var available = array(request("GET", "/api/v1/trainers/" + fixture.ptA.profileId + "/slots" + range, otherMemberAccess, null, 200));
+            assertEquals(1, available.size()); assertEquals(slotId.toString(), available.getFirst().get("id"));
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"PENDING_ACTIVATION", "SUSPENDED", "EXPIRED", "CANCELLED"})
+        void memberCancellationDoesNotRequireActiveMembership(String state) throws Exception {
+            jdbc.update("UPDATE memberships SET status=? WHERE id=?", state, fixture.membershipA);
+            assertTransition(transition("member", 200, null), "CANCELLED", "MEMBER", null, "AVAILABLE");
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0, 1})
+        void memberCancellationDeadlineIncludesEquality(long microseconds) throws Exception {
+            now = writeStart().minusHours(4).toInstant().plusNanos(microseconds * 1000); testClock.fixed.set(now);
+            var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            if (microseconds <= 0) assertTransition(transition("member", 200, null), "CANCELLED", "MEMBER", null, "AVAILABLE");
+            else {
+                transition("member", 409, "ERR_CANCELLATION_DEADLINE");
+                assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+                assertEquals("BOOKED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slotId));
+            }
+        }
+
+        @Test void cancellationUsesCustomDeadlineFromEffectivePolicy() throws Exception {
+            now = writeStart().minusHours(5).toInstant(); testClock.fixed.set(now);
+            jdbc.update("UPDATE booking_policy SET cancel_deadline_hours=6 WHERE id=?", policyId);
+            transition("member", 409, "ERR_CANCELLATION_DEADLINE");
+        }
+
+        @Test void zeroDeadlineAtStartCancelsWithoutReopeningPastSlot() throws Exception {
+            now = writeStart().toInstant(); testClock.fixed.set(now);
+            jdbc.update("UPDATE booking_policy SET cancel_deadline_hours=0 WHERE id=?", policyId);
+            assertTransition(transition("member", 200, null), "CANCELLED", "MEMBER", null, "DISABLED");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"absent", "inactive", "future"})
+        void memberCancellationRejectsMissingPolicyWithoutFallback(String state) throws Exception {
+            if (state.equals("absent")) jdbc.update("DELETE FROM booking_policy WHERE id=?", policyId);
+            if (state.equals("inactive")) jdbc.update("UPDATE booking_policy SET active=false WHERE id=?", policyId);
+            if (state.equals("future")) jdbc.update("UPDATE booking_policy SET effective_from=? WHERE id=?", now.plusNanos(1000).atOffset(ZoneOffset.UTC), policyId);
+            var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            transition("member", 404, "BOOKING_POLICY_NOT_FOUND");
+            assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0, 1})
+        void completionRequiresEndAndIncludesEquality(long microseconds) throws Exception {
+            now = writeStart().plusMinutes(90).toInstant().plusNanos(microseconds * 1000); testClock.fixed.set(now);
+            if (microseconds < 0) transition("complete", 409, "ERR_BOOKING_NOT_ENDED");
+            else {
+                var body = transition("complete", 200, null);
+                assertTransition(body, "COMPLETED", null, null, "DISABLED");
+                String range = range(writeStart(), writeStart().plusHours(2));
+                assertEquals(List.of(body), array(request("GET", "/api/v1/bookings/me" + range, memberAccess, null, 200)));
+                assertEquals(List.of(body), array(request("GET", "/api/v1/pt/bookings" + range, ptAccess, null, 200)));
+                assertTrue(array(request("GET", "/api/v1/trainers/" + fixture.ptA.profileId + "/slots" + range, otherMemberAccess, null, 200)).isEmpty());
+            }
+        }
+
+        @Test void completionDoesNotLoadPolicyOrMembershipEligibility() throws Exception {
+            now = writeStart().plusMinutes(90).toInstant(); testClock.fixed.set(now);
+            jdbc.update("DELETE FROM booking_policy WHERE id=?", policyId);
+            jdbc.update("UPDATE memberships SET status='EXPIRED' WHERE id=?", fixture.membershipA);
+            assertTransition(transition("complete", 200, null), "COMPLETED", null, null, "DISABLED");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"member", "pt", "complete"})
+        void anonymousLifecycleIs401(String operation) throws Exception {
+            error("POST", path(operation, bookingId), null, null, 401, "ERR_UNAUTHORIZED");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"admin", "ptA"})
+        void memberCancelRejectsOtherRoles(String actorName) throws Exception {
+            error("POST", path("member", bookingId), token(actor(actorName)), null, 403, "ERR_FORBIDDEN");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"admin", "memberA"})
+        void completeRejectsOtherRoles(String actorName) throws Exception {
+            error("POST", path("complete", bookingId), token(actor(actorName)), null, 403, "ERR_FORBIDDEN");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"member", "pt", "complete"})
+        void lifecycleEnforcesOwnershipAndUuid(String operation) throws Exception {
+            Object payload = operation.equals("pt") ? Map.of("reason", "PT unavailable") : null;
+            error("POST", path(operation, bookingId), token(operation.equals("member") ? fixture.memberB : fixture.ptB), payload, 404, "ERR_NOT_FOUND");
+            String access = operation.equals("member") ? memberAccess : ptAccess;
+            error("POST", path(operation, UUID.randomUUID()), access, payload, 404, "ERR_NOT_FOUND");
+            error("POST", path(operation, bookingId).replace(bookingId.toString(), "bad-id"), access, payload, 400, "ERR_VALIDATION");
+        }
+
+        @Test void suspendedMemberCannotCancelUsingAnOldToken() throws Exception {
+            jdbc.update("UPDATE users SET status='SUSPENDED' WHERE id=?", fixture.memberA.userId);
+            error("POST", path("member", bookingId), memberAccess, null, 401, "ERR_UNAUTHORIZED");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"CANCELLED", "COMPLETED"})
+        void terminalBookingRejectsEveryImplementedTransitionWithoutMetadataChanges(String terminal) throws Exception {
+            if (terminal.equals("CANCELLED")) transition("member", 200, null);
+            else { now = writeStart().plusMinutes(90).toInstant(); testClock.fixed.set(now); transition("complete", 200, null); }
+            var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            var slot = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId);
+            testClock.fixed.set(now.plusSeconds(60));
+            transition("member", 409, "ERR_BOOKING_NOT_CONFIRMED"); transition("complete", 409, "ERR_BOOKING_NOT_CONFIRMED");
+            transition("pt", 409, "ERR_BOOKING_NOT_CONFIRMED");
+            assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+            assertEquals(slot, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId));
+        }
+
+        private Map<String, Object> rebook(int status) throws Exception {
+            var response = writeExchange("POST", "/api/v1/bookings", otherMemberAccess,
+                    Map.of("ptId", fixture.ptA.profileId.toString(), "slotId", slotId.toString()));
+            if (response.statusCode() == 201) writeBookings.add(UUID.fromString((String) object(json.readValue(response.body(), Object.class)).get("id")));
+            assertEquals(status, response.statusCode());
+            return object(json.readValue(response.body(), Object.class));
+        }
+
+        @Test void memberCancelAllowsAnotherMemberToRebookAndOldCancelCannotAffectNewBooking() throws Exception {
+            transition("member", 200, null);
+            var next = rebook(201); UUID nextId = UUID.fromString((String) next.get("id"));
+            assertEquals(fixture.memberB.profileId.toString(), next.get("memberId"));
+            var old = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            var fresh = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", nextId);
+            var slot = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId);
+            transition("member", 409, "ERR_BOOKING_NOT_CONFIRMED");
+            assertEquals(old, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+            assertEquals(fresh, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", nextId));
+            assertEquals(slot, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId));
+            assertEquals("BOOKED", slot.get("status"));
+        }
+
+        private void waiters(int count) throws Exception {
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (System.nanoTime() < deadline) {
+                int waiting = jdbc.queryForObject("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND usename=current_user AND wait_event_type='Lock' AND pid<>pg_backend_pid()", Integer.class);
+                if (waiting >= count) return;
+                Thread.sleep(20);
+            }
+            fail("Expected lifecycle requests blocked together on held locks");
+        }
+
+        private List<HttpResponse<String>> race(Callable<HttpResponse<String>> first, Callable<HttpResponse<String>> second) throws Exception {
+            try (var connection = jdbc.getDataSource().getConnection(); var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+                connection.setAutoCommit(false);
+                try (var statement = connection.prepareStatement("SELECT id FROM personal_trainers WHERE id=? FOR NO KEY UPDATE")) {
+                    statement.setObject(1, fixture.ptA.profileId);
+                    try (var rs = statement.executeQuery()) { assertTrue(rs.next()); }
+                }
+                var a = pool.submit(first);
+                try {
+                    waiters(1); var b = pool.submit(second); waiters(2); connection.commit();
+                    var result = List.of(a.get(15, TimeUnit.SECONDS), b.get(15, TimeUnit.SECONDS));
+                    for (var response : result) {
+                        if (response.statusCode() == 201 || response.statusCode() == 200) {
+                            var body = object(json.readValue(response.body(), Object.class));
+                            if (response.statusCode() == 201 && body.containsKey("memberId")) writeBookings.add(UUID.fromString((String) body.get("id")));
+                            if (!body.containsKey("memberId")) writeSlots.add(UUID.fromString((String) body.get("id")));
+                        }
+                    }
+                    return result;
+                } finally { connection.rollback(); }
+            }
+        }
+
+        @Test void concurrentMemberCancelHasExactlyOneTransition() throws Exception {
+            Callable<HttpResponse<String>> cancel = () -> writeExchange("POST", path("member", bookingId), memberAccess, null);
+            var responses = race(cancel, cancel);
+            assertEquals(200, responses.getFirst().statusCode()); assertEquals(409, responses.getLast().statusCode());
+            assertEquals("ERR_BOOKING_NOT_CONFIRMED", object(object(json.readValue(responses.getLast().body(), Object.class)).get("error")).get("code"));
+            assertTransition(object(json.readValue(responses.getFirst().body(), Object.class)), "CANCELLED", "MEMBER", null, "AVAILABLE");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"cancelFirst", "completeFirst"})
+        void concurrentMemberCancelAndCompleteOnlyCompleteAfterEnd(String order) throws Exception {
+            now = writeStart().plusMinutes(90).toInstant(); testClock.fixed.set(now);
+            Callable<HttpResponse<String>> cancel = () -> writeExchange("POST", path("member", bookingId), memberAccess, null);
+            Callable<HttpResponse<String>> complete = () -> writeExchange("POST", path("complete", bookingId), ptAccess, null);
+            var result = race(order.equals("cancelFirst") ? cancel : complete, order.equals("cancelFirst") ? complete : cancel);
+            assertEquals(1L, result.stream().filter(r -> r.statusCode() == 200).count());
+            assertEquals(1L, result.stream().filter(r -> r.statusCode() == 409).count());
+            assertEquals("COMPLETED", jdbc.queryForObject("SELECT status FROM bookings WHERE id=?", String.class, bookingId));
+            assertEquals("DISABLED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slotId));
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"cancelFirst", "bookFirst"})
+        void concurrentCancelAndRebookNeedsFreshRequestAndNeverChangesOldOwner(String order) throws Exception {
+            Callable<HttpResponse<String>> cancel = () -> writeExchange("POST", path("member", bookingId), memberAccess, null);
+            Callable<HttpResponse<String>> book = () -> writeExchange("POST", "/api/v1/bookings", otherMemberAccess,
+                    Map.of("ptId", fixture.ptA.profileId.toString(), "slotId", slotId.toString()));
+            var result = race(order.equals("cancelFirst") ? cancel : book, order.equals("cancelFirst") ? book : cancel);
+            assertEquals(1L, result.stream().filter(r -> r.statusCode() == 200).count());
+            assertEquals(1L, result.stream().filter(r -> r.statusCode() == 409).count());
+            rebook(201);
+            transition("member", 409, "ERR_BOOKING_NOT_CONFIRMED");
+            assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM bookings WHERE slot_id=? AND status='CONFIRMED' AND member_id=?",
+                    Integer.class, slotId, fixture.memberB.profileId));
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"PATCH-cancel", "PATCH-slot", "DELETE-cancel", "DELETE-slot"})
+        void memberCancelRacesAvailabilityWithoutDamagingHistoricalFk(String scenario) throws Exception {
+            String method = scenario.split("-")[0]; boolean cancelFirst = scenario.endsWith("cancel");
+            Callable<HttpResponse<String>> cancel = () -> writeExchange("POST", path("member", bookingId), memberAccess, null);
+            Callable<HttpResponse<String>> change = () -> writeExchange(method, AVAILABILITY_PATH + "/" + slotId, ptAccess,
+                    method.equals("DELETE") ? null : times(writeStart().plusHours(3)));
+            var result = race(cancelFirst ? cancel : change, cancelFirst ? change : cancel);
+            if (cancelFirst) {
+                assertEquals(200, result.getFirst().statusCode()); assertEquals(method.equals("PATCH") ? 200 : 204, result.getLast().statusCode());
+                assertEquals("DISABLED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slotId));
+            } else {
+                assertEquals(409, result.getFirst().statusCode()); assertEquals(200, result.getLast().statusCode());
+                assertEquals("AVAILABLE", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slotId));
+            }
+            assertEquals("CANCELLED", jdbc.queryForObject("SELECT status FROM bookings WHERE id=?", String.class, bookingId));
+            assertEquals(slotId, jdbc.queryForObject("SELECT slot_id FROM bookings WHERE id=?", UUID.class, bookingId));
+            var start = jdbc.queryForObject("SELECT start_at FROM bookings WHERE id=?", (rs, row) -> rs.getObject(1, OffsetDateTime.class), bookingId);
+            assertEquals(writeStart().toInstant(), start.toInstant());
+        }
+
+        @Test void concurrentCompletionHasOneWinnerAndStableMetadata() throws Exception {
+            now = writeStart().plusMinutes(90).toInstant(); testClock.fixed.set(now);
+            Callable<HttpResponse<String>> complete = () -> writeExchange("POST", path("complete", bookingId), ptAccess, null);
+            var result = race(complete, complete);
+            assertEquals(200, result.getFirst().statusCode()); assertEquals(409, result.getLast().statusCode());
+            assertEquals("ERR_BOOKING_NOT_CONFIRMED", object(object(json.readValue(result.getLast().body(), Object.class)).get("error")).get("code"));
+            assertTransition(object(json.readValue(result.getFirst().body(), Object.class)), "COMPLETED", null, null, "DISABLED");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"PATCH-complete", "PATCH-slot", "DELETE-complete", "DELETE-slot"})
+        void completeRacesAvailabilityWithoutReopeningPastSlot(String scenario) throws Exception {
+            now = writeStart().plusMinutes(90).toInstant(); testClock.fixed.set(now);
+            String method = scenario.split("-")[0]; boolean completeFirst = scenario.endsWith("complete");
+            Callable<HttpResponse<String>> complete = () -> writeExchange("POST", path("complete", bookingId), ptAccess, null);
+            Callable<HttpResponse<String>> change = () -> writeExchange(method, AVAILABILITY_PATH + "/" + slotId, ptAccess,
+                    method.equals("DELETE") ? null : times(writeStart().plusDays(1)));
+            var result = race(completeFirst ? complete : change, completeFirst ? change : complete);
+            if (completeFirst) {
+                assertEquals(200, result.getFirst().statusCode());
+                assertEquals(method.equals("DELETE") ? 204 : 409, result.getLast().statusCode());
+            } else { assertEquals(409, result.getFirst().statusCode()); assertEquals(200, result.getLast().statusCode()); }
+            assertEquals("COMPLETED", jdbc.queryForObject("SELECT status FROM bookings WHERE id=?", String.class, bookingId));
+            assertEquals("DISABLED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slotId));
+            var end = jdbc.queryForObject("SELECT end_at FROM bookings WHERE id=?", (rs, row) -> rs.getObject(1, OffsetDateTime.class), bookingId);
+            assertEquals(writeStart().plusMinutes(90).toInstant(), end.toInstant());
+        }
+
+        @Test void ptCancelPreservesReasonDisablesSlotAndUpdatesCalendars() throws Exception {
+            String reason = "  Lịch PT thay đổi — dữ liệu tổng hợp 💪  ";
+            var body = object(request("POST", path("pt", bookingId), ptAccess, Map.of("reason", reason), 200));
+            assertTransition(body, "CANCELLED", "PT", reason, "DISABLED");
+            String range = range(writeStart(), writeStart().plusHours(2));
+            assertEquals(List.of(body), array(request("GET", "/api/v1/bookings/me" + range, memberAccess, null, 200)));
+            assertEquals(List.of(body), array(request("GET", "/api/v1/pt/bookings" + range, ptAccess, null, 200)));
+            assertTrue(array(request("GET", "/api/v1/trainers/" + fixture.ptA.profileId + "/slots" + range, otherMemberAccess, null, 200)).isEmpty());
+            var rejected = rebook(409);
+            assertEquals("ERR_SLOT_NO_LONGER_AVAILABLE", object(rejected.get("error")).get("code"));
+            var old = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            var slot = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId);
+            testClock.fixed.set(now.plusSeconds(1));
+            error("POST", path("pt", bookingId), ptAccess, Map.of("reason", "different reason"), 409, "ERR_BOOKING_NOT_CONFIRMED");
+            assertEquals(old, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+            assertEquals(slot, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId));
+        }
+
+        @ParameterizedTest @ValueSource(longs = {-1, 0, 1})
+        void ptCancelExcludesExactStart(long microseconds) throws Exception {
+            now = writeStart().toInstant().plusNanos(microseconds * 1000); testClock.fixed.set(now);
+            var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            var slot = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId);
+            if (microseconds < 0) assertTransition(transition("pt", 200, null), "CANCELLED", "PT", "PT unavailable", "DISABLED");
+            else {
+                transition("pt", 409, "ERR_PT_CANCELLATION_WINDOW_CLOSED");
+                assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+                assertEquals(slot, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId));
+            }
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"PENDING_ACTIVATION", "SUSPENDED", "EXPIRED", "CANCELLED"})
+        void ptCancelDoesNotRequireMemberMembershipOrPolicy(String state) throws Exception {
+            jdbc.update("UPDATE memberships SET status=? WHERE id=?", state, fixture.membershipA);
+            jdbc.update("DELETE FROM booking_policy WHERE id=?", policyId);
+            assertTransition(transition("pt", 200, null), "CANCELLED", "PT", "PT unavailable", "DISABLED");
+        }
+
+        Stream<Arguments> invalidPtReasons() {
+            var nullReason = new HashMap<String, Object>(); nullReason.put("reason", null);
+            return Stream.of(null, Map.of(), nullReason, Map.of("reason", ""), Map.of("reason", " \t\r\n"),
+                    Map.of("reason", "\u2003\u00a0"), Map.of("reason", "x".repeat(501)), Map.of("reason", "💪".repeat(501)))
+                    .map(Arguments::of);
+        }
+
+        @ParameterizedTest @MethodSource("invalidPtReasons")
+        void ptCancelRejectsInvalidReasonWithoutMutation(Object payload) throws Exception {
+            var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            var slot = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId);
+            error("POST", path("pt", bookingId), ptAccess, payload, 400, "ERR_VALIDATION");
+            assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+            assertEquals(slot, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId));
+        }
+
+        @Test void ptReasonAllowsExactlyFiveHundredUnicodeCharacters() throws Exception {
+            String reason = "💪".repeat(500);
+            assertTransition(object(request("POST", path("pt", bookingId), ptAccess, Map.of("reason", reason), 200)),
+                    "CANCELLED", "PT", reason, "DISABLED");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"admin", "memberA"})
+        void ptCancelRejectsOtherRoles(String actorName) throws Exception {
+            error("POST", path("pt", bookingId), token(actor(actorName)), Map.of("reason", "PT unavailable"), 403, "ERR_FORBIDDEN");
+        }
+
+        @Test void suspendedPtCannotCancelUsingAnOldToken() throws Exception {
+            jdbc.update("UPDATE users SET status='SUSPENDED' WHERE id=?", fixture.ptA.userId);
+            error("POST", path("pt", bookingId), ptAccess, Map.of("reason", "PT unavailable"), 401, "ERR_UNAUTHORIZED");
+        }
+
+        @ParameterizedTest @ValueSource(longs = {0, 1})
+        void ptCancelUsesClockAfterWaitingAcrossStart(long microseconds) throws Exception {
+            now = writeStart().toInstant().minusNanos(1000); testClock.fixed.set(now);
+            var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            var slot = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId);
+            try (var connection = jdbc.getDataSource().getConnection(); var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+                connection.setAutoCommit(false);
+                try (var statement = connection.prepareStatement("SELECT id FROM personal_trainers WHERE id=? FOR NO KEY UPDATE")) {
+                    statement.setObject(1, fixture.ptA.profileId); try (var rs = statement.executeQuery()) { assertTrue(rs.next()); }
+                }
+                var pending = pool.submit(() -> writeExchange("POST", path("pt", bookingId), ptAccess, Map.of("reason", "PT unavailable")));
+                try {
+                    waiters(1); // The HTTP request entered before start but cannot decide yet.
+                    now = writeStart().toInstant().plusNanos(microseconds * 1000); testClock.fixed.set(now);
+                    connection.commit();
+                    var response = pending.get(15, TimeUnit.SECONDS);
+                    assertEquals(409, response.statusCode());
+                    assertEquals("ERR_PT_CANCELLATION_WINDOW_CLOSED", object(object(json.readValue(response.body(), Object.class)).get("error")).get("code"));
+                } finally { connection.rollback(); }
+            }
+            assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+            assertEquals(slot, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId));
+        }
+
+        @Test void ptCancelRechecksAccountAfterWaitingForLock() throws Exception {
+            var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            var slot = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId);
+            try (var connection = jdbc.getDataSource().getConnection(); var pool = Executors.newVirtualThreadPerTaskExecutor()) {
+                connection.setAutoCommit(false);
+                try (var statement = connection.prepareStatement("SELECT id FROM personal_trainers WHERE id=? FOR NO KEY UPDATE")) {
+                    statement.setObject(1, fixture.ptA.profileId); try (var rs = statement.executeQuery()) { assertTrue(rs.next()); }
+                }
+                var pending = pool.submit(() -> writeExchange("POST", path("pt", bookingId), ptAccess, Map.of("reason", "PT unavailable")));
+                try {
+                    waiters(1);
+                    jdbc.update("UPDATE users SET status='SUSPENDED' WHERE id=?", fixture.ptA.userId);
+                    connection.commit();
+                    var response = pending.get(15, TimeUnit.SECONDS);
+                    assertEquals(403, response.statusCode());
+                    assertEquals("ERR_FORBIDDEN", object(object(json.readValue(response.body(), Object.class)).get("error")).get("code"));
+                } finally { connection.rollback(); }
+            }
+            assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+            assertEquals(slot, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId));
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"PATCH-pt", "PATCH-slot", "DELETE-pt", "DELETE-slot"})
+        void ptCancelRacesAvailabilityAndNeverReopensDisabledSlot(String scenario) throws Exception {
+            String method = scenario.split("-")[0]; boolean ptFirst = scenario.endsWith("pt");
+            Callable<HttpResponse<String>> pt = () -> writeExchange("POST", path("pt", bookingId), ptAccess, Map.of("reason", "PT unavailable"));
+            Callable<HttpResponse<String>> change = () -> writeExchange(method, AVAILABILITY_PATH + "/" + slotId, ptAccess,
+                    method.equals("DELETE") ? null : times(writeStart().plusHours(3)));
+            var result = race(ptFirst ? pt : change, ptFirst ? change : pt);
+            assertEquals(200, result.get(ptFirst ? 0 : 1).statusCode());
+            assertEquals(ptFirst && method.equals("DELETE") ? 204 : 409, result.get(ptFirst ? 1 : 0).statusCode());
+            assertEquals("CANCELLED", jdbc.queryForObject("SELECT status FROM bookings WHERE id=?", String.class, bookingId));
+            assertEquals("PT", jdbc.queryForObject("SELECT cancelled_by FROM bookings WHERE id=?", String.class, bookingId));
+            assertEquals("DISABLED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slotId));
+            assertEquals(slotId, jdbc.queryForObject("SELECT slot_id FROM bookings WHERE id=?", UUID.class, bookingId));
+            assertEquals(writeStart().toInstant(), jdbc.queryForObject("SELECT start_at FROM availability_slots WHERE id=?",
+                    (rs, row) -> rs.getObject(1, OffsetDateTime.class).toInstant(), slotId));
+        }
+
+        @Test void concurrentPtCancelsHaveOneWinnerAndStableReason() throws Exception {
+            var result = race(() -> writeExchange("POST", path("pt", bookingId), ptAccess, Map.of("reason", "first")),
+                    () -> writeExchange("POST", path("pt", bookingId), ptAccess, Map.of("reason", "second")));
+            assertEquals(200, result.getFirst().statusCode()); assertEquals(409, result.getLast().statusCode());
+            assertTransition(object(json.readValue(result.getFirst().body(), Object.class)), "CANCELLED", "PT", "first", "DISABLED");
+            assertEquals("ERR_BOOKING_NOT_CONFIRMED", object(object(json.readValue(result.getLast().body(), Object.class)).get("error")).get("code"));
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"ptFirst", "memberFirst"})
+        void ptAndMemberCancelSerializeWithOneActorAndOneSlotOutcome(String order) throws Exception {
+            Callable<HttpResponse<String>> pt = () -> writeExchange("POST", path("pt", bookingId), ptAccess, Map.of("reason", "PT unavailable"));
+            Callable<HttpResponse<String>> member = () -> writeExchange("POST", path("member", bookingId), memberAccess, null);
+            var result = race(order.equals("ptFirst") ? pt : member, order.equals("ptFirst") ? member : pt);
+            assertEquals(200, result.getFirst().statusCode()); assertEquals(409, result.getLast().statusCode());
+            assertEquals("ERR_BOOKING_NOT_CONFIRMED", object(object(json.readValue(result.getLast().body(), Object.class)).get("error")).get("code"));
+            boolean ptWins = order.equals("ptFirst");
+            assertTransition(object(json.readValue(result.getFirst().body(), Object.class)), "CANCELLED", ptWins ? "PT" : "MEMBER",
+                    ptWins ? "PT unavailable" : null, ptWins ? "DISABLED" : "AVAILABLE");
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"ptFirst", "bookFirst"})
+        void ptCancelRacesRebookAndDisabledSlotCannotBeTaken(String order) throws Exception {
+            Callable<HttpResponse<String>> pt = () -> writeExchange("POST", path("pt", bookingId), ptAccess, Map.of("reason", "PT unavailable"));
+            Callable<HttpResponse<String>> book = () -> writeExchange("POST", "/api/v1/bookings", otherMemberAccess,
+                    Map.of("ptId", fixture.ptA.profileId.toString(), "slotId", slotId.toString()));
+            var result = race(order.equals("ptFirst") ? pt : book, order.equals("ptFirst") ? book : pt);
+            assertEquals(1L, result.stream().filter(r -> r.statusCode() == 200).count());
+            assertEquals(1L, result.stream().filter(r -> r.statusCode() == 409).count());
+            assertEquals("DISABLED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slotId));
+            assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM bookings WHERE slot_id=? AND status='CONFIRMED'", Integer.class, slotId));
+            assertEquals("ERR_SLOT_NO_LONGER_AVAILABLE", object(rebook(409).get("error")).get("code"));
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"ptFirst", "bookFirst"})
+        void stalePtCancelAfterMemberRebookCannotDisableNewBooking(String order) throws Exception {
+            transition("member", 200, null);
+            var old = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            Callable<HttpResponse<String>> stale = () -> writeExchange("POST", path("pt", bookingId), ptAccess, Map.of("reason", "stale request"));
+            Callable<HttpResponse<String>> book = () -> writeExchange("POST", "/api/v1/bookings", otherMemberAccess,
+                    Map.of("ptId", fixture.ptA.profileId.toString(), "slotId", slotId.toString()));
+            var result = race(order.equals("ptFirst") ? stale : book, order.equals("ptFirst") ? book : stale);
+            assertEquals(1L, result.stream().filter(r -> r.statusCode() == 201).count());
+            assertEquals(1L, result.stream().filter(r -> r.statusCode() == 409).count());
+            var fresh = jdbc.queryForMap("SELECT * FROM bookings WHERE slot_id=? AND status='CONFIRMED'", slotId);
+            var slot = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId);
+            transition("pt", 409, "ERR_BOOKING_NOT_CONFIRMED");
+            assertEquals(old, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+            assertEquals(fresh, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", fresh.get("id")));
+            assertEquals(fixture.memberB.profileId, fresh.get("member_id")); assertEquals("BOOKED", slot.get("status"));
+            assertEquals(slot, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId));
+        }
+
+        @ParameterizedTest @ValueSource(strings = {"ptBefore", "completeBefore", "ptAfter", "completeAfter"})
+        void ptCancelAndCompleteNeverBothTransition(String scenario) throws Exception {
+            boolean before = scenario.endsWith("Before");
+            if (!before) { now = writeStart().plusMinutes(90).toInstant(); testClock.fixed.set(now); }
+            Callable<HttpResponse<String>> pt = () -> writeExchange("POST", path("pt", bookingId), ptAccess, Map.of("reason", "PT unavailable"));
+            Callable<HttpResponse<String>> complete = () -> writeExchange("POST", path("complete", bookingId), ptAccess, null);
+            var result = race(scenario.startsWith("pt") ? pt : complete, scenario.startsWith("pt") ? complete : pt);
+            assertEquals(1L, result.stream().filter(r -> r.statusCode() == 200).count());
+            assertEquals(1L, result.stream().filter(r -> r.statusCode() == 409).count());
+            assertTransition(object(json.readValue(result.stream().filter(r -> r.statusCode() == 200).findFirst().orElseThrow().body(), Object.class)),
+                    before ? "CANCELLED" : "COMPLETED", before ? "PT" : null, before ? "PT unavailable" : null, "DISABLED");
+        }
+
+        @Test void ptCancelRollbackRestoresBothRowsAfterActualFlush() {
+            var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            var slot = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId);
+            var abort = new IllegalStateException("intentional rollback after both writes");
+            assertSame(abort, assertThrows(IllegalStateException.class, () -> new TransactionTemplate(transactions).executeWithoutResult(status -> {
+                lifecycle.ptCancel(fixture.ptA.email, bookingId, "rollback probe");
+                assertEquals("CANCELLED", jdbc.queryForObject("SELECT status FROM bookings WHERE id=?", String.class, bookingId));
+                assertEquals("DISABLED", jdbc.queryForObject("SELECT status FROM availability_slots WHERE id=?", String.class, slotId));
+                throw abort;
+            })));
+            assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+            assertEquals(slot, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId));
+        }
+
+        @Test void slotConstraintFailureRollsBackAlreadyFlushedCancellationMetadata() throws Exception {
+            jdbc.update("UPDATE availability_slots SET status='DISABLED' WHERE id=?", slotId);
+            UUID overlap = UUID.randomUUID();
+            jdbc.update("INSERT INTO availability_slots(id,pt_id,start_at,end_at,status) VALUES(?,?,?,?,'AVAILABLE')",
+                    overlap, fixture.ptA.profileId, writeStart().plusMinutes(30), writeStart().plusMinutes(120)); writeSlots.add(overlap);
+            // Intentionally inconsistent but V4-valid input: re-publication must fail exclusion atomically.
+            var before = jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId);
+            var slot = jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId);
+            transition("member", 409, "ERR_CONFLICT");
+            assertEquals(before, jdbc.queryForMap("SELECT * FROM bookings WHERE id=?", bookingId));
+            assertEquals(slot, jdbc.queryForMap("SELECT * FROM availability_slots WHERE id=?", slotId));
+        }
+    }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

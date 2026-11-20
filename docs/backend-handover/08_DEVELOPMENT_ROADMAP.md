@@ -1,5 +1,7 @@
 # Backlog tiếp nhận
 
+Cập nhật R04: R03 đã commit local `394a21f`; nhánh feature/backend-booking-lifecycle có Member/PT cancellation và PT completion, chưa commit. OPEN-R04-PT-TIME đã chốt PT chỉ hủy trước startAt; xem [báo cáo R04](evidence/R04_BOOKING_LIFECYCLE.md). Snapshot R04 “PT duyệt/từ chối” bên dưới không thuộc quy trình auto-confirm đã chốt; R04 thực tế được người dùng giao ở phiên này là cancel/complete, không thêm PENDING/REJECTED. D01 service-start recheck, policy PUT và membership/payment write vẫn chưa có.
+
 Cập nhật R03: R02 đã đóng bằng commit local `4d137d7`. R03 được giao và triển khai auto-confirm Member booking trong working tree `feature/backend-booking-create`, cùng kiểm tra membership/policy, khóa Member/PT/slot và rollback. Xem [báo cáo](evidence/R03_BOOKING_CREATE.md), [traceability](decisions/2026-11-20_R03_BOOKING_CREATE.md). Các mô tả R03 bị chặn trong snapshot bên dưới đã được cập nhật này thay thế. Cancel/complete, policy PUT và membership write chưa triển khai; PT approve/reject không thuộc baseline đã chốt.
 
 Cập nhật R02: R01 đã commit local `9ae0a50`. R02 đã được người dùng giao chính thức, triển khai availability POST/PATCH/DELETE và kiểm thử trên working tree `feature/backend-pt-availability-write`; xem [báo cáo](evidence/R02_PT_AVAILABILITY_WRITE.md) và [contract](05_API_DOCUMENTATION.md). Các trạng thái R01/R02 chờ duyệt trong snapshot bên dưới đã được cập nhật này thay thế. R03 trở đi chưa triển khai; không thêm PT approve/reject trái auto-confirm D01–D07.
