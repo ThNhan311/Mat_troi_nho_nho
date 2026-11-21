@@ -1,0 +1,47 @@
+import 'dart:convert';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:fitcenter/services/api_client.dart';
+import 'package:fitcenter/services/booking_service.dart';
+
+void main() {
+  for (final status in [200, 201, 500]) {
+    test(
+      'unexpected/malformed write response $status stays uncertain without retry',
+      () async {
+        var writes = 0;
+        final api = ApiClient(
+          expectedRole: 'MEMBER',
+          baseUri: Uri.parse('http://localhost/api/v1'),
+          client: MockClient((r) async {
+            if (r.url.path.endsWith('/login'))
+              return http.Response(
+                jsonEncode({
+                  'role': 'MEMBER',
+                  'accessToken': 'test-access',
+                  'refreshToken': 'test-refresh',
+                }),
+                200,
+              );
+            writes++;
+            return http.Response('{}', status);
+          }),
+        );
+        addTearDown(api.dispose);
+        await api.login('fixture@example.invalid', 'test-only');
+        await expectLater(
+          BookingService(api).create(
+            '10000000-0000-0000-0000-000000000001',
+            '20000000-0000-0000-0000-000000000002',
+          ),
+          throwsA(
+            isA<ApiError>().having((e) => e.outcomeUnknown, 'ambiguous', true),
+          ),
+        );
+        expect(writes, 1);
+      },
+    );
+  }
+}
