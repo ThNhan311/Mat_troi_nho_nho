@@ -22,6 +22,13 @@ class BookingService {
     await api.request('GET', '/bookings/me', query: queryRange(from, to)),
     Booking.fromJson,
   );
+  Future<Booking> cancel(Booking booking) async => transitioned(
+    await api.request('POST', '/bookings/${booking.id}/cancel'),
+    booking,
+    'CANCELLED',
+    actor: 'MEMBER',
+  );
+
   Future<Booking> create(String ptId, String slotId) async {
     final payload = await api.request(
       'POST',

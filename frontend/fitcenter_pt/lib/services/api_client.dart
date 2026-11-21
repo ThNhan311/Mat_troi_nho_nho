@@ -32,6 +32,7 @@ class ApiClient extends ChangeNotifier {
   Future<void>? _refreshing;
   int _generation = 0;
   bool get authenticated => _access != null;
+  int get sessionEpoch => _generation;
 
   ApiClient({
     required this.expectedRole,
@@ -63,6 +64,7 @@ class ApiClient extends ChangeNotifier {
 
   void logout() {
     _generation++;
+    _refreshing = null;
     _access = null;
     _refresh = null;
     notifyListeners();
@@ -226,6 +228,9 @@ class ApiClient extends ChangeNotifier {
     }
     if (response.statusCode == 401) {
       if (_access == sentToken) await _refreshOnce();
+      if (generation != _generation) {
+        throw const ApiError(401, 'SESSION_CHANGED', 'Phiên đã thay đổi.');
+      }
       if (method != 'GET') {
         throw const ApiError(
           401,
@@ -234,7 +239,7 @@ class ApiClient extends ChangeNotifier {
         );
       }
       response = await _send(method, path, query: query, token: _access);
-      if (response.statusCode == 401) {
+      if (response.statusCode == 401 && generation == _generation) {
         logout();
         throw _error(response);
       }
@@ -254,6 +259,8 @@ class ApiClient extends ChangeNotifier {
             (response.statusCode >= 500 || response.statusCode < 300),
       );
     }
+    // DELETE returns an empty 204; do not JSON-decode it.
+    if (expectedStatus == 204) return null;
     return _decode(response);
   }
 

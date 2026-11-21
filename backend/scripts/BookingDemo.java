@@ -129,6 +129,78 @@ public class BookingDemo {
     manifest.setProperty("slots",String.join(",",slots));manifest.setProperty("bookings",String.join(",",bookings));save();
     System.out.println("Registered exact fixture UUIDs: slots="+slots.size()+", bookings="+bookings.size());
   }
+  static void lifecycleSeed() throws Exception {
+    if(!"true".equals(id("seeded")))throw new IllegalStateException("Seed actors first");
+    if("true".equals(id("lifecycle.seeded"))){System.out.println("Lifecycle scenarios already seeded; no rows changed.");return;}
+    var names=List.of("memberCancel","ptCancel","replacement","delete","current","ended");
+    var slots=registry("slots");var bookings=registry("bookings");
+    for(String name:names){
+      String key="lifecycle."+name;
+      if(id(key+".slot")==null)manifest.setProperty(key+".slot",UUID.randomUUID().toString());
+      slots.add(id(key+".slot"));
+      if(!name.equals("delete")){
+        if(id(key+".booking")==null)manifest.setProperty(key+".booking",UUID.randomUUID().toString());
+        bookings.add(id(key+".booking"));
+      }
+    }
+    // Register IDs before insert, so cleanup can recover even if the process stops after commit.
+    manifest.setProperty("slots",String.join(",",slots));manifest.setProperty("bookings",String.join(",",bookings));save();
+    OffsetDateTime now=OffsetDateTime.now(ZoneOffset.UTC).withSecond(0).withNano(0);
+    var starts=Map.of("memberCancel",now.plusHours(24),"ptCancel",now.plusHours(28),"replacement",now.plusHours(32),
+      "delete",now.plusHours(36),"current",now.minusMinutes(30),"ended",now.minusHours(3));
+    db.setAutoCommit(false);
+    try {
+      LocalDate day=LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+      update("UPDATE memberships SET start_date=? WHERE id=? AND member_id=?",day.minusDays(1),uuid("membershipA"),uuid("memberA.profileId"));
+      for(String name:names){
+        String key="lifecycle."+name;var start=starts.get(name);var end=start.plusMinutes(90);
+        boolean available=name.equals("replacement")||name.equals("delete");
+        update("INSERT INTO availability_slots(id,pt_id,start_at,end_at,status) VALUES(?,?,?,?,?)",uuid(key+".slot"),uuid("ptA.profileId"),start,end,available?"AVAILABLE":"BOOKED");
+        if(!name.equals("delete")){
+          boolean history=name.equals("replacement");
+          update("INSERT INTO bookings(id,member_id,pt_id,slot_id,start_at,end_at,status,cancelled_by,cancelled_at) VALUES(?,?,?,?,?,?,?,?,?)",
+            uuid(key+".booking"),uuid("memberA.profileId"),uuid("ptA.profileId"),uuid(key+".slot"),start,end,history?"CANCELLED":"CONFIRMED",history?"MEMBER":null,history?now:null);
+        }
+      }
+      db.commit();manifest.setProperty("lifecycle.seeded","true");save();
+      System.out.println("Seeded six synthetic slots/five bookings relative to real UTC now: current (-30m), ended (-3h), future (+24/28/32/36h). No server Clock changes.");
+    }catch(Exception error){db.rollback();throw error;}finally{db.setAutoCommit(true);}
+  }
+  static String currentSnapshot() throws Exception {
+    return scalar("SELECT md5(row_to_json(b)::text||row_to_json(s)::text||row_to_json(m)::text||u.status||row_to_json(ms)::text) FROM bookings b JOIN availability_slots s ON s.id=b.slot_id JOIN members m ON m.id=b.member_id JOIN users u ON u.id=m.user_id JOIN memberships ms ON ms.member_id=m.id WHERE b.id='"+UUID.fromString(id("lifecycle.current.booking"))+"' AND ms.id='"+UUID.fromString(id("membershipA"))+"'");
+  }
+  static void lifecycleSnapshot() throws Exception {
+    if(id("lifecycle.current.snapshot")!=null)throw new IllegalStateException("Snapshot already registered; do not overwrite evidence");
+    manifest.setProperty("lifecycle.current.snapshot",currentSnapshot());save();
+    System.out.println("Registered current-session booking/slot/account/profile/membership snapshot before eligibility UI.");
+  }
+  static void lifecycleAudit() throws Exception {
+    capture();int checks=0;
+    if(!currentSnapshot().equals(id("lifecycle.current.snapshot")))throw new IllegalStateException("Eligibility mutated current-session snapshot");checks++;
+    for(String name:List.of("memberCancel","ptCancel","replacement","delete","current","ended")){
+      String key="lifecycle."+name;
+      try(var ps=db.prepareStatement("SELECT status FROM availability_slots WHERE id=?")){
+        ps.setObject(1,uuid(key+".slot"));try(var rs=ps.executeQuery()){
+          if(!rs.next())throw new IllegalStateException("Seed slot missing; history must be retained");
+          String expected=switch(name){case "memberCancel","current"->"BOOKED";default->"DISABLED";};
+          if(!expected.equals(rs.getString(1)))throw new IllegalStateException("Unexpected lifecycle slot status");checks++;
+        }
+      }
+      if(name.equals("delete"))continue;
+      try(var ps=db.prepareStatement("SELECT status,cancelled_by,cancel_reason,cancelled_at,completed_at FROM bookings WHERE id=?")){
+        ps.setObject(1,uuid(key+".booking"));try(var rs=ps.executeQuery()){
+          if(!rs.next())throw new IllegalStateException("Seed booking missing");
+          String expected=name.equals("ended")?"COMPLETED":name.equals("current")?"CONFIRMED":"CANCELLED";
+          if(!expected.equals(rs.getString(1)))throw new IllegalStateException("Unexpected lifecycle booking status");checks++;
+          if(name.equals("ptCancel")&&(!"PT".equals(rs.getString(2))||!"Demo PT unavailable".equals(rs.getString(3))||rs.getObject(4)==null))throw new IllegalStateException("PT cancel metadata missing");
+          if(name.equals("ended")&&rs.getObject(5)==null)throw new IllegalStateException("Completion metadata missing");
+          System.out.println("DB scenario="+name+" booking="+id(key+".booking")+" slot="+id(key+".slot")+" status="+rs.getString(1));
+        }
+      }
+    }
+    if(!"true".equals(scalar("SELECT bool_and(b.pt_id=s.pt_id AND b.start_at=s.start_at AND b.end_at=s.end_at)::text FROM bookings b JOIN availability_slots s ON b.slot_id=s.id")))throw new IllegalStateException("FK time mismatch");checks++;
+    System.out.println("Lifecycle DB checks: "+checks+" passed, 0 failed, 0 skipped");
+  }
   static void audit() throws Exception {
     capture();
     try(var ps=db.prepareStatement("""
@@ -166,7 +238,7 @@ public class BookingDemo {
       for(String a:List.of("ptA","ptB"))update("DELETE FROM personal_trainers WHERE id=? AND user_id=?",uuid(a+".profileId"),uuid(a+".userId"));
       for(String a:ACTORS)update("DELETE FROM users WHERE id=? AND email=?",uuid(a+".userId"),id(a+".email"));
       update("DELETE FROM membership_plans WHERE id=?",uuid("plan"));
-      db.commit();manifest.setProperty("seeded","false");manifest.setProperty("slots","");manifest.setProperty("bookings","");manifest.remove("policy");save();
+      db.commit();manifest.setProperty("seeded","false");manifest.setProperty("slots","");manifest.setProperty("bookings","");manifest.remove("policy");manifest.remove("lifecycle.seeded");manifest.remove("lifecycle.current.snapshot");save();
       System.out.println("Exact-UUID cleanup committed; volume and all non-fixture rows preserved.");
     }catch(Exception error){db.rollback();throw error;}finally{db.setAutoCommit(true);}
   }
@@ -179,7 +251,7 @@ public class BookingDemo {
     init();
     try{
       guard();
-      switch(args[0]){case "seed"->seed();case "policy"->policy(args[2]);case "rotate"->rotate();case "capture"->capture();case "audit"->audit();case "cleanup"->cleanup();default->throw new IllegalArgumentException("Unknown action");}
+      switch(args[0]){case "seed"->seed();case "lifecycleseed"->lifecycleSeed();case "lifecycleaudit"->lifecycleAudit();case "lifecyclesnapshot"->lifecycleSnapshot();case "policy"->policy(args[2]);case "rotate"->rotate();case "capture"->capture();case "audit"->audit();case "cleanup"->cleanup();default->throw new IllegalArgumentException("Unknown action");}
     }catch(Exception error){
       // JDBC exceptions can contain parameters; do not echo secrets, SQL or stack traces.
       String diagnostic = error instanceof SQLException sql ? ", SQLSTATE="+sql.getSQLState() : "";

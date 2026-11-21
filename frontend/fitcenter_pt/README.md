@@ -14,3 +14,5 @@ flutter build web --no-web-resources-cdn --dart-define=API_BASE_URL=http://127.0
 ~~~
 
 Từ repository root chạy node frontend/serve-booking-web.mjs pt, mở http://localhost:3001. Chuẩn bị Backend/DB/fixture theo quickstart. Không credential/token mặc định; session chỉ memory, reload cần login lại. Không replay POST khi lỗi mạng/kết quả chưa rõ; tải lại lịch/slot để đối chiếu trước thao tác mới.
+
+Lifecycle đã nối: PATCH/DELETE availability, hủy session có lý do, eligibility snapshot và complete. [Báo cáo lifecycle](../../docs/backend-handover/evidence/BOOKING_WEB_LIFECYCLE.md). Không replay write khi lỗi mạng; kết quả eligibility không ghi nhận bắt đầu.

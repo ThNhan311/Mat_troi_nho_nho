@@ -75,10 +75,20 @@ class Slot {
 }
 
 class Booking {
+  final String? cancelledBy, cancelReason;
+  final DateTime? cancelledAt, completedAt;
   final String id, memberId, ptId, slotId, status;
   final DateTime startAt, endAt;
   Booking.fromJson(Map<String, dynamic> value)
-    : id = uuid(value, 'id'),
+    : cancelledBy = value['cancelledBy'] as String?,
+      cancelReason = value['cancelReason'] as String?,
+      cancelledAt = value['cancelledAt'] == null
+          ? null
+          : instant(value, 'cancelledAt'),
+      completedAt = value['completedAt'] == null
+          ? null
+          : instant(value, 'completedAt'),
+      id = uuid(value, 'id'),
       memberId = uuid(value, 'memberId'),
       ptId = uuid(value, 'ptId'),
       slotId = uuid(value, 'slotId'),
@@ -88,3 +98,69 @@ class Booking {
 }
 
 String shortId(String id) => id.substring(0, 8);
+
+Booking transitioned(
+  Object? payload,
+  Booking previous,
+  String status, {
+  String? actor,
+}) {
+  try {
+    final next = Booking.fromJson(object(payload));
+    if (next.id != previous.id ||
+        next.memberId != previous.memberId ||
+        next.ptId != previous.ptId ||
+        next.slotId != previous.slotId ||
+        next.startAt != previous.startAt ||
+        next.endAt != previous.endAt ||
+        next.status != status ||
+        (status == 'CANCELLED' &&
+            (next.cancelledAt == null || next.cancelledBy != actor)) ||
+        (status == 'COMPLETED' && next.completedAt == null))
+      throw const FormatException();
+    return next;
+  } catch (_) {
+    throw const ApiError(
+      200,
+      'INVALID_RESPONSE',
+      'Chưa xác nhận được kết quả. Tải lại dữ liệu để đối chiếu.',
+      outcomeUnknown: true,
+    );
+  }
+}
+
+class ServiceEligibility {
+  final bool eligible;
+  final DateTime checkedAt;
+  final List<String> reasonCodes;
+  ServiceEligibility._(this.eligible, this.checkedAt, this.reasonCodes);
+  factory ServiceEligibility.fromJson(Map<String, dynamic> value) {
+    final reasons = value['reasonCodes'];
+    if (value['eligible'] is! bool ||
+        reasons is! List ||
+        reasons.any((r) => r is! String) ||
+        value['eligible'] != reasons.isEmpty) {
+      throw const ApiError(
+        200,
+        'INVALID_RESPONSE',
+        'Kết quả kiểm tra điều kiện không hợp lệ.',
+      );
+    }
+    return ServiceEligibility._(
+      value['eligible'] as bool,
+      instant(value, 'checkedAt'),
+      List<String>.unmodifiable(reasons),
+    );
+  }
+}
+
+String eligibilityReason(String code) =>
+    const {
+      'BOOKING_NOT_CONFIRMED': 'Booking không còn CONFIRMED.',
+      'SESSION_NOT_STARTED': 'Chưa đến giờ buổi tập.',
+      'SESSION_ENDED': 'Buổi tập đã hết giờ.',
+      'MEMBER_ACCOUNT_INACTIVE': 'Tài khoản Member không hợp lệ.',
+      'MEMBERSHIP_INACTIVE': 'Membership hiện tại không hợp lệ.',
+      'MEMBERSHIP_NOT_COVERED': 'Membership không bao phủ toàn bộ buổi tập.',
+    }[code] ??
+    'Không đủ điều kiện ($code).';

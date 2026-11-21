@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
- [Parameter(Mandatory=$true)][ValidateSet('Verify','Seed','Policy','Rotate','Capture','Audit','Cleanup','ServeBackend')][string]$Action,
+ [Parameter(Mandatory=$true)][ValidateSet('Verify','Seed','LifecycleSeed','LifecycleAudit','LifecycleSnapshot','Policy','Rotate','Capture','Audit','Cleanup','ServeBackend')][string]$Action,
  [Parameter(Mandatory=$true)][string]$JavaHome,
  [Parameter(Mandatory=$true)][ValidatePattern('^[a-f0-9]{64}$')][string]$ExpectedContainerId,
  [Parameter(Mandatory=$true)][string]$ManifestPath,

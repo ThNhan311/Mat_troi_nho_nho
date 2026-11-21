@@ -287,4 +287,68 @@ void main() {
       );
     },
   );
+
+  test('empty DELETE 204 succeeds without JSON or replay', () async {
+    var writes = 0;
+    api = ApiClient(
+      expectedRole: 'MEMBER',
+      baseUri: Uri.parse('http://localhost/api/v1'),
+      client: MockClient((r) async {
+        if (r.url.path.endsWith('/login')) return tokens('MEMBER');
+        writes++;
+        return http.Response('', 204);
+      }),
+    );
+    await api.login('a@example.invalid', 'test-only');
+    expect(await api.request('DELETE', '/slot', expectedStatus: 204), null);
+    expect(writes, 1);
+  });
+  test('old read cannot overwrite a different account session', () async {
+    final gate = Completer<http.Response>();
+    api = ApiClient(
+      expectedRole: 'MEMBER',
+      baseUri: Uri.parse('http://localhost/api/v1'),
+      client: MockClient((r) async {
+        if (r.url.path.endsWith('/login')) return tokens('MEMBER');
+        return gate.future;
+      }),
+    );
+    await api.login('a@example.invalid', 'test-only');
+    final old = expectLater(
+      api.request('GET', '/old'),
+      throwsA(isA<ApiError>().having((e) => e.code, 'code', 'SESSION_CHANGED')),
+    );
+    api.logout();
+    await api.login('b@example.invalid', 'test-only');
+    gate.complete(http.Response('[]', 200));
+    await old;
+    expect(api.authenticated, true);
+  });
+  for (final method in ['PATCH', 'DELETE']) {
+    test('$method 401 refreshes once but never replays', () async {
+      var writes = 0, refreshes = 0;
+      api = ApiClient(
+        expectedRole: 'MEMBER',
+        baseUri: Uri.parse('http://localhost/api/v1'),
+        client: MockClient((r) async {
+          if (r.url.path.endsWith('/login')) return tokens('MEMBER');
+          if (r.url.path.endsWith('/refresh')) {
+            refreshes++;
+            return tokens('MEMBER');
+          }
+          writes++;
+          return http.Response('{}', 401);
+        }),
+      );
+      await api.login('a@example.invalid', 'test-only');
+      await expectLater(
+        api.request(method, '/slot'),
+        throwsA(
+          isA<ApiError>().having((e) => e.code, 'code', 'SESSION_REFRESHED'),
+        ),
+      );
+      expect(writes, 1);
+      expect(refreshes, 1);
+    });
+  }
 }

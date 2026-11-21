@@ -31,7 +31,7 @@ class _FitCenterAppState extends State<FitCenterApp> {
       animation: api,
       builder: (context, _) => api.authenticated
           ? BookingDashboard(
-              key: const ValueKey('dashboard'),
+              key: ValueKey('dashboard-${api.sessionEpoch}'),
               service: BookingService(api),
             )
           : LoginView(api: api),

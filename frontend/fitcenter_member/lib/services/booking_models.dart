@@ -75,10 +75,20 @@ class Slot {
 }
 
 class Booking {
+  final String? cancelledBy, cancelReason;
+  final DateTime? cancelledAt, completedAt;
   final String id, memberId, ptId, slotId, status;
   final DateTime startAt, endAt;
   Booking.fromJson(Map<String, dynamic> value)
-    : id = uuid(value, 'id'),
+    : cancelledBy = value['cancelledBy'] as String?,
+      cancelReason = value['cancelReason'] as String?,
+      cancelledAt = value['cancelledAt'] == null
+          ? null
+          : instant(value, 'cancelledAt'),
+      completedAt = value['completedAt'] == null
+          ? null
+          : instant(value, 'completedAt'),
+      id = uuid(value, 'id'),
       memberId = uuid(value, 'memberId'),
       ptId = uuid(value, 'ptId'),
       slotId = uuid(value, 'slotId'),
@@ -88,3 +98,33 @@ class Booking {
 }
 
 String shortId(String id) => id.substring(0, 8);
+
+Booking transitioned(
+  Object? payload,
+  Booking previous,
+  String status, {
+  String? actor,
+}) {
+  try {
+    final next = Booking.fromJson(object(payload));
+    if (next.id != previous.id ||
+        next.memberId != previous.memberId ||
+        next.ptId != previous.ptId ||
+        next.slotId != previous.slotId ||
+        next.startAt != previous.startAt ||
+        next.endAt != previous.endAt ||
+        next.status != status ||
+        (status == 'CANCELLED' &&
+            (next.cancelledAt == null || next.cancelledBy != actor)) ||
+        (status == 'COMPLETED' && next.completedAt == null))
+      throw const FormatException();
+    return next;
+  } catch (_) {
+    throw const ApiError(
+      200,
+      'INVALID_RESPONSE',
+      'Chưa xác nhận được kết quả. Tải lại dữ liệu để đối chiếu.',
+      outcomeUnknown: true,
+    );
+  }
+}

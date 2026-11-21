@@ -20,6 +20,10 @@ class _BookingDashboardState extends State<BookingDashboard> {
   List<Booking> bookings = [];
   String? message, error;
   bool loading = true, sending = false, needsReconciliation = false;
+  late final int epoch = widget.service.api.sessionEpoch;
+  int loadVersion = 0;
+  bool get alive => mounted && epoch == widget.service.api.sessionEpoch;
+  bool get blocked => loading || sending || needsReconciliation;
   @override
   void initState() {
     super.initState();
@@ -33,6 +37,7 @@ class _BookingDashboardState extends State<BookingDashboard> {
   }
 
   Future<void> load({bool manual = false}) async {
+    final version = ++loadVersion;
     setState(() {
       loading = true;
       error = null;
@@ -42,23 +47,23 @@ class _BookingDashboardState extends State<BookingDashboard> {
         widget.service.slots(from, to),
         widget.service.bookings(from, to),
       ]);
-      if (!mounted) return;
+      if (!alive || version != loadVersion) return;
       setState(() {
         slots = results[0] as List<Slot>;
         bookings = results[1] as List<Booking>;
         if (manual) needsReconciliation = false;
       });
     } on ApiError catch (failure) {
-      if (mounted) setState(() => error = failure.toString());
+      if (alive) setState(() => error = failure.toString());
     } catch (_) {
-      if (mounted) {
+      if (alive) {
         setState(
           () => error =
               'Không thể đọc dữ liệu máy chủ; không có dữ liệu demo thay thế.',
         );
       }
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (alive && version == loadVersion) setState(() => loading = false);
     }
   }
 
@@ -81,7 +86,7 @@ class _BookingDashboardState extends State<BookingDashboard> {
     });
     try {
       final slot = await widget.service.create(start);
-      if (!mounted) return;
+      if (!alive) return;
       setState(() {
         message =
             'Tạo slot thành công • ${slot.status}\nSlot: ${slot.id}\n${vietnamTime(slot.startAt)} → ${vietnamTime(slot.endAt)}';
@@ -89,7 +94,7 @@ class _BookingDashboardState extends State<BookingDashboard> {
       });
       await load();
     } on ApiError catch (failure) {
-      if (!mounted) return;
+      if (!alive) return;
       setState(() {
         error = failure.toString();
         needsReconciliation = failure.outcomeUnknown || failure.status == 401;
@@ -97,10 +102,10 @@ class _BookingDashboardState extends State<BookingDashboard> {
       if (failure.status == 409) {
         final conflict = failure.toString();
         await load();
-        if (mounted) setState(() => error = conflict);
+        if (alive) setState(() => error = conflict);
       }
     } catch (_) {
-      if (mounted) {
+      if (alive) {
         setState(() {
           needsReconciliation = true;
           error =
@@ -108,9 +113,229 @@ class _BookingDashboardState extends State<BookingDashboard> {
         });
       }
     } finally {
-      if (mounted) setState(() => sending = false);
+      if (alive) setState(() => sending = false);
     }
   }
+
+  Future<void> perform(Future<void> Function() action) async {
+    if (blocked) return;
+    setState(() {
+      sending = true;
+      message = null;
+      error = null;
+    });
+    try {
+      await action();
+    } on ApiError catch (failure) {
+      if (!alive) return;
+      setState(() {
+        error = failure.toString();
+        needsReconciliation = failure.outcomeUnknown || failure.status == 401;
+      });
+      if (failure.status == 409 || failure.status == 404) {
+        await load();
+        if (alive) setState(() => error = failure.toString());
+      }
+    } catch (_) {
+      if (alive)
+        setState(() {
+          needsReconciliation = true;
+          error =
+              'Chưa xác nhận được kết quả. Tải lại dữ liệu trước thao tác mới.';
+        });
+    } finally {
+      if (alive) setState(() => sending = false);
+    }
+  }
+
+  Future<bool> confirm(String title, String detail) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(title),
+          content: Text(detail),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Quay lại'),
+            ),
+            FilledButton(
+              key: const Key('confirm-action'),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Xác nhận'),
+            ),
+          ],
+        ),
+      ) ==
+      true;
+
+  Future<String?> input(
+    String title,
+    String label, {
+    String initial = '',
+    bool date = false,
+  }) async {
+    var value = initial;
+    String? validation;
+    return showDialog<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, change) => AlertDialog(
+          title: Text(title),
+          content: SizedBox(
+            width: 440,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  key: const Key('action-input'),
+                  initialValue: initial,
+                  autofocus: true,
+                  maxLines: date ? 1 : 3,
+                  decoration: InputDecoration(
+                    labelText: label,
+                    errorText: validation,
+                  ),
+                  onChanged: (s) => value = s,
+                ),
+                if (date)
+                  const Text(
+                    'Giờ Việt Nam • YYYY-MM-DD HH:mm. Kết thúc = bắt đầu + 90 phút.',
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Quay lại'),
+            ),
+            FilledButton(
+              key: const Key('submit-input'),
+              onPressed: () {
+                try {
+                  if (value.trim().isEmpty)
+                    throw const FormatException('Không được để trống.');
+                  if (date) parseVietnamInput(value.trim());
+                  Navigator.pop(context, value.trim());
+                } on FormatException catch (e) {
+                  change(() => validation = e.message);
+                }
+              },
+              child: const Text('Xác nhận'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> edit(Slot slot) => perform(() async {
+    final raw = await input(
+      'Sửa slot ${shortId(slot.id)}',
+      'Bắt đầu (giờ Việt Nam)',
+      initial: vietnamInput(slot.startAt),
+      date: true,
+    );
+    if (raw == null || !alive) return;
+    final next = await widget.service.edit(slot, parseVietnamInput(raw));
+    if (!alive) return;
+    setState(() {
+      slots = slots.map((s) => s.id == slot.id ? next : s).toList();
+      message =
+          'Đã cập nhật slot • ${next.status}\nSlot hiện tại: ${next.id}${next.id == slot.id ? "" : "\nThay thế slot: ${slot.id}"}';
+    });
+    await load();
+  });
+
+  Future<void> remove(Slot slot) => perform(() async {
+    if (!await confirm(
+          'Loại slot khỏi availability',
+          'Slot: ${slot.id}\nMáy chủ giữ lịch sử và loại slot khỏi danh sách khả dụng.',
+        ) ||
+        !alive)
+      return;
+    await widget.service.remove(slot);
+    if (!alive) return;
+    setState(
+      () => message = 'Đã loại slot khỏi availability\nSlot: ${slot.id}',
+    );
+    await load();
+  });
+
+  Future<void> cancel(Booking booking) => perform(() async {
+    final reason = await input(
+      'Hủy session ${shortId(booking.id)}',
+      'Lý do hủy bắt buộc',
+    );
+    if (reason == null || !alive) return;
+    final next = await widget.service.cancel(booking, reason);
+    if (!alive) return;
+    setState(() {
+      bookings = bookings.map((b) => b.id == next.id ? next : b).toList();
+      message =
+          'Đã hủy session • ${next.status}\nBooking: ${next.id}\nLý do: ${next.cancelReason}';
+    });
+    await load();
+  });
+
+  Future<void> complete(Booking booking) => perform(() async {
+    if (!await confirm(
+          'Hoàn tất session',
+          'Booking: ${booking.id}\nMáy chủ quyết định buổi tập đã kết thúc hay chưa.',
+        ) ||
+        !alive)
+      return;
+    final next = await widget.service.complete(booking);
+    if (!alive) return;
+    setState(() {
+      bookings = bookings.map((b) => b.id == next.id ? next : b).toList();
+      message =
+          'Hoàn tất session • ${next.status}\nBooking: ${next.id}\n${vietnamTime(next.completedAt!)}';
+    });
+    await load();
+  });
+
+  Future<void> checkEligibility(Booking booking) => perform(() async {
+    final result = await widget.service.eligibility(booking);
+    if (!alive) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          result.eligible
+              ? 'Đủ điều kiện tại thời điểm kiểm tra'
+              : 'Chưa đủ điều kiện',
+        ),
+        content: SizedBox(
+          width: 480,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Booking: ${booking.id}\nKiểm tra lúc: ${vietnamTime(result.checkedAt)}\nUTC: ${result.checkedAt.toIso8601String()}',
+              ),
+              ...result.reasonCodes.map(
+                (code) => Text('${eligibilityReason(code)} [$code]'),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Chỉ phản ánh điều kiện hiện tại; có thể thay đổi sau phản hồi. Không ghi nhận bắt đầu buổi tập.',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            key: const Key('close-eligibility'),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Đóng'),
+          ),
+        ],
+      ),
+    );
+  });
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -187,8 +412,29 @@ class _BookingDashboardState extends State<BookingDashboard> {
           (slot) => Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(
-                'Slot: ${slot.id}\n${vietnamTime(slot.startAt)} → ${vietnamTime(slot.endAt)}\n${slot.status}',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Slot: ${slot.id}\n${vietnamTime(slot.startAt)} → ${vietnamTime(slot.endAt)}\n${slot.status}',
+                  ),
+                  if (slot.status == 'AVAILABLE')
+                    Wrap(
+                      spacing: 12,
+                      children: [
+                        OutlinedButton(
+                          key: ValueKey('edit-${slot.id}'),
+                          onPressed: blocked ? null : () => edit(slot),
+                          child: Text('Sửa slot ${shortId(slot.id)}'),
+                        ),
+                        OutlinedButton(
+                          key: ValueKey('delete-${slot.id}'),
+                          onPressed: blocked ? null : () => remove(slot),
+                          child: Text('Loại slot ${shortId(slot.id)}'),
+                        ),
+                      ],
+                    ),
+                ],
               ),
             ),
           ),
@@ -204,8 +450,47 @@ class _BookingDashboardState extends State<BookingDashboard> {
           (booking) => Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(
-                'Booking: ${booking.id}\nMember: ${shortId(booking.memberId)}\n${vietnamTime(booking.startAt)} → ${vietnamTime(booking.endAt)}\n${booking.status}',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Booking: ${booking.id}\nMember: ${shortId(booking.memberId)}\n${vietnamTime(booking.startAt)} → ${vietnamTime(booking.endAt)}\n${booking.status}',
+                  ),
+                  if (booking.cancelledAt != null)
+                    Text(
+                      'Hủy bởi ${booking.cancelledBy} • ${vietnamTime(booking.cancelledAt!)}',
+                    ),
+                  if (booking.cancelReason != null)
+                    Text('Lý do: ${booking.cancelReason}'),
+                  if (booking.completedAt != null)
+                    Text('Hoàn tất: ${vietnamTime(booking.completedAt!)}'),
+                  Wrap(
+                    spacing: 12,
+                    children: [
+                      OutlinedButton(
+                        key: ValueKey('eligibility-${booking.id}'),
+                        onPressed: blocked
+                            ? null
+                            : () => checkEligibility(booking),
+                        child: Text(
+                          'Kiểm tra điều kiện ${shortId(booking.id)}',
+                        ),
+                      ),
+                      if (booking.status == 'CONFIRMED') ...[
+                        OutlinedButton(
+                          key: ValueKey('cancel-${booking.id}'),
+                          onPressed: blocked ? null : () => cancel(booking),
+                          child: Text('Hủy session ${shortId(booking.id)}'),
+                        ),
+                        FilledButton(
+                          key: ValueKey('complete-${booking.id}'),
+                          onPressed: blocked ? null : () => complete(booking),
+                          child: Text('Hoàn tất ${shortId(booking.id)}'),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ),
             ),
           ),

@@ -1,6 +1,6 @@
 # Quickstart — Booking Member/PT trên Flutter Web
 
-Lát cắt: login → PT tạo slot90phút → Member đọc PT/slot, đặt auto-confirm → tải lại lịch hai bên. Backend base089b5e2; Frontend source0307242; nhánh feature/frontend-booking-integration. [Kết quả](evidence/BOOKING_WEB_INTEGRATION.md), [khảo sát](evidence/FRONTEND_INTEGRATION_SURVEY.md).
+Lát cắt đầu login → PT tạo slot → Member đặt và lịch hai bên đã đóng bằng commit9fe34b9. Nhánh hiện tại feature/frontend-booking-lifecycle bổ sung hủy, sửa/loại availability, kiểm tra điều kiện và complete; Backend base089b5e2, Frontend nguồn0307242. [Kết quả](evidence/BOOKING_WEB_INTEGRATION.md), [khảo sát](evidence/FRONTEND_INTEGRATION_SURVEY.md).
 
 ## Source và SDK
 
@@ -83,7 +83,7 @@ Mở http://localhost:3000 cho Member, http://localhost:3001 cho PT. [Static ser
 3. PT Tải lại dữ liệu: cùng booking UUID/time, slot BOOKED; Member available không còn slot đã đặt. Giờ UTC+07:00 độc lập timezone máy.
 4. Reload cần login lại, booking vẫn từ server. MemberB không thấy bookingA; PTB không thấy bookingPTA. PT dùng member UUID rút gọn, không bịa tên/rating/số buổi.
 5. Session chỉ memory; logout xóa session. GET401 refresh tối đa một lần rồi retry GET một lần. POST401 có thể refresh nhưng không gửi lại POST. Lỗi mạng/timeout/5xx hoặc write response chưa chắc chắn không báo thành công/không retry mù; khóa gửi tới khi người dùng reload đối chiếu. Kiểm tra lịch/slot trước thao tác mới.
-6. 409 hiển thị error.code/correlationId, bỏ selection và reload. Không fallback mock/approval/PENDING/REJECTED. Chưa nối PATCH/DELETE/cancel/complete/eligibility, Admin UI hoặc tính năng ngoài slice.
+6. 409 hiển thị error.code/correlationId, bỏ selection và reload. Không fallback mock/approval/PENDING/REJECTED. Đã nối PATCH/DELETE/cancel/complete/eligibility theo phần lifecycle bên dưới. Admin UI và tính năng ngoài slice vẫn chưa tích hợp.
 
 Khoảng xem now−1ngày tới now+31ngày, hiển thị trên UI; chưa range picker. from/to UTC ISO cóZ, encode bằng Uri queryParameters. Không dùng API Admin để cấp policy cho Member/PT; public policy contract vẫn là task riêng.
 
@@ -107,3 +107,48 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-
 Cleanup DELETE từng UUID, FK-order trong transaction. Capture chỉ đăng ký rows thuộc PT/member fixture; dừng nếu thấy ownership ngoài fixture. Không truncate/broad delete/reset DB. Giữ manifest để seed lại. Rotate chỉ đổi đúng credentials actor fixture, lưu riêng local, không in giá trị.
 
 Cuối cùng dừng đúng container đã xác minh nếu phiên này tự khởi động, giữ volume; không stop container/engine phục vụ người khác. Trạng thái sau nghiệm thu ở [báo cáo](evidence/BOOKING_WEB_INTEGRATION.md).
+
+## Booking lifecycle trên Web
+
+[Báo cáo và bằng chứng mới](evidence/BOOKING_WEB_LIFECYCLE.md), [hashes source được test](evidence/BOOKING_WEB_LIFECYCLE_HASHES.json). Giữ SDK/JDK/datasource/guarded runner/2origin như trên. Không cần build lại Backend chỉ vì đổi Dart; jar đã có các API Backend R02/R04/D01. Dart đổi phải test/build lại hai app.
+
+| Ứng dụng / nút | API | Xử lý |
+|---|---|---|
+| Member Hủy booking | POST /bookings/{booking.id}/cancel | Xác nhận,200 DTO rồi reload lịch/available; deadline do policy server, thiếu policy/409 không đổi state giả |
+| PT Sửa slot | PATCH /pt/availability/{slot.id} | Input giờ Việt Nam,+90phút; dùng UUID trong response kể cả UUID thay thế, reload |
+| PT Loại slot | DELETE /pt/availability/{slot.id} | Xác nhận,204 rỗng không decode JSON; giữ row DISABLED/history |
+| PT Hủy session | POST /pt/bookings/{booking.id}/cancel | Reason bắt buộc; server kiểm now<startAt;200 DTO và reload |
+| PT Kiểm tra điều kiện | GET /pt/bookings/{booking.id}/service-eligibility | Đọc eligible/reasonCodes/checkedAt kể cả HTTP200false; mỗi lần bấm là GET mới, đóng dialog bỏ kết quả |
+| PT Hoàn tất | POST /pt/bookings/{booking.id}/complete | Xác nhận; server quyết định now>=endAt,200 DTO; không bắt buộc GET eligibility trước |
+
+Nút write khóa khi đang gửi, kể cả đang xác nhận/dialog. BOOKED không hiện sửa/loại slot; terminal booking không hiện cancel/complete. Các nút CONFIRMED không dựa đồng hồ client để cho phép hủy/complete. Server vẫn quyết định ownership, thời gian, trạng thái. 409 tải lại dữ liệu và giữ code/correlationId. Lỗi mạng/timeout/kết quả chưa rõ không replay POST/PATCH/DELETE, chặn write tới khi tải lại đối chiếu. Logout/đổi tài khoản đổi session epoch, hủy dữ liệu dashboard cũ và bỏ response cũ; token chỉ memory.
+
+Eligibility chỉ đánh giá hiện tại, có thể đổi sau response; không có cache lâu dài, start marker, startedAt/startedBy hoặc IN_PROGRESS. Backend response no-store. Không ghi UI “đã bắt đầu buổi tập”; complete giữ R04 độc lập.
+
+### Fixture lifecycle theo thời gian thật
+
+Sau Seed, ServeBackend và Policy như trên, trước thao tác UI:
+
+~~~powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-demo.ps1 -Action LifecycleSeed -JavaHome $JavaHome -ExpectedContainerId $verifiedId -ManifestPath $manifest
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-demo.ps1 -Action LifecycleSnapshot -JavaHome $JavaHome -ExpectedContainerId $verifiedId -ManifestPath $manifest
+~~~
+
+LifecycleSeed đăng ký UUID trong manifest trước INSERT. Tạo6slot/5booking synthetic, cùng PTA và MemberA: session hiện tại start=now−30phút,end=now+60phút; session đã hết start=now−3giờ; tương lai +24giờ cho Member cancel/rebook,+28giờ cho PT cancel,+32giờ có lịch sử CANCELLED cho PATCH trả UUID mới,+36giờ chưa booking cho DELETE. Chỉ membership fixtureA được mở start_date về hôm qua để bao phủ session qua nửa đêm Việt Nam. Không đổi Clock/app, không chờ90phút; seed không phải booking tạo qua UI. Seed lặp khi còn fixture báo no-op; snapshot từ chối ghi đè evidence đã có.
+
+Thứ tự demo:
+
+1. MemberA hủy booking scenario memberCancel; MemberB login,chọn slot mở lại và đặt qua UI. Booking mới có UUID riêng, không thay booking cũ theo slotId.
+2. PTA kiểm tra current eligible=true; booking tương lai eligible=false/SESSION_NOT_STARTED; dialog hiển thị thời gian Việt Nam và UTC. Làm trong vòng60phút sau seed để current chưa kết thúc; nếu hết cửa sổ thì cleanup/seed một chu kỳ mới.
+3. PTA complete scenario ended, không cần GET eligibility cho booking đó; PT cancel scenario ptCancel với reason; PATCH scenario replacement sang giờ chưa chồng slot, sau đó sửa lần nữa dùng UUID mới; DELETE scenario delete.
+4. Logout/login PTB chỉ thấy dữ liệu của B; reload/login MemberB vẫn thấy booking rebook. Không bấm hủy booking B khi chỉ kiểm tra persistence.
+5. Chạy probe và DB audit:
+
+~~~powershell
+node frontend/verify-booking-lifecycle.mjs $manifest
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-demo.ps1 -Action LifecycleAudit -JavaHome $JavaHome -ExpectedContainerId $verifiedId -ManifestPath $manifest
+~~~
+
+Probe giả định các scenario đã được thao tác theo thứ tự này, reason PT là Demo PT unavailable, replacement còn AVAILABLE. Probe chỉ ghi requests kỳ vọng bị từ chối (sai quyền/repeated cancel/đặt slot DISABLED); không tự thực hiện các thao tác thành công thay UI. DB audit đối chiếu metadata, trạng thái và snapshot booking/slot/account/profile/membership current không đổi; ghi13checks. Không cộng checks vào Flutter tests.
+
+Capture/Audit tự đăng ký UUID mới thuộc đúng PT/member fixture, gồm booking rebook và slot thay thế. Cleanup xác minh ownership lại và DELETE từng UUID manifest trong transaction; không truncate/xóa theo ngày. Sau logout và dừng đúng hai static servers/Backend của phiên, chạy Cleanup khi DB còn hoạt động, lặp Cleanup để kiểm no-op rồi stop đúng container nếu tự khởi động; giữ volume. Không cấp credential Admin cho Member/PT app.

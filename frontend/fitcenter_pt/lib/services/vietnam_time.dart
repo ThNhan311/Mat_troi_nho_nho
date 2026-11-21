@@ -25,3 +25,10 @@ Map<String, String> queryRange(DateTime from, DateTime to) => {
   'from': from.toUtc().toIso8601String(),
   'to': to.toUtc().toIso8601String(),
 };
+
+String vietnamInput(DateTime instant) => instant
+    .toUtc()
+    .add(const Duration(hours: 7))
+    .toIso8601String()
+    .substring(0, 16)
+    .replaceFirst('T', ' ');

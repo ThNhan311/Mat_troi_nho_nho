@@ -23,6 +23,8 @@ class _BookingDashboardState extends State<BookingDashboard> {
   String? message, error;
   bool loading = true, sending = false, needsReconciliation = false;
   int loadVersion = 0;
+  late final int epoch = widget.service.api.sessionEpoch;
+  bool get alive => mounted && epoch == widget.service.api.sessionEpoch;
   @override
   void initState() {
     super.initState();
@@ -40,7 +42,7 @@ class _BookingDashboardState extends State<BookingDashboard> {
         widget.service.trainers(),
         widget.service.bookings(from, to),
       ]);
-      if (!mounted || version != loadVersion) return;
+      if (!alive || version != loadVersion) return;
       final fetched = results[0] as List<Trainer>;
       final id = selectedTrainer?.id;
       final matches = fetched.where((trainer) => trainer.id == id);
@@ -50,7 +52,7 @@ class _BookingDashboardState extends State<BookingDashboard> {
         detail = await widget.service.trainer(id!);
         fetchedSlots = await widget.service.slots(id, from, to);
       }
-      if (!mounted || version != loadVersion) return;
+      if (!alive || version != loadVersion) return;
       setState(() {
         trainers = fetched;
         bookings = results[1] as List<Booking>;
@@ -64,7 +66,7 @@ class _BookingDashboardState extends State<BookingDashboard> {
         if (manual) needsReconciliation = false;
       });
     } on ApiError catch (failure) {
-      if (mounted && version == loadVersion) {
+      if (alive && version == loadVersion) {
         setState(() {
           error = failure.toString();
           slots = [];
@@ -72,14 +74,14 @@ class _BookingDashboardState extends State<BookingDashboard> {
         });
       }
     } catch (_) {
-      if (mounted && version == loadVersion) {
+      if (alive && version == loadVersion) {
         setState(
           () => error =
               'Không thể đọc dữ liệu máy chủ; không có dữ liệu demo thay thế.',
         );
       }
     } finally {
-      if (mounted && version == loadVersion) setState(() => loading = false);
+      if (alive && version == loadVersion) setState(() => loading = false);
     }
   }
 
@@ -111,7 +113,7 @@ class _BookingDashboardState extends State<BookingDashboard> {
     });
     try {
       final booking = await widget.service.create(trainer.id, slot);
-      if (!mounted) return;
+      if (!alive) return;
       setState(() {
         selectedSlot = null;
         message =
@@ -119,7 +121,7 @@ class _BookingDashboardState extends State<BookingDashboard> {
       });
       await load();
     } on ApiError catch (failure) {
-      if (!mounted) return;
+      if (!alive) return;
       setState(() {
         selectedSlot = null;
         error = failure.toString();
@@ -128,10 +130,10 @@ class _BookingDashboardState extends State<BookingDashboard> {
       if (failure.status == 409) {
         final conflict = failure.toString();
         await load();
-        if (mounted) setState(() => error = conflict);
+        if (alive) setState(() => error = conflict);
       }
     } catch (_) {
-      if (mounted) {
+      if (alive) {
         setState(() {
           needsReconciliation = true;
           selectedSlot = null;
@@ -139,7 +141,67 @@ class _BookingDashboardState extends State<BookingDashboard> {
         });
       }
     } finally {
-      if (mounted) setState(() => sending = false);
+      if (alive) setState(() => sending = false);
+    }
+  }
+
+  Future<void> cancel(Booking booking) async {
+    if (loading || sending || needsReconciliation) return;
+    setState(() {
+      sending = true;
+      error = null;
+      message = null;
+    });
+    try {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Xác nhận hủy booking'),
+          content: Text(
+            'Booking: ${booking.id}\n${vietnamTime(booking.startAt)}\nMáy chủ sẽ kiểm tra hạn hủy theo policy đang hiệu lực.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Quay lại'),
+            ),
+            FilledButton(
+              key: const Key('confirm-cancel'),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Xác nhận hủy'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !alive) return;
+      final next = await widget.service.cancel(booking);
+      if (!alive) return;
+      setState(() {
+        bookings = bookings.map((b) => b.id == next.id ? next : b).toList();
+        selectedSlot = null;
+        message =
+            'Đã hủy booking • ${next.status}\nBooking: ${next.id}\n${vietnamTime(next.cancelledAt!)}';
+      });
+      await load();
+    } on ApiError catch (failure) {
+      if (!alive) return;
+      setState(() {
+        error = failure.toString();
+        needsReconciliation = failure.outcomeUnknown || failure.status == 401;
+        selectedSlot = null;
+      });
+      if (failure.status == 409 || failure.code == 'BOOKING_POLICY_NOT_FOUND') {
+        await load();
+        if (alive) setState(() => error = failure.toString());
+      }
+    } catch (_) {
+      if (alive)
+        setState(() {
+          needsReconciliation = true;
+          error = 'Chưa rõ kết quả hủy. Tải lại lịch để đối chiếu.';
+        });
+    } finally {
+      if (alive) setState(() => sending = false);
     }
   }
 
@@ -259,8 +321,27 @@ class _BookingDashboardState extends State<BookingDashboard> {
           (booking) => Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Text(
-                'Booking: ${booking.id}\nPT: ${booking.ptId}\n${vietnamTime(booking.startAt)} → ${vietnamTime(booking.endAt)}\n${booking.status}',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Booking: ${booking.id}\nPT: ${booking.ptId}\n${vietnamTime(booking.startAt)} → ${vietnamTime(booking.endAt)}\n${booking.status}',
+                  ),
+                  if (booking.cancelledAt != null)
+                    Text(
+                      'Hủy bởi ${booking.cancelledBy} • ${vietnamTime(booking.cancelledAt!)}',
+                    ),
+                  if (booking.cancelReason != null)
+                    Text('Lý do: ${booking.cancelReason}'),
+                  if (booking.status == 'CONFIRMED')
+                    OutlinedButton(
+                      key: ValueKey('cancel-${booking.id}'),
+                      onPressed: loading || sending || needsReconciliation
+                          ? null
+                          : () => cancel(booking),
+                      child: const Text('Hủy booking'),
+                    ),
+                ],
               ),
             ),
           ),
