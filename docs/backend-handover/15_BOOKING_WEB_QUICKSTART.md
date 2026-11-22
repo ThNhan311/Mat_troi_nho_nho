@@ -241,3 +241,61 @@ Nếu UI PUT đầu tiên được thao tác thủ công thay runner: ghi **đú
 Sau kiểm tra, logout, dừng đúng PID ba static server/Java/guarded wrapper do lượt này tạo, Capture rồi Cleanup như trên; chạy Cleanup lần hai để kiểm idempotence. Kiểm rows fixture/history, dừng đúng DB nếu tự khởi động, giữ volume. Không để port3000/3001/3002/18081 hoặc tài khoản demo còn chạy mà báo đã cleanup.
 
 Không làm Admin UI khác hoặc API/migration mới. Admin API chỉ cho ADMIN; Member/PT không được gọi policy Admin để hiển thị deadline. D01 vẫn là snapshot eligibility, completion vẫn theo R04.
+## M-01 — Admin tạo Membership Plan (22/11/2026)
+
+Baseline Admin Policy đã đóng local1b1e323. Task mới feature/admin-membership-plan-create, chưa stage/commit. [Quyết định/contract](decisions/2026-11-22_M01_PLAN_CREATE.md), [kết quả thực](evidence/M01_PLAN_CREATE.md). Các phần “Membership chưa nối API” phía trên là checkpoint lịch sử: hiện chỉ **Admin list ACTIVE+create plan** được nối, Member Membership/activation/renewal/payment vẫn chưa tích hợp.
+
+Dùng JDK21/Flutter3.50.1, PUB_CACHE và DB riêng theo guard ở trên; không đổi PATH hệ thống, V1–V6, profile alignment hoặc V7. Kiểm port18081/3002 trống. Build Backend mới vì M-01 có executable Java. Từ backend:
+
+~~~powershell
+.\mvnw.cmd -B -ntp -DskipTests package
+# Từ repository root, secret DB chỉ env process/SecureString riêng, không ghi lệnh chứa secret:
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/test-http-baseline.ps1 -JavaHome $JavaHome -ExpectedContainerId $verifiedId -StartDatabase
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/test-http-baseline.ps1 -JavaHome $JavaHome -ExpectedContainerId $verifiedId -StartDatabase -FullSuite
+~~~
+
+Runner focused chạy toàn HTTP harness (có M-01); full bao gồm unit/controller/HTTP/DB, không cộng hai kết quả. Không áp migration mới. Guard tự stop DB nếu tự start cho tests. Lỗi execution policy dùng PowerShell con như ví dụ, không đổi policy máy.
+
+Từ Admin project:
+
+~~~powershell
+& $flutter pub get --enforce-lockfile
+& $flutter analyze --no-fatal-infos
+& $flutter test test/membership_plan_test.dart --reporter expanded
+& $flutter test --reporter expanded
+& $flutter build web --no-web-resources-cdn --dart-define=API_BASE_URL=http://127.0.0.1:18081/api/v1
+~~~
+
+Không pub upgrade/hạ constraints. Nếu SDK cache thiếu artifact, xác minh bundle chính thức/checksum trước khôi phục đúng file; không tạo file giả để build. Lượt này khôi phục dart2wasm_platform.dill và flutter.js.map từ đúng bundle3.50.1 đã xác minh. Web JavaScript là target nghiệm thu, Wasm/native chưa được nghiệm thu.
+
+Demo dùng manifest/credentials tổng hợp riêng sẵn có sau cleanup (seeded=false), không ghi đè credentials và không dùng AutoCloseable fixture tests. Cần private classpath.txt như phần setup. Từ repository root:
+
+~~~powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-demo.ps1 -Action Seed -JavaHome $JavaHome -ExpectedContainerId $verifiedId -ManifestPath $manifest -StartDatabase
+# Terminal riêng, giữ default profile và chỉ ba origin cố định:
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-demo.ps1 -Action ServeBackend -JavaHome $JavaHome -ExpectedContainerId $verifiedId -ManifestPath $manifest -BackendPort 18081 -IncludeAdminWeb
+# Terminal riêng:
+node frontend/serve-booking-web.mjs ad
+~~~
+
+Không cần tạo BookingPolicy để tạo plan; không gọi Admin PUT policy trong M-01. Login tại http://localhost:3002 → Home gốc → Gói tập → Thêm gói. Form nhập name, price, durationDays (ngày), description tùy chọn. Giá0 và tên trùng hợp lệ. Chỉ201+DTO hợp lệ mới success, hiển thị UUID server. Tải lại/login lại vẫn đọc plan qua GET thật. Chỉ list ACTIVE; sửa/xóa/đổi trạng thái báo Chưa khả dụng. Member/PT không có token Admin; Member GET plan là API read-back, không phải Membership UI.
+
+### Registry và audit/cleanup plan mới
+
+[UI runner](../../frontend/verify-membership-plan-ui.mjs) dùng Chrome thật/Playwright riêng, viewport1024×768, timezone America/Los_Angeles; không cần mở Chrome cá nhân. [DB helper](../../frontend/verify-membership-plan-demo.mjs) kiểm context/containerID/label/volume/loopback port/database/role/history1–6 trước mọi SQL. PGPASSWORD phải có trong process riêng, không ghi secret vào history/log/Git.
+
+~~~powershell
+node frontend/verify-membership-plan-demo.mjs $manifest prepare
+node frontend/verify-membership-plan-ui.mjs $manifest $playwright
+node frontend/verify-membership-plan-demo.mjs $manifest audit
+# Trước BookingDemo Cleanup, xóa đúng plan UUID tạo từ UI:
+node frontend/verify-membership-plan-demo.mjs $manifest cleanup
+node frontend/verify-membership-plan-demo.mjs $manifest cleanup
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-demo.ps1 -Action Cleanup -JavaHome $JavaHome -ExpectedContainerId $verifiedId -ManifestPath $manifest
+~~~
+
+Prepare lưu baseline ngoài Git bằng flag wx. UI runner tạo m01-ui-results.json bằng wx trước write intent, ghi UUID/body ngay khi nhận201; không token/credential vào results. DB helper đối chiếu chính xác UUID và đủ name/description/duration/price/ACTIVE; từ chối UUID đã thuộc baseline, hoặc plan có membership/payment FK. Cleanup từng UUID, không xóa theo tên/thời gian/truncate; chạy lại cleanup sau khi row đã xóa là no-op và vẫn kiểm baseline khác không đổi. BookingDemo chỉ cleanup fixture actor/base plan/membership theo manifest, không tự biết plan mới của UI.
+
+Khi timeout/failure: **không xóa intent hoặc rerun UI create ngay**. Đọc response UUID/results, GET/DB đối chiếu. Nếu UUID đã ghi nhận thì audit và cleanup theo registry trước chu kỳ mới. Nếu chưa có UUID, không đoán theo tên; giữ riêng evidence để đối soát trước thao tác tiếp. Không sửa registry để trỏ plan có sẵn. Archive evidence/baseline cũ bằng tên riêng sau reconciliation, không ghi đè. Plan tổng hợp mới được tạo qua UI; actors/base plan/membership do Seed, không tuyên bố do UI tạo.
+
+Cuối lượt logout, dừng đúng PID static server/guarded parent/Java do task tạo; sau cleanup kiểm rows/history rồi stop đúng container nếu task đã start, giữ volume. Không kill theo tên process rộng, không stop Docker engine hay tài nguyên đồng đội. Credentials/manifest/raw logs/cache/build luôn ngoài Git hoặc ignored, không stage.

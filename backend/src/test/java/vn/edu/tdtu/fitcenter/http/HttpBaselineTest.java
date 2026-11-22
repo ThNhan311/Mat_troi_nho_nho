@@ -187,6 +187,118 @@ class HttpBaselineTest {
     private static final String AVAILABILITY_PATH = "/api/v1/pt/availability";
     private static final Instant POLICY_NOW = Instant.parse("2030-01-02T03:04:05.123456Z");
 
+    @Autowired vn.edu.tdtu.fitcenter.service.MembershipPlanCreateService planCreate;
+
+    @Nested
+    class MembershipPlanCreateCases {
+        private static final String PATH = "/api/v1/admin/membership-plans";
+        private final Set<UUID> plans = new HashSet<>();
+        @AfterEach void cleanupPlans() {
+            for (UUID id : plans) assertEquals(1, jdbc.update("DELETE FROM membership_plans WHERE id=?", id));
+            jdbc.update("UPDATE users SET status='ACTIVE',role='ADMIN' WHERE id=?", fixture.admin.userId);
+        }
+        private Map<String, Object> input() {
+            return new HashMap<>(Map.of("name", "Synthetic M01 plan", "durationDays", 37, "price", new java.math.BigDecimal("123456.78")));
+        }
+        private Map<String, Object> create(Map<String, Object> input) throws Exception {
+            var result = object(request("POST", PATH, token(fixture.admin), input, 201));
+            plans.add(UUID.fromString((String) result.get("id")));
+            return result;
+        }
+        @Test void createReadBackAndNoUnrelatedMutation() throws Exception {
+            var before = snapshot();
+            var input = input(); input.put("description", "Synthetic description");
+            var result = create(input); UUID id = UUID.fromString((String) result.get("id"));
+            assertEquals(Set.of("id", "name", "description", "durationDays", "price"), result.keySet());
+            assertEquals(input.get("name"), result.get("name"));
+            assertEquals(input.get("description"), result.get("description"));
+            assertEquals(37, result.get("durationDays"));
+            assertEquals(0, new java.math.BigDecimal("123456.78").compareTo(new java.math.BigDecimal(result.get("price").toString())));
+            var row = jdbc.queryForMap("SELECT * FROM membership_plans WHERE id=?", id);
+            assertEquals("ACTIVE", row.get("status")); assertNotNull(row.get("created_at")); assertNotNull(row.get("updated_at"));
+            assertEquals(37, row.get("duration_days")); assertEquals(new java.math.BigDecimal("123456.78"), row.get("price"));
+            for (var actor : List.of(fixture.admin, fixture.memberA)) {
+                assertEquals(result, object(request("GET", "/api/v1/membership-plans/" + id, token(actor), null, 200)));
+                assertTrue(array(request("GET", "/api/v1/membership-plans", token(actor), null, 200)).contains(result));
+            }
+            assertEquals(before, snapshot());
+        }
+        private Map<String, List<String>> snapshot() {
+            var result = new HashMap<String, List<String>>();
+            for (String table : List.of("users", "members", "personal_trainers", "memberships", "payment_transactions", "bookings", "availability_slots", "booking_policy")) {
+                result.put(table, jdbc.queryForList("SELECT to_jsonb(t)::text FROM " + table + " t ORDER BY id", String.class));
+            }
+            return result;
+        }
+        @Test void duplicateNamesHaveIndependentUuids() throws Exception {
+            var first = create(input()); var second = create(input());
+            assertNotEquals(first.get("id"), second.get("id"));
+        }
+        @ParameterizedTest @ValueSource(strings = {"0", "0.01", "9999999999.99"})
+        void priceBoundaries(String price) throws Exception {
+            var data = input(); data.put("price", new java.math.BigDecimal(price));
+            var created = create(data);
+            assertEquals(0, new java.math.BigDecimal(price).compareTo(new java.math.BigDecimal(created.get("price").toString())));
+        }
+        @Test void storageBoundariesAndOptionalText() throws Exception {
+            var data = input(); data.put("name", "🏋".repeat(100)); data.put("durationDays", Integer.MAX_VALUE); data.put("description", "x".repeat(12000));
+            var created = create(data); assertEquals(data.get("name"), created.get("name"));
+            assertEquals(data.get("description"), created.get("description"));
+            assertEquals(Integer.MAX_VALUE, created.get("durationDays"));
+            var absent = create(input()); assertNull(absent.get("description"));
+            data = input(); data.put("description", null); assertNull(create(data).get("description"));
+        }
+        @Test void anonymousAndWrongRoles() throws Exception {
+            error("POST", PATH, null, input(), 401, "ERR_UNAUTHORIZED");
+            for (var actor : List.of(fixture.memberA, fixture.ptA)) error("POST", PATH, token(actor), input(), 403, "ERR_FORBIDDEN");
+        }
+        @ParameterizedTest @ValueSource(strings = {"SUSPENDED", "DISABLED"})
+        void lockedActor(String status) throws Exception {
+            String access = token(fixture.admin);
+            jdbc.update("UPDATE users SET status=? WHERE id=?", status, fixture.admin.userId);
+            error("POST", PATH, access, input(), 401, "ERR_UNAUTHORIZED");
+        }
+        @ParameterizedTest @ValueSource(strings = {"name", "durationDays", "price"})
+        void requiredMissingOrNull(String field) throws Exception {
+            var data = input(); data.remove(field); error("POST", PATH, token(fixture.admin), data, 400, "ERR_VALIDATION");
+            data.put(field, null); error("POST", PATH, token(fixture.admin), data, 400, "ERR_VALIDATION");
+        }
+        @ParameterizedTest @ValueSource(strings = {"", " ", "\t\n", "TOO_LONG"})
+        void invalidNames(String name) throws Exception {
+            var data = input(); data.put("name", name.equals("TOO_LONG") ? "a".repeat(101) : name);
+            error("POST", PATH, token(fixture.admin), data, 400, "ERR_VALIDATION");
+        }
+        @ParameterizedTest @ValueSource(strings = {"0", "-1", "2147483648", "-2147483649", "1.0", "1e0", "\"30\"", "true", "[]", "{}"})
+        void invalidDurationTypeOrRange(String value) throws Exception { invalidRaw("durationDays", value); }
+        @ParameterizedTest @ValueSource(strings = {"-0.01", "0.001", "1.000000000000000000001", "10000000000", "9999999999.999", "1e20", "\"1.00\"", "true", "[]", "{}"})
+        void invalidPriceTypeScaleOrRange(String value) throws Exception { invalidRaw("price", value); }
+        @ParameterizedTest @ValueSource(strings = {"name", "description"})
+        void invalidTextType(String field) throws Exception { invalidRaw(field, "1"); invalidRaw(field, "\"\\u0000\""); }
+        @ParameterizedTest @ValueSource(strings = {"id", "status", "createdAt", "updatedAt", "owner", "memberId"})
+        void rejectsServerControlledOrUnknownFields(String field) throws Exception {
+            var data = input(); data.put(field, "client-controlled"); error("POST", PATH, token(fixture.admin), data, 400, "ERR_VALIDATION");
+        }
+        private void invalidRaw(String field, String raw) throws Exception {
+            var data = input(); data.remove(field);
+            String payload = json.writeValueAsString(data); payload = payload.substring(0, payload.length()-1) + ",\"" + field + "\":" + raw + "}";
+            int before = jdbc.queryForObject("SELECT count(*) FROM membership_plans", Integer.class);
+            var response = client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + PATH))
+                    .header("Authorization", "Bearer " + token(fixture.admin)).header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(payload)).build(), HttpResponse.BodyHandlers.ofString());
+            assertEquals(400, response.statusCode());
+            assertEquals("ERR_VALIDATION", object(object(json.readValue(response.body(), Object.class)).get("error")).get("code"));
+            assertEquals(before, jdbc.queryForObject("SELECT count(*) FROM membership_plans", Integer.class));
+        }
+        @Test void rollbackAfterInsertLeavesNoPlan() {
+            var id = new AtomicReference<UUID>();
+            assertThrows(IllegalStateException.class, () -> new TransactionTemplate(transactions).executeWithoutResult(tx -> {
+                id.set(planCreate.create(fixture.admin.email, new vn.edu.tdtu.fitcenter.dto.membership.MembershipPlanCreateRequest(
+                        "Synthetic rollback", null, 1, java.math.BigDecimal.ZERO)).id());
+                throw new IllegalStateException("Force rollback after flush");
+            }));
+            assertNotNull(id.get()); assertEquals(0, jdbc.queryForObject("SELECT count(*) FROM membership_plans WHERE id=?", Integer.class, id.get()));
+        }
+    }
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class ServiceEligibilityCases {

@@ -3,9 +3,12 @@ import '../services/booking_policy_service.dart';
 import 'package:flutter/material.dart';
 
 import 'booking_policy_page.dart';
+import 'membership_page.dart';
+import '../services/membership_plan_service.dart';
 
 class AdminHomePage extends StatelessWidget {
   final BookingPolicyService service;
+  final MembershipPlanService plans;
   final VoidCallback onLogout;
   final bool isDark;
   final ValueChanged<bool> onToggleTheme;
@@ -13,6 +16,7 @@ class AdminHomePage extends StatelessWidget {
   const AdminHomePage({
     super.key,
     required this.service,
+    required this.plans,
     required this.onLogout,
     required this.isDark,
     required this.onToggleTheme,
@@ -140,15 +144,13 @@ class AdminHomePage extends StatelessWidget {
               _AdminMenuCard(
                 icon: Icons.card_membership_outlined,
                 title: 'Gói tập',
-                subtitle: 'Tạo và cập nhật các gói hội viên',
+                subtitle: 'Xem gói đang hoạt động và thêm gói tập',
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                      builder: (_) => const _ComingSoonPage(
-                        title: 'Chưa khả dụng',
-                        description: 'Chức năng chưa khả dụng.',
-                      ),
+                      builder: (_) =>
+                          MembershipPage(service: plans, onLogout: onLogout),
                     ),
                   );
                 },

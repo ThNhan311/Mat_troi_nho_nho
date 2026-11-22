@@ -1,11 +1,50 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: service-eligibility-working-tree
-  description: Policy write 63fe394; working tree thêm D01 phương án A kiểm tra eligibility phía Backend. Không lưu dấu bắt đầu, completion giữ R04; Frontend chưa tích hợp, chưa hoàn tất chặn dịch vụ end-to-end. Membership/payment write chưa có.
+  version: membership-plan-create-working-tree
+  description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Account/activation/renewal/payment write chưa có.
 servers:
 - url: http://localhost:18081
 paths:
+  /api/v1/admin/membership-plans:
+    post:
+      operationId: createMembershipPlan
+      summary: ADMIN ACTIVE tạo gói tập ACTIVE và đọc lại qua GET hiện có
+      description: >-
+        UUID và trạng thái ACTIVE do server đặt. Không nhận ID/status/timestamps/owner hoặc field ngoài bốn input.
+        Tên không unique; hai lệnh cùng tên có thể tạo hai UUID. durationDays là JSON integer int32, không chuỗi/float/exponent.
+        price là JSON number đọc trực tiếp BigDecimal, không âm thầm làm tròn scale/range NUMERIC(12,2); giá 0 hợp lệ.
+        Không đổi tháng thành ngày; không tạo/sửa Member, membership, payment hoặc booking.
+        Transaction kiểm lại ADMIN ACTIVE từ principal và INSERT/flush; không khóa Member/PT/slot/policy.
+        Không có idempotency key; client không tự replay POST khi timeout/kết quả chưa rõ, GET đối chiếu nhưng không nhận diện bằng tên.
+        GET list/detail chỉ ACTIVE, không phải quản lý đầy đủ INACTIVE; update/status/delete chưa triển khai.
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipPlanCreate'
+      responses:
+        '201':
+          description: Gói ACTIVE mới; DTO giống GET, không có status/timestamps
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+        '400':
+          $ref: '#/components/responses/LifecycleValidation'
+        '401':
+          $ref: '#/components/responses/LifecycleUnauthorized'
+        '403':
+          $ref: '#/components/responses/LifecycleForbidden'
+        '409':
+          description: ERR_CONFLICT khi constraint/lock conflict thực tế, không áp cho trùng tên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/pt/bookings/{id}/service-eligibility:
     get:
       operationId: getOwnBookingServiceEligibility
@@ -1140,6 +1179,32 @@ components:
           items:
             type: string
             enum: [BOOKING_NOT_CONFIRMED, SESSION_NOT_STARTED, SESSION_ENDED, MEMBER_ACCOUNT_INACTIVE, MEMBERSHIP_INACTIVE, MEMBERSHIP_NOT_COVERED]
+    MembershipPlanCreate:
+      type: object
+      additionalProperties: false
+      required: [name, durationDays, price]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Không blank; tối đa 100 Unicode code points, không chứa U+0000; giữ nguyên tên, không unique
+        description:
+          type: string
+          nullable: true
+          description: Tùy chọn hoặc null, TEXT PostgreSQL; không thêm business cap; không chứa U+0000
+        durationDays:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+          description: JSON integer lexical, không ép chuỗi hoặc float/exponent; đơn vị ngày
+        price:
+          type: number
+          minimum: 0
+          maximum: 9999999999.99
+          multipleOf: 0.01
+          description: JSON number, NUMERIC(12,2); quá 2 chữ số thập phân hoặc range bị từ chối, không làm tròn
     BookingPolicyWrite:
       type: object
       additionalProperties: false
@@ -1279,16 +1344,28 @@ components:
           - ADMIN
     Plan:
       type: object
+      additionalProperties: false
+      required: [id, name, description, durationDays, price]
       properties:
-        id: *id001
-        name: *id005
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 100
         description:
           type: string
           nullable: true
         durationDays:
           type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
         price:
           type: number
+          minimum: 0
+          maximum: 9999999999.99
+          multipleOf: 0.01
     Membership:
       type: object
       properties:

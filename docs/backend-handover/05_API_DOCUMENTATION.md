@@ -1,5 +1,8 @@
 # API hiện có
 
+Cập nhật M-01 (22/11/2026), baseline local 1b1e323, working tree feature/admin-membership-plan-create: POST `/api/v1/admin/membership-plans` cho ADMIN ACTIVE, HTTP201 trả DTO plan hiện có. Tên không unique, đơn vị ngày, giá0 hợp lệ; request strict chỉ name/description/durationDays/price, không rounding NUMERIC(12,2). Hai GET active list/detail được tái sử dụng. [Contract M-01](decisions/2026-11-22_M01_PLAN_CREATE.md), [evidence](evidence/M01_PLAN_CREATE.md), [OpenAPI](api/openapi.yaml).
+
+Web Member/PT Booking và Admin Policy đã tích hợp trên màn hình gốc tại baseline; M-01 thêm list ACTIVE và tạo plan trên Admin MembershipPage. Các đoạn checkpoint phía dưới giữ nguyên lịch sử, không mô tả đầy đủ hiện trạng. D01 là snapshot, không start marker/hard gate dịch vụ vật lý. Chưa account creation/activation/renewal/payment write, plan update/status/delete hoặc Member Membership UI.
 Cập nhật D01: policy write đã commit local `63fe394`. Working tree feature/backend-service-eligibility thêm GET kiểm tra điều kiện hiện tại cho PT sở hữu booking, phương án A; không lưu dấu bắt đầu, không đổi completion. Frontend chưa tích hợp nên chưa hoàn tất luồng chặn dịch vụ end-to-end. Các trạng thái D01 “chưa triển khai” ở checkpoint phía dưới được thay bằng cập nhật này. [Contract D01](decisions/2026-11-20_SERVICE_ELIGIBILITY.md), [báo cáo](evidence/SERVICE_ELIGIBILITY.md).
 
 Cập nhật Policy write: R04 đã commit local `8cb95e2`. Working tree feature/backend-booking-policy-write thêm PUT Admin Booking Policy hiệu lực ngay theo D05, xem [quyết định](decisions/2026-11-20_BOOKING_POLICY_WRITE.md) và [báo cáo](evidence/BOOKING_POLICY_WRITE.md). Các cập nhật R01–R04 phía dưới là checkpoint theo task; trạng thái hiện tại gồm GET/PUT policy, booking create và ba lifecycle endpoints. D01 service-start check vẫn chưa triển khai.
@@ -8,10 +11,11 @@ Cập nhật R04: R03 đã commit local `394a21f`. Working tree feature/backend-
 
 Nguồn: [controllers](../../backend/src/main/java/vn/edu/tdtu/fitcenter/controller/), [security](../../backend/src/main/java/vn/edu/tdtu/fitcenter/config/SecurityConfig.java), [DTO](../../backend/src/main/java/vn/edu/tdtu/fitcenter/dto/). Phần bàn giao gốc phản ánh checkpoint 0ae542a; Task A 073e131, R01 9ae0a50, R02 4d137d7 và R03 394a21f đã commit local. R04 working tree có ba endpoint lifecycle; xem [báo cáo R04](evidence/R04_BOOKING_LIFECYCLE.md). Không có phân trang.
 
-| Method, URL | Role/auth | Input | Response 200 | Service / bảng |
+| Method, URL | Role/auth | Input | Response thành công | Service / bảng |
 |---|---|---|---|---|
 | POST `/api/v1/auth/login` | công khai | JSON `email`, `password` bắt buộc | `accessToken`, `refreshToken`, `role` | AuthService / users |
 | POST `/api/v1/auth/refresh` | công khai | JSON `refreshToken` bắt buộc | như login | AuthService / users |
+| POST `/api/v1/admin/membership-plans` | ADMIN ACTIVE | JSON name/description?/durationDays/price | 201 plan DTO, UUID server; ACTIVE trong DB | MembershipPlanCreateService / membership_plans |
 | GET `/api/v1/membership-plans` | MEMBER hoặc ADMIN, Bearer | không | mảng plan ACTIVE | MembershipPlanService / membership_plans |
 | GET `/api/v1/membership-plans/{id}` | MEMBER hoặc ADMIN | UUID | plan ACTIVE | MembershipPlanService / membership_plans |
 | GET `/api/v1/memberships/me` | MEMBER | không | mảng membership của chính user | MembershipService / users, members, memberships, plans |

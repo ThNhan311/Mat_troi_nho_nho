@@ -6,6 +6,7 @@ import 'screens/home_page.dart';
 import 'screens/login_page.dart';
 import 'services/api_client.dart';
 import 'services/booking_policy_service.dart';
+import 'services/membership_plan_service.dart';
 
 void main() {
   runApp(const FitCenterAdminApp());
@@ -63,6 +64,7 @@ class _FitCenterAdminAppState extends State<FitCenterAdminApp> {
                 onGenerateRoute: (_) => MaterialPageRoute<void>(
                   builder: (_) => AdminHomePage(
                     service: BookingPolicyService(api),
+                    plans: MembershipPlanService(api),
                     onLogout: api.logout,
                     isDark: _themeMode == ThemeMode.dark,
                     onToggleTheme: _toggleTheme,
