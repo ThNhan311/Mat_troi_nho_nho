@@ -5,8 +5,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:fitcenter/main.dart';
+import 'package:fitcenter/screens/login_page.dart';
+import 'package:fitcenter/screens/booking_dashboard.dart';
+import 'package:fitcenter/services/booking_service.dart';
+import 'package:fitcenter/theme/app_theme.dart';
 import 'package:fitcenter/services/api_client.dart';
+
+// Retains the verified dashboard regression coverage; production entry uses original navigation.
+class FitCenterApp extends StatelessWidget {
+  final ApiClient api;
+  const FitCenterApp({super.key, required this.api});
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    theme: AppTheme.lightTheme,
+    home: AnimatedBuilder(
+      animation: api,
+      builder: (context, _) => api.authenticated
+          ? BookingDashboard(service: BookingService(api))
+          : LoginPage(api: api),
+    ),
+  );
+}
 
 const ptId = '10000000-0000-0000-0000-000000000001';
 const slotId = '20000000-0000-0000-0000-000000000002';

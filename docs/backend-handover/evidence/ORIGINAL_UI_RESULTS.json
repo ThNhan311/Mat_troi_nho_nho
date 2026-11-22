@@ -1,0 +1,677 @@
+{
+  "checkedAt": "2026-11-22T03:25:01.850Z",
+  "workingTree": {
+    "branch": "feature/frontend-original-ui-integration",
+    "head": "cb749ae20ad97ab923577bd36d4ba1703375deda",
+    "staged": false,
+    "committed": false,
+    "sourceHashes": "ORIGINAL_UI_SOURCE_HASHES.json"
+  },
+  "environment": {
+    "flutter": "3.50.1",
+    "dart": "3.14.0",
+    "java": "Temurin21.0.13+9",
+    "playwright": "1.65.1 external Temp tool",
+    "browser": "Chrome headless, real web build / real Backend / real isolated PostgreSQL",
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "browserTimezone": "America/Los_Angeles",
+    "businessTimezone": "Asia/Ho_Chi_Minh",
+    "backendPort": 18081,
+    "origins": [
+      "http://localhost:3000",
+      "http://localhost:3001"
+    ]
+  },
+  "flutter": {
+    "member": {
+      "passed": 37,
+      "failed": 0,
+      "skipped": 0
+    },
+    "pt": {
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0
+    },
+    "analyze": {
+      "member": {
+        "exitCode": 0,
+        "errors": 0,
+        "warnings": 0,
+        "infos": 42
+      },
+      "pt": {
+        "exitCode": 0,
+        "errors": 0,
+        "warnings": 0,
+        "infos": 45
+      }
+    },
+    "webBuild": {
+      "member": "passed",
+      "pt": "passed"
+    },
+    "backendFullRegression": "not rerun: executable Backend unchanged; 668 is historical"
+  },
+  "ui": {
+    "phases": {
+      "pt-create": {
+        "checks": 4,
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:17:51.568Z"
+      },
+      "member-book": {
+        "checks": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:18:02.127Z"
+      },
+      "member-cancel-rebook": {
+        "checks": 8,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:19:19.053Z"
+      },
+      "pt-lifecycle-final": {
+        "checks": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:19:28.670Z"
+      },
+      "pt-availability": {
+        "checks": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:19:37.876Z"
+      },
+      "owners": {
+        "checks": 2,
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:19:41.384Z"
+      },
+      "ui-error-feedback": {
+        "checks": 10,
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:19:47.221Z"
+      }
+    },
+    "noAggregateAssertionCount": "Repeated auth/read assertions across phases are not added as tests",
+    "writes": {
+      "pt-create|POST|/pt/availability": {
+        "at": "2026-11-22T03:17:50.960Z",
+        "response": {
+          "status": 201,
+          "id": "60f6bc2c-bb99-4cd8-88a8-e78f31c5954b",
+          "entityStatus": "AVAILABLE"
+        }
+      },
+      "member-book|POST|/bookings": {
+        "at": "2026-11-22T03:17:58.050Z",
+        "response": {
+          "status": 201,
+          "id": "2b5b3eda-1c74-404f-91db-05cb3518d03e",
+          "entityStatus": "CONFIRMED"
+        }
+      },
+      "member-cancel-rebook|POST|/bookings/998ca0df-7999-457b-ae9d-980d7d9b47e1/cancel": {
+        "at": "2026-11-22T03:19:11.403Z",
+        "response": {
+          "status": 200,
+          "id": "998ca0df-7999-457b-ae9d-980d7d9b47e1",
+          "entityStatus": "CANCELLED"
+        }
+      },
+      "member-cancel-rebook|POST|/bookings": {
+        "at": "2026-11-22T03:19:18.443Z",
+        "response": {
+          "status": 201,
+          "id": "5dcbfa52-1887-421d-be92-ca8801e4fcc7",
+          "entityStatus": "CONFIRMED"
+        }
+      },
+      "pt-lifecycle-final|POST|/pt/bookings/2de75976-86be-4e31-85d7-bfcf0a705729/cancel": {
+        "at": "2026-11-22T03:19:26.572Z",
+        "response": {
+          "status": 200,
+          "id": "2de75976-86be-4e31-85d7-bfcf0a705729",
+          "entityStatus": "CANCELLED"
+        }
+      },
+      "pt-lifecycle-final|POST|/pt/bookings/49463023-b4a8-4346-a8d7-ca6bf8a62762/complete": {
+        "at": "2026-11-22T03:19:28.054Z",
+        "response": {
+          "status": 200,
+          "id": "49463023-b4a8-4346-a8d7-ca6bf8a62762",
+          "entityStatus": "COMPLETED"
+        }
+      },
+      "pt-availability|PATCH|/pt/availability/924bed96-0dde-4899-8ead-7b0543bf30c3": {
+        "at": "2026-11-22T03:19:35.627Z",
+        "response": {
+          "status": 200,
+          "id": "d83c117f-113a-4dd9-af43-a2a1c0258876",
+          "entityStatus": "AVAILABLE"
+        }
+      },
+      "pt-availability|DELETE|/pt/availability/803214fe-1cb3-40b1-8fca-aa3abd004043": {
+        "at": "2026-11-22T03:19:37.045Z",
+        "response": {
+          "status": 204
+        }
+      },
+      "ui-error-feedback|POST|/bookings/c7818e2f-eb67-4d97-bdc4-49ffc4a27ea8/cancel": {
+        "at": "2026-11-22T03:19:44.956Z",
+        "response": {
+          "status": 409,
+          "entityStatus": 409,
+          "errorCode": "ERR_CANCELLATION_DEADLINE"
+        }
+      }
+    },
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/pt/availability",
+        "status": 201
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers/cf391025-9991-47c0-aec5-973f03f71b37",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers/cf391025-9991-47c0-aec5-973f03f71b37/slots",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/bookings",
+        "status": 201
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers/cf391025-9991-47c0-aec5-973f03f71b37/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/bookings/998ca0df-7999-457b-ae9d-980d7d9b47e1/cancel",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers/cf391025-9991-47c0-aec5-973f03f71b37",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers/cf391025-9991-47c0-aec5-973f03f71b37/slots",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/bookings",
+        "status": 201
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers/cf391025-9991-47c0-aec5-973f03f71b37/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings/c7818e2f-eb67-4d97-bdc4-49ffc4a27ea8/service-eligibility",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings/2de75976-86be-4e31-85d7-bfcf0a705729/service-eligibility",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/pt/bookings/2de75976-86be-4e31-85d7-bfcf0a705729/cancel",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/pt/bookings/49463023-b4a8-4346-a8d7-ca6bf8a62762/complete",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "PATCH",
+        "path": "/api/v1/pt/availability/924bed96-0dde-4899-8ead-7b0543bf30c3",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/v1/pt/availability/803214fe-1cb3-40b1-8fca-aa3abd004043",
+        "status": 204
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/bookings",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/pt/slots",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/bookings/c7818e2f-eb67-4d97-bdc4-49ffc4a27ea8/cancel",
+        "status": 409
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 401
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 401
+      }
+    ],
+    "createdSlot": {
+      "id": "60f6bc2c-bb99-4cd8-88a8-e78f31c5954b",
+      "ptId": "cf391025-9991-47c0-aec5-973f03f71b37",
+      "startAt": "2026-11-24T07:00:00Z",
+      "endAt": "2026-11-24T08:30:00Z",
+      "status": "AVAILABLE"
+    },
+    "createdBooking": {
+      "id": "2b5b3eda-1c74-404f-91db-05cb3518d03e",
+      "memberId": "d0c3896e-926b-4c5c-8403-6b732e206bf0",
+      "ptId": "cf391025-9991-47c0-aec5-973f03f71b37",
+      "slotId": "60f6bc2c-bb99-4cd8-88a8-e78f31c5954b",
+      "startAt": "2026-11-24T07:00:00Z",
+      "endAt": "2026-11-24T08:30:00Z",
+      "status": "CONFIRMED",
+      "cancelledBy": null,
+      "cancelReason": null,
+      "cancelledAt": null,
+      "completedAt": null
+    },
+    "rebooking": {
+      "id": "5dcbfa52-1887-421d-be92-ca8801e4fcc7",
+      "memberId": "7873b83a-5d2e-4aa6-929d-047298a42c02",
+      "ptId": "cf391025-9991-47c0-aec5-973f03f71b37",
+      "slotId": "3fd38bfb-357a-43af-b57a-cfc0649e8d4a",
+      "startAt": "2026-11-23T03:17:00Z",
+      "endAt": "2026-11-23T04:47:00Z",
+      "status": "CONFIRMED",
+      "cancelledBy": null,
+      "cancelReason": null,
+      "cancelledAt": null,
+      "completedAt": null
+    },
+    "replacementSlot": {
+      "id": "d83c117f-113a-4dd9-af43-a2a1c0258876",
+      "ptId": "cf391025-9991-47c0-aec5-973f03f71b37",
+      "startAt": "2026-11-23T11:47:00Z",
+      "endAt": "2026-11-23T13:17:00Z",
+      "status": "AVAILABLE"
+    },
+    "sourceHashesVerified": 74,
+    "networkAnd401": "Browser route fault injection; 409 is real Backend response"
+  },
+  "http": {
+    "baseline": {
+      "checks": 26,
+      "requests": 19,
+      "expectedBooking": "2b5b3eda-1c74-404f-91db-05cb3518d03e",
+      "memberCount": 6,
+      "otherMemberCount": 1,
+      "ptCount": 7,
+      "otherPtCount": 0,
+      "passed": 26,
+      "failed": 0,
+      "skipped": 0,
+      "checkedAt": "2026-11-22T03:21:44.241Z"
+    },
+    "lifecycle": {
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0,
+      "requests": 20,
+      "checkedAt": "2026-11-22T03:21:49.083Z",
+      "rebookId": "5dcbfa52-1887-421d-be92-ca8801e4fcc7",
+      "replacementSlotId": "d83c117f-113a-4dd9-af43-a2a1c0258876"
+    }
+  },
+  "database": {
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "rows": [
+      {
+        "booking": "2b5b3eda-1c74-404f-91db-05cb3518d03e",
+        "member": "d0c3896e-926b-4c5c-8403-6b732e206bf0",
+        "pt": "cf391025-9991-47c0-aec5-973f03f71b37",
+        "slot": "60f6bc2c-bb99-4cd8-88a8-e78f31c5954b",
+        "start": "2026-11-24T07:00:00Z",
+        "end": "2026-11-24T08:30:00Z",
+        "bookingStatus": "CONFIRMED",
+        "slotStatus": "BOOKED",
+        "timesMatch": "true"
+      },
+      {
+        "booking": "2de75976-86be-4e31-85d7-bfcf0a705729",
+        "member": "d0c3896e-926b-4c5c-8403-6b732e206bf0",
+        "pt": "cf391025-9991-47c0-aec5-973f03f71b37",
+        "slot": "f57588d4-d369-415c-ac52-744b446300f8",
+        "start": "2026-11-23T07:17:00Z",
+        "end": "2026-11-23T08:47:00Z",
+        "bookingStatus": "CANCELLED",
+        "slotStatus": "DISABLED",
+        "timesMatch": "true"
+      },
+      {
+        "booking": "49463023-b4a8-4346-a8d7-ca6bf8a62762",
+        "member": "d0c3896e-926b-4c5c-8403-6b732e206bf0",
+        "pt": "cf391025-9991-47c0-aec5-973f03f71b37",
+        "slot": "d17251ea-a2a2-4d9a-8d21-ec5834f75899",
+        "start": "2026-11-22T00:17:00Z",
+        "end": "2026-11-22T01:47:00Z",
+        "bookingStatus": "COMPLETED",
+        "slotStatus": "DISABLED",
+        "timesMatch": "true"
+      },
+      {
+        "booking": "5dcbfa52-1887-421d-be92-ca8801e4fcc7",
+        "member": "7873b83a-5d2e-4aa6-929d-047298a42c02",
+        "pt": "cf391025-9991-47c0-aec5-973f03f71b37",
+        "slot": "3fd38bfb-357a-43af-b57a-cfc0649e8d4a",
+        "start": "2026-11-23T03:17:00Z",
+        "end": "2026-11-23T04:47:00Z",
+        "bookingStatus": "CONFIRMED",
+        "slotStatus": "BOOKED",
+        "timesMatch": "true"
+      },
+      {
+        "booking": "87d89a3f-85cd-4f3d-aaca-68c3bd78bd00",
+        "member": "d0c3896e-926b-4c5c-8403-6b732e206bf0",
+        "pt": "cf391025-9991-47c0-aec5-973f03f71b37",
+        "slot": "924bed96-0dde-4899-8ead-7b0543bf30c3",
+        "start": "2026-11-23T11:17:00Z",
+        "end": "2026-11-23T12:47:00Z",
+        "bookingStatus": "CANCELLED",
+        "slotStatus": "DISABLED",
+        "timesMatch": "true"
+      },
+      {
+        "booking": "998ca0df-7999-457b-ae9d-980d7d9b47e1",
+        "member": "d0c3896e-926b-4c5c-8403-6b732e206bf0",
+        "pt": "cf391025-9991-47c0-aec5-973f03f71b37",
+        "slot": "3fd38bfb-357a-43af-b57a-cfc0649e8d4a",
+        "start": "2026-11-23T03:17:00Z",
+        "end": "2026-11-23T04:47:00Z",
+        "bookingStatus": "CANCELLED",
+        "slotStatus": "BOOKED",
+        "timesMatch": "true"
+      },
+      {
+        "booking": "c7818e2f-eb67-4d97-bdc4-49ffc4a27ea8",
+        "member": "d0c3896e-926b-4c5c-8403-6b732e206bf0",
+        "pt": "cf391025-9991-47c0-aec5-973f03f71b37",
+        "slot": "3c05c24f-0c98-4972-bc2a-faf7159d0fb5",
+        "start": "2026-11-22T02:47:00Z",
+        "end": "2026-11-22T04:17:00Z",
+        "bookingStatus": "CONFIRMED",
+        "slotStatus": "BOOKED",
+        "timesMatch": "true"
+      }
+    ],
+    "currentEligibilitySnapshotUnchanged": true,
+    "fixtureSeeded": "six slots/five bookings relative to real UTC now; current -30m, ended -3h; no Clock change",
+    "uiCreated": "one additional slot, Member A booking and Member B rebooking; PATCH replacement slot created by Backend response"
+  },
+  "cleanup": {
+    "ownedProcessesAbsent": true,
+    "guardRunnerExitedAfterJavaStop": true,
+    "portsClosed": [
+      3000,
+      3001,
+      18081,
+      15437
+    ],
+    "containerStopped": true,
+    "volumePreserved": true,
+    "checkedAt": "2026-11-22T03:24:14.5802088Z",
+    "manifestSlots": 8,
+    "manifestBookings": 7,
+    "postCleanup": "users=0,members=0,personal_trainers=0,membership_plans=0,memberships=0,availability_slots=0,bookings=0,booking_policy=0\r\n1,2,3,4,5,6|true",
+    "allOutsideFixtureRowsPreserved": true
+  }
+}

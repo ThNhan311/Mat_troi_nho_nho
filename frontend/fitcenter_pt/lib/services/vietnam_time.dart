@@ -32,3 +32,17 @@ String vietnamInput(DateTime instant) => instant
     .toIso8601String()
     .substring(0, 16)
     .replaceFirst('T', ' ');
+
+DateTime vietnamDate(DateTime instant) {
+  final vn = instant.toUtc().add(const Duration(hours: 7));
+  return DateTime.utc(vn.year, vn.month, vn.day);
+}
+
+bool sameVietnamDay(DateTime instant, DateTime day) {
+  final vn = vietnamDate(instant);
+  return vn.year == day.year && vn.month == day.month && vn.day == day.day;
+}
+
+String vietnamClock(DateTime instant) => vietnamInput(instant).substring(11);
+String vietnamDateText(DateTime instant) =>
+    vietnamTime(instant).substring(0, 10);

@@ -1,13 +1,11 @@
-
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatefulWidget {
-  final VoidCallback onOpenDemo;
+import '../services/api_client.dart';
 
-  const LoginPage({
-    super.key,
-    required this.onOpenDemo,
-  });
+class LoginPage extends StatefulWidget {
+  final ApiClient api;
+
+  const LoginPage({super.key, required this.api});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -27,19 +25,27 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    if (!_formKey.currentState!.validate()) {
-      return;
+  bool _busy = false;
+  String? _error;
+  Future<void> _handleLogin() async {
+    if (_busy || !_formKey.currentState!.validate()) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.api.login(_emailController.text, _passwordController.text);
+    } on ApiError catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    } catch (_) {
+      if (mounted)
+        setState(() => _error = 'Không thể đăng nhập. Vui lòng thử lại.');
+    } finally {
+      if (mounted) {
+        _passwordController.clear();
+        setState(() => _busy = false);
+      }
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Giao diện đã sẵn sàng. Chức năng đăng nhập '
-              'cần được kết nối với backend.',
-        ),
-      ),
-    );
   }
 
   @override
@@ -57,11 +63,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.fitness_center,
-                    size: 72,
-                    color: colors.primary,
-                  ),
+                  Icon(Icons.fitness_center, size: 72, color: colors.primary),
                   const SizedBox(height: 16),
                   Text(
                     'FITCENTER',
@@ -101,6 +103,8 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 24),
 
                   TextFormField(
+                    key: const Key('email'),
+                    enabled: !_busy,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     style: TextStyle(color: colors.onSurface),
@@ -119,9 +123,8 @@ class _LoginPageState extends State<LoginPage> {
                         return 'Vui lòng nhập email.';
                       }
 
-                      if (!RegExp(
-                        r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                      ).hasMatch(value.trim())) {
+                      if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                          .hasMatch(value.trim())) {
                         return 'Email chưa đúng định dạng.';
                       }
 
@@ -131,6 +134,8 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 16),
 
                   TextFormField(
+                    key: const Key('password'),
+                    enabled: !_busy,
                     controller: _passwordController,
                     obscureText: _hidePassword,
                     style: TextStyle(color: colors.onSurface),
@@ -166,10 +171,21 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 24),
 
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(
+                        _error!,
+                        key: const Key('login-error'),
+                        style: TextStyle(color: colors.error),
+                      ),
+                    ),
+                  if (_busy) const LinearProgressIndicator(),
                   SizedBox(
                     height: 52,
                     child: ElevatedButton(
-                      onPressed: _handleLogin,
+                      key: const Key('login'),
+                      onPressed: _busy ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colors.primary,
                         foregroundColor: colors.onPrimary,
@@ -198,13 +214,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 12),
 
-                  TextButton(
-                    onPressed: widget.onOpenDemo,
-                    child: Text(
-                      'Xem giao diện demo',
-                      style: TextStyle(color: colors.primary),
-                    ),
-                  ),
+                  const SizedBox(height: 48),
                 ],
               ),
             ),

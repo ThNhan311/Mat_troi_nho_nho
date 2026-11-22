@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class TrainerDetailPage extends StatelessWidget {
   final String trainerName;
+  final String? bio;
   final String specialty;
   final String experience;
   final String rating;
@@ -12,6 +13,7 @@ class TrainerDetailPage extends StatelessWidget {
   const TrainerDetailPage({
     super.key,
     required this.trainerName,
+    this.bio,
     required this.specialty,
     required this.experience,
     required this.rating,
@@ -26,9 +28,7 @@ class TrainerDetailPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Hồ sơ huấn luyện viên'),
-      ),
+      appBar: AppBar(title: const Text('Hồ sơ huấn luyện viên')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -43,11 +43,7 @@ class TrainerDetailPage extends StatelessWidget {
                     color: colors.primary.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.person,
-                    size: 65,
-                    color: colors.primary,
-                  ),
+                  child: Icon(Icons.person, size: 65, color: colors.primary),
                 ),
               ),
               const SizedBox(height: 18),
@@ -67,21 +63,13 @@ class TrainerDetailPage extends StatelessWidget {
                 child: Text(
                   specialty,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: colors.primary,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: colors.primary, fontSize: 14),
                 ),
               ),
               const SizedBox(height: 24),
               Row(
                 children: [
-                  _buildStat(
-                    context,
-                    'Đánh giá',
-                    rating,
-                    Icons.star,
-                  ),
+                  _buildStat(context, 'Đánh giá', rating, Icons.star),
                   const SizedBox(width: 10),
                   _buildStat(
                     context,
@@ -95,8 +83,8 @@ class TrainerDetailPage extends StatelessWidget {
               _buildInfoCard(
                 context,
                 icon: Icons.fitness_center,
-                title: 'Kinh nghiệm huấn luyện',
-                content: '$sessions đã được ghi nhận.',
+                title: 'Giới thiệu',
+                content: bio ?? 'Chưa có thông tin',
               ),
               const SizedBox(height: 14),
               _buildInfoCard(
@@ -111,7 +99,7 @@ class TrainerDetailPage extends StatelessWidget {
                 icon: Icons.calendar_month,
                 title: 'Lịch huấn luyện',
                 content:
-                'Xem các khung giờ còn trống và chọn lịch phù hợp với bạn.',
+                    'Xem các khung giờ còn trống và chọn lịch phù hợp với bạn.',
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -138,11 +126,11 @@ class TrainerDetailPage extends StatelessWidget {
   }
 
   Widget _buildStat(
-      BuildContext context,
-      String title,
-      String value,
-      IconData icon,
-      ) {
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+  ) {
     final colors = Theme.of(context).colorScheme;
 
     return Expanded(
@@ -154,11 +142,7 @@ class TrainerDetailPage extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              color: colors.primary,
-              size: 22,
-            ),
+            Icon(icon, color: colors.primary, size: 22),
             const SizedBox(height: 10),
             Text(
               title,
@@ -184,11 +168,11 @@ class TrainerDetailPage extends StatelessWidget {
   }
 
   Widget _buildInfoCard(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required String content,
-      }) {
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
     final colors = Theme.of(context).colorScheme;
 
     return Container(
@@ -201,11 +185,7 @@ class TrainerDetailPage extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: colors.primary,
-            size: 24,
-          ),
+          Icon(icon, color: colors.primary, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

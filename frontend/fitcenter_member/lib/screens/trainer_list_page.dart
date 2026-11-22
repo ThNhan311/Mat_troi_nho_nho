@@ -1,44 +1,41 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/page_header.dart';
+import '../services/booking_state.dart';
+import '../widgets/api_status.dart';
 import 'trainer_detail_page.dart';
 
 class TrainerListPage extends StatelessWidget {
+  final BookingState state;
   final ValueChanged<String> onShowMessage;
   final ValueChanged<String> onSelectTrainerForBooking;
 
   const TrainerListPage({
     super.key,
     required this.onShowMessage,
+    required this.state,
     required this.onSelectTrainerForBooking,
   });
 
-  static const List<Map<String, dynamic>> trainers = [
-    {
-      'name': 'Nguyễn Minh Anh',
-      'specialty': 'Giảm mỡ • Cải thiện thể lực',
-      'experience': '5 năm kinh nghiệm',
-      'rating': '4.9',
-      'sessions': '320+ buổi tập',
-      'initials': 'MA',
-    },
-    {
-      'name': 'Trần Quốc Bảo',
-      'specialty': 'Tăng cơ • Phát triển sức mạnh',
-      'experience': '4 năm kinh nghiệm',
-      'rating': '4.8',
-      'sessions': '250+ buổi tập',
-      'initials': 'QB',
-    },
-    {
-      'name': 'Lê Hoàng Phúc',
-      'specialty': 'Thể hình • Sức bền',
-      'experience': '3 năm kinh nghiệm',
-      'rating': '4.7',
-      'sessions': '180+ buổi tập',
-      'initials': 'HP',
-    },
-  ];
+  List<Map<String, dynamic>> get trainers => state.trainers
+      .map(
+        (t) => {
+          'id': t.id,
+          'name': t.fullName,
+          'specialty': t.specialization ?? 'Chưa có thông tin',
+          'experience': t.experienceSummary ?? 'Chưa có thông tin',
+          'rating': 'Chưa khả dụng',
+          'sessions': 'Chưa khả dụng',
+          'initials': t.fullName
+              .trim()
+              .split(RegExp(r'\s+'))
+              .where((s) => s.isNotEmpty)
+              .take(2)
+              .map((s) => s[0])
+              .join(),
+        },
+      )
+      .toList();
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +54,7 @@ class TrainerListPage extends StatelessWidget {
                 title: 'Huấn luyện viên',
                 subtitle: 'Tìm PT phù hợp với mục tiêu của bạn',
               ),
+              ApiStatus(state: state),
               const SizedBox(height: 22),
               _buildIntroCard(context),
               const SizedBox(height: 24),
@@ -82,9 +80,9 @@ class TrainerListPage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 14),
-              ...trainers.map(
-                    (trainer) => _buildTrainerCard(context, trainer),
-              ),
+              if (!state.loading && trainers.isEmpty)
+                const Text('Chưa có huấn luyện viên để hiển thị.'),
+              ...trainers.map((trainer) => _buildTrainerCard(context, trainer)),
               const SizedBox(height: 16),
             ],
           ),
@@ -102,17 +100,11 @@ class TrainerListPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: colors.primary.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.track_changes,
-            color: colors.primary,
-            size: 34,
-          ),
+          Icon(Icons.track_changes, color: colors.primary, size: 34),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -143,10 +135,7 @@ class TrainerListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTrainerCard(
-      BuildContext context,
-      Map<String, dynamic> trainer,
-      ) {
+  Widget _buildTrainerCard(BuildContext context, Map<String, dynamic> trainer) {
     final colors = Theme.of(context).colorScheme;
 
     return Container(
@@ -155,9 +144,7 @@ class TrainerListPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: colors.onSurface.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: colors.onSurface.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,10 +186,7 @@ class TrainerListPage extends StatelessWidget {
                     const SizedBox(height: 7),
                     Text(
                       trainer['specialty'] as String,
-                      style: TextStyle(
-                        color: colors.primary,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: colors.primary, fontSize: 12),
                     ),
                     const SizedBox(height: 7),
                     Text(
@@ -218,18 +202,11 @@ class TrainerListPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Divider(
-            color: colors.onSurface.withValues(alpha: 0.08),
-            height: 1,
-          ),
+          Divider(color: colors.onSurface.withValues(alpha: 0.08), height: 1),
           const SizedBox(height: 14),
           Row(
             children: [
-              Icon(
-                Icons.star,
-                color: colors.primary,
-                size: 18,
-              ),
+              Icon(Icons.star, color: colors.primary, size: 18),
               const SizedBox(width: 5),
               Text(
                 trainer['rating'] as String,
@@ -261,27 +238,35 @@ class TrainerListPage extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => TrainerDetailPage(
-                      trainerName: trainer['name'] as String,
-                      specialty: trainer['specialty'] as String,
-                      experience: trainer['experience'] as String,
-                      rating: trainer['rating'] as String,
-                      sessions: trainer['sessions'] as String,
-                      onShowMessage: onShowMessage,
-                      onBookAppointment: () {
-                        Navigator.pop(context);
-                        onSelectTrainerForBooking(
-                          trainer['name'] as String,
-                        );
-                      },
-                    ),
-                  ),
-                );
-              },
+              key: ValueKey('trainer-${trainer['id']}'),
+              onPressed: state.blocked
+                  ? null
+                  : () => state.act(() async {
+                      final detail = await state.service.trainer(
+                        trainer['id'] as String,
+                      );
+                      if (!context.mounted || !state.alive) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => TrainerDetailPage(
+                            trainerName: detail.fullName,
+                            specialty:
+                                detail.specialization ?? 'Chưa có thông tin',
+                            experience:
+                                detail.experienceSummary ?? 'Chưa có thông tin',
+                            rating: 'Chưa khả dụng',
+                            sessions: 'Chưa khả dụng',
+                            bio: detail.bio,
+                            onShowMessage: onShowMessage,
+                            onBookAppointment: () {
+                              Navigator.pop(context);
+                              onSelectTrainerForBooking(detail.id);
+                            },
+                          ),
+                        ),
+                      );
+                    }),
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.primary,
                 foregroundColor: colors.onPrimary,
@@ -292,9 +277,7 @@ class TrainerListPage extends StatelessWidget {
               ),
               child: const Text(
                 'Xem hồ sơ PT',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ),

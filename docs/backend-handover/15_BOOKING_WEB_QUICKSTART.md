@@ -1,10 +1,10 @@
 # Quickstart — Booking Member/PT trên Flutter Web
 
-Lát cắt đầu login → PT tạo slot → Member đặt và lịch hai bên đã đóng bằng commit9fe34b9. Nhánh hiện tại feature/frontend-booking-lifecycle bổ sung hủy, sửa/loại availability, kiểm tra điều kiện và complete; Backend base089b5e2, Frontend nguồn0307242. [Kết quả](evidence/BOOKING_WEB_INTEGRATION.md), [khảo sát](evidence/FRONTEND_INTEGRATION_SURVEY.md).
+Lát cắt đầu login → PT tạo slot → Member đặt và lịch hai bên đã đóng bằng commit9fe34b9. Lifecycle đã đóng bằng cb749ae. Nhánh hiện tại feature/frontend-original-ui-integration đưa logic đã kiểm chứng vào Login/Home/navigation và screen gốc; Backend base089b5e2, Frontend nguồn0307242. [Kết quả](evidence/BOOKING_WEB_INTEGRATION.md), [khảo sát](evidence/FRONTEND_INTEGRATION_SURVEY.md).
 
 ## Source và SDK
 
-Làm từ worktree tích hợp. Hai project: [Member](../../frontend/fitcenter_member), [PT](../../frontend/fitcenter_pt). Production Backend/V1–V6 giữ nguyên; không alignment/V7. Prototype Membership/Payment/Workout nhập theo source gốc vẫn ngoài entry point Booking mới, không được nối API trong task này.
+Làm từ worktree tích hợp. Hai project: [Member](../../frontend/fitcenter_member), [PT](../../frontend/fitcenter_pt). Production Backend/V1–V6 giữ nguyên; không alignment/V7. Membership/Payment/Workout/Face không được nối API; navigation gốc hiện Chưa khả dụng cho module chưa có contract. Dashboard trước được giữ cho regression riêng, không là entry chính.
 
 Đã xác minh Flutter3.50.1/Dart3.14.0, tương thích Dart^3.13.5. SDK riêng, không đổi PATH hệ thống. Nguồn chính thức: [archive](https://docs.flutter.dev/install/archive), [Windows manifest](https://storage.googleapis.com/flutter_infra_release/releases/releases_windows.json), [bundle3.50.1](https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.50.1-stable.zip). SHA256:
 33c1e3d4dd08f1136ddb9c7976cfd2b0ab20296f1565b78ba176a4cbb4e140eb.
@@ -152,3 +152,47 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-
 Probe giả định các scenario đã được thao tác theo thứ tự này, reason PT là Demo PT unavailable, replacement còn AVAILABLE. Probe chỉ ghi requests kỳ vọng bị từ chối (sai quyền/repeated cancel/đặt slot DISABLED); không tự thực hiện các thao tác thành công thay UI. DB audit đối chiếu metadata, trạng thái và snapshot booking/slot/account/profile/membership current không đổi; ghi13checks. Không cộng checks vào Flutter tests.
 
 Capture/Audit tự đăng ký UUID mới thuộc đúng PT/member fixture, gồm booking rebook và slot thay thế. Cleanup xác minh ownership lại và DELETE từng UUID manifest trong transaction; không truncate/xóa theo ngày. Sau logout và dừng đúng hai static servers/Backend của phiên, chạy Cleanup khi DB còn hoạt động, lặp Cleanup để kiểm no-op rồi stop đúng container nếu tự khởi động; giữ volume. Không cấp credential Admin cho Member/PT app.
+
+## Giao diện gốc và UI runner (task hiện tại)
+
+Entry thực tế là Login → Home/navigation gốc. Member: PT list/detail → Lịch tập/calendar → Cá nhân/Lịch sử đặt lịch. PT: Lịch làm → Buổi tập → Chi tiết. Không cần dùng dashboard thay thế. [Báo cáo và ảnh trước/sau](evidence/ORIGINAL_UI_INTEGRATION.md).
+
+Có thể kiểm chứng tự động bằng Chrome headless thật, vẫn qua các widget Web và Backend/PostgreSQL demo riêng. Playwright1.65.1 chỉ nằm trong thư mục công cụ local (npm registry chính thức + integrity package lock), không thêm dependency hai app. Cần Chrome đã cài; tùy chọn CHROME_EXECUTABLE chỉ trỏ executable được người vận hành xác minh.
+
+~~~powershell
+$uiTools = Join-Path $env:LOCALAPPDATA 'Temp\fitcenter-ui-tools'
+npm.cmd install --prefix $uiTools playwright@1.65.1 --ignore-scripts --no-audit --no-fund
+$playwright = Join-Path $uiTools 'node_modules\playwright\index.mjs'
+# Dùng manifest trong Temp riêng theo phần trên, DB/backend và hai web server đang chạy.
+# Chuẩn bị một lượt mới: Seed, Policy (Admin PUT), LifecycleSeed, LifecycleSnapshot.
+foreach ($action in @('LifecycleSeed','LifecycleSnapshot')) {
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-demo.ps1 -Action $action -JavaHome $JavaHome -ExpectedContainerId $verifiedId -ManifestPath $manifest
+  if ($LASTEXITCODE) { throw 'Dừng và kiểm tra fixture' }
+}
+foreach ($phase in @('pt-create','member-book','member-cancel-rebook','pt-lifecycle-final','pt-availability','owners','ui-error-feedback')) {
+  node frontend/verify-original-ui.mjs $manifest $playwright $phase
+  if ($LASTEXITCODE) { throw 'Dừng; Capture/Audit kết quả trước khi làm gì tiếp' }
+}
+~~~
+
+Đây là các pha của **một lượt fixture sạch**. Runner ghi original-ui-results.json cạnh manifest, lưu 74 source hashes của app/tests/helper/config, và lưu write intent trước khi thao tác. Không sửa source giữa các pha. Không xóa/đặt lại intent để chạy lại write khi timeout. Pha member-read-only chỉ login/GET/reload booking đã ghi nhận; không tạo booking mới. Khi một pha đã chạy dở: đọc trace + Capture/Audit/DB, rồi cleanup đúng manifest. Lượt mới cần private manifest/results sạch; lưu evidence cũ trước. Không ghi đè credentials hoặc manifest khác.
+
+PT create và Member book tạo slot/booking thật qua UI. Member cancel/rebook và PT cancel/complete cũng qua UI. LifecycleSeed tạo trước các booking tổng hợp: Member-cancel tương lai, PT-cancel tương lai, AVAILABLE có lịch sử CANCELLED để PATCH thay ID, AVAILABLE để DELETE, CONFIRMED đang diễn ra và CONFIRMED đã kết thúc. Đó là dữ liệu seed, không tuyên bố chúng được tạo qua UI. Current/ended được tính bằng thời gian thật; không sửa Clock production, không chờ90phút. Chạy eligibility trong cửa sổ current còn hiệu lực; hết cửa sổ thì cleanup rồi seed lượt mới.
+
+UI error phase kiểm 409 deadline Backend thật; network abort và repeated GET401 là fault injection ở browser để kiểm client không fake success/replay và refresh giới hạn. Hai HTTP probes kiểm role/ownership thật. Không cộng assertions UI, HTTP, DB và Flutter thành một số tests.
+
+Sau UI:
+
+~~~powershell
+# Đối chiếu đúng booking UUID lấy từ UI results, không dùng ID ví dụ.
+node frontend/verify-booking-demo.mjs verify $manifest '<UI-booking-UUID>'
+node frontend/verify-booking-lifecycle.mjs $manifest
+foreach ($action in @('Capture','Audit','LifecycleAudit','Cleanup')) {
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-demo.ps1 -Action $action -JavaHome $JavaHome -ExpectedContainerId $verifiedId -ManifestPath $manifest
+  if ($LASTEXITCODE) { throw 'Dừng kiểm tra đích/manifest' }
+}
+~~~
+
+Nếu shell đặt TMP/TEMP vào một sandbox khác, hai probe cũ yêu cầu manifest nằm dưới os.tmpdir(); chạy chúng trong process có TMP/TEMP trỏ thư mục Temp chứa manifest đã xác minh. Không di chuyển credential vào repo để vượt guard. verify-booking-demo dùng nhánh **verify**, không dùng claim khi đối chiếu. Lifecycle probe đọc metadata trước, chỉ gửi các negative request dự kiến409/403/404, không tạo rebook/replacement thay UI.
+
+Cuối cùng dừng đúng PID/command line của Node serve-booking-web, Java/guarded runner do lượt này khởi động; xác minh port3000/3001/18081 đã đóng. Dừng đúng container đã verify ID/label/volume, giữ volume. Không kill theo tên process rộng hoặc stop container khác. Cleanup đã kiểm tám bảng về baseline0 và history1–6 thành công ở lượt nghiệm thu; đây không phải lệnh truncate.

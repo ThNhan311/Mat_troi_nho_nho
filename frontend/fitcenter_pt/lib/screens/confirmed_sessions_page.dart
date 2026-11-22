@@ -1,54 +1,29 @@
 import 'package:flutter/material.dart';
 
+import '../services/booking_state.dart';
+import '../services/vietnam_time.dart';
+import '../widgets/api_status.dart';
+
 class ConfirmedSessionsPage extends StatefulWidget {
+  final BookingState state;
   final void Function(Map<String, dynamic> session) onOpenSession;
 
   const ConfirmedSessionsPage({
     super.key,
     required this.onOpenSession,
+    required this.state,
   });
 
   @override
-  State<ConfirmedSessionsPage> createState() =>
-      _ConfirmedSessionsPageState();
+  State<ConfirmedSessionsPage> createState() => _ConfirmedSessionsPageState();
 }
 
-class _ConfirmedSessionsPageState
-    extends State<ConfirmedSessionsPage> {
-  final List<Map<String, dynamic>> _sessions = [
-    {
-      'id': 'BK001',
-      'memberName': 'Nguyễn Minh Anh',
-      'date': DateTime(2026, 10, 24),
-      'start': '08:00',
-      'end': '09:30',
-      'status': 'CONFIRMED',
-    },
-    {
-      'id': 'BK002',
-      'memberName': 'Trần Hoàng Long',
-      'date': DateTime(2026, 10, 24),
-      'start': '10:00',
-      'end': '11:30',
-      'status': 'CONFIRMED',
-    },
-    {
-      'id': 'BK003',
-      'memberName': 'Lê Ngọc Hà',
-      'date': DateTime(2026, 10, 25),
-      'start': '14:00',
-      'end': '15:30',
-      'status': 'CONFIRMED',
-    },
-  ];
+class _ConfirmedSessionsPageState extends State<ConfirmedSessionsPage> {
+  List<Map<String, dynamic>> get _sessions => widget.state.sessions;
 
   String _selectedFilter = 'Tất cả';
 
-  final List<String> _filters = [
-    'Tất cả',
-    'Hôm nay',
-    'Sắp tới',
-  ];
+  final List<String> _filters = ['Tất cả', 'Hôm nay', 'Sắp tới'];
 
   String _formatDate(DateTime date) {
     final day = date.day.toString().padLeft(2, '0');
@@ -57,36 +32,26 @@ class _ConfirmedSessionsPageState
     return '$day/$month/${date.year}';
   }
 
-  DateTime _sessionStartDateTime(
-      Map<String, dynamic> session,
-      ) {
+  DateTime _sessionStartDateTime(Map<String, dynamic> session) {
     final date = session['date'] as DateTime;
     final time = (session['start'] as String).split(':');
 
-    return DateTime(
+    return DateTime.utc(
       date.year,
       date.month,
       date.day,
       int.parse(time[0]),
       int.parse(time[1]),
-    );
+    ).subtract(const Duration(hours: 7));
   }
 
   List<Map<String, dynamic>> get _filteredSessions {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
 
-    final today = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    );
+    final today = vietnamDate(now);
 
     final sessions = _sessions.where((session) {
       final sessionDate = session['date'] as DateTime;
-
-      if (session['status'] != 'CONFIRMED') {
-        return false;
-      }
 
       if (_selectedFilter == 'Hôm nay') {
         return sessionDate.year == today.year &&
@@ -122,13 +87,10 @@ class _ConfirmedSessionsPageState
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            ApiStatus(state: widget.state),
             Row(
               children: [
-                Icon(
-                  Icons.event_note,
-                  size: 32,
-                  color: colors.primary,
-                ),
+                Icon(Icons.event_note, size: 32, color: colors.primary),
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Column(
@@ -159,11 +121,7 @@ class _ConfirmedSessionsPageState
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.calendar_month,
-                    size: 40,
-                    color: colors.onPrimary,
-                  ),
+                  Icon(Icons.calendar_month, size: 40, color: colors.onPrimary),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -179,11 +137,9 @@ class _ConfirmedSessionsPageState
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Trong danh sách dữ liệu mẫu',
+                          'Trong khoảng xem',
                           style: TextStyle(
-                            color: colors.onPrimary.withValues(
-                              alpha: 0.8,
-                            ),
+                            color: colors.onPrimary.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
@@ -197,10 +153,7 @@ class _ConfirmedSessionsPageState
 
             const Text(
               'Lọc lịch tập',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 12),
@@ -229,18 +182,13 @@ class _ConfirmedSessionsPageState
                 const Expanded(
                   child: Text(
                     'Danh sách buổi tập',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
                 Text(
                   '${sessions.length} buổi',
                   style: TextStyle(
-                    color: colors.onSurface.withValues(
-                      alpha: 0.65,
-                    ),
+                    color: colors.onSurface.withValues(alpha: 0.65),
                   ),
                 ),
               ],
@@ -251,17 +199,12 @@ class _ConfirmedSessionsPageState
             if (sessions.isEmpty)
               _buildEmptyState(context)
             else
-              ...sessions.map(
-                    (session) => _buildSessionCard(
-                  context,
-                  session,
-                ),
-              ),
+              ...sessions.map((session) => _buildSessionCard(context, session)),
 
             const SizedBox(height: 16),
 
             Text(
-              'Dữ liệu hiện là dữ liệu mẫu, chưa lấy từ backend.',
+              'Giờ Việt Nam (UTC+07:00).',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: colors.onSurface.withValues(alpha: 0.6),
@@ -274,143 +217,133 @@ class _ConfirmedSessionsPageState
     );
   }
 
-  Widget _buildSessionCard(
-      BuildContext context,
-      Map<String, dynamic> session,
-      ) {
+  String statusLabel(String status) => switch (status) {
+    'CONFIRMED' => 'Đã xác nhận',
+    'CANCELLED' => 'Đã hủy',
+    'COMPLETED' => 'Đã hoàn tất',
+    _ => status,
+  };
+  Widget _buildSessionCard(BuildContext context, Map<String, dynamic> session) {
     final colors = Theme.of(context).colorScheme;
     final date = session['date'] as DateTime;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: colors.surface,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: colors.outline.withValues(alpha: 0.2),
+    return Semantics(
+      label:
+          'Buổi tập ${session['id']}. ${session['memberName']}. ${_formatDate(session['date'] as DateTime)}. ${session['start']} - ${session['end']}. ${statusLabel(session['status'] as String)}',
+      button: true,
+      excludeSemantics: true,
+      onTap: widget.state.busy ? null : () => widget.onOpenSession(session),
+      child: Card(
+        key: ValueKey('session-${session['id']}'),
+        margin: const EdgeInsets.only(bottom: 12),
+        color: colors.surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colors.outline.withValues(alpha: 0.2)),
         ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => widget.onOpenSession(session),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: colors.primary.withValues(
-                      alpha: 0.12,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: widget.state.busy ? null : () => widget.onOpenSession(session),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: colors.primary.withValues(alpha: 0.12),
+                      child: Icon(Icons.person_outline, color: colors.primary),
                     ),
-                    child: Icon(
-                      Icons.person_outline,
-                      color: colors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      session['memberName'] as String,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        session['memberName'] as String,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  const Icon(Icons.chevron_right),
-                ],
-              ),
+                    const Icon(Icons.chevron_right),
+                  ],
+                ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              _buildInfoRow(
-                context,
-                Icons.calendar_today,
-                _formatDate(date),
-              ),
+                _buildInfoRow(context, Icons.calendar_today, _formatDate(date)),
 
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
 
-              _buildInfoRow(
-                context,
-                Icons.access_time,
-                '${session['start']} - ${session['end']}',
-              ),
+                _buildInfoRow(
+                  context,
+                  Icons.access_time,
+                  '${session['start']} - ${session['end']}',
+                ),
 
-              const SizedBox(height: 14),
+                const SizedBox(height: 14),
 
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.check_circle_outline,
-                          size: 15,
-                          color: Colors.green,
-                        ),
-                        SizedBox(width: 5),
-                        Text(
-                          'Đã xác nhận',
-                          style: TextStyle(
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            size: 15,
                             color: Colors.green,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 5),
+                          Text(
+                            statusLabel(session['status'] as String),
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    'Chi tiết',
-                    style: TextStyle(
-                      color: colors.primary,
-                      fontWeight: FontWeight.w600,
+                    const Spacer(),
+                    Text(
+                      'Chi tiết',
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(
-      BuildContext context,
-      IconData icon,
-      String text,
-      ) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String text) {
     final colors = Theme.of(context).colorScheme;
 
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: colors.onSurface.withValues(alpha: 0.65),
-        ),
+        Icon(icon, size: 18, color: colors.onSurface.withValues(alpha: 0.65)),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
-              color: colors.onSurface.withValues(alpha: 0.85),
-            ),
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.85)),
           ),
         ),
       ],
@@ -437,18 +370,13 @@ class _ConfirmedSessionsPageState
           const SizedBox(height: 12),
           const Text(
             'Không có buổi tập nào',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
           Text(
             'Không tìm thấy buổi tập phù hợp với bộ lọc.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: colors.onSurface.withValues(alpha: 0.65),
-            ),
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.65)),
           ),
         ],
       ),

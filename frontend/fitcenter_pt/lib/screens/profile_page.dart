@@ -19,37 +19,11 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String fullName = 'Nguyễn Văn Nam';
-  String email = 'nam@example.com';
-  String phone = '0123456789';
+  String fullName = 'Huấn luyện viên';
+  String email = 'Chưa khả dụng';
+  String phone = 'Chưa khả dụng';
 
-  final List<Map<String, String>> notifications = [
-    {
-      'title': 'Chào mừng đến với FitCenter',
-      'message':
-      'Chào mừng bạn đến với FitCenter! Hãy bắt đầu quản lý lịch làm việc và theo dõi các buổi tập của học viên.',
-      'time': 'Hôm nay',
-      'type': 'info',
-    },
-    {
-      'title': 'Nhắc nhở lịch làm việc',
-      'message':
-      'Đừng quên kiểm tra lịch làm việc để chủ động sắp xếp thời gian và chuẩn bị cho các buổi tập.',
-      'time': 'Hôm nay',
-      'type': 'schedule',
-    },
-    {
-      'title': 'Quản lý giáo án',
-      'message':
-      'Bạn có thể tạo và quản lý giáo án tập luyện phù hợp với mục tiêu của từng học viên tại mục Giáo án.',
-      'time': 'Gần đây',
-      'type': 'workout',
-    },
-  ];
-
-  final Set<int> readNotifications = {};
-
-  int get unreadCount => notifications.length - readNotifications.length;
+  int get unreadCount => 0;
 
   void _toggleTheme() {
     widget.onToggleTheme(!widget.isDark);
@@ -60,10 +34,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cá nhân'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Cá nhân'), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -87,9 +58,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   Text(
                     fullName,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -203,9 +173,8 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
+        style: Theme.of(context).textTheme.titleMedium
+            ?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -257,135 +226,15 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showNotifications() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _NotificationsPage(
-          notifications: notifications,
-          readNotifications: readNotifications,
-          onRead: (index) {
-            if (!mounted) return;
-            setState(() {
-              readNotifications.add(index);
-            });
-          },
-          onReadAll: () {
-            if (!mounted) return;
-            setState(() {
-              readNotifications.addAll(
-                List.generate(notifications.length, (index) => index),
-              );
-            });
-          },
-        ),
-      ),
-    );
-  }
+  void _showNotifications() => widget.onShowMessage('Chưa khả dụng');
 
   Future<void> _showEditProfileDialog() async {
-    final nameController = TextEditingController(text: fullName);
-    final emailController = TextEditingController(text: email);
-    final phoneController = TextEditingController(text: phone);
-
-    try {
-      final result = await showDialog<Map<String, String>>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Chỉnh sửa thông tin cá nhân'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Họ và tên',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Số điện thoại',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Hủy'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final newName = nameController.text.trim();
-                final newEmail = emailController.text.trim();
-                final newPhone = phoneController.text.trim();
-
-                if (newName.isEmpty ||
-                    newEmail.isEmpty ||
-                    newPhone.isEmpty) {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    const SnackBar(
-                      content: Text('Vui lòng điền đầy đủ thông tin.'),
-                    ),
-                  );
-                  return;
-                }
-
-                if (!newEmail.contains('@') || !newEmail.contains('.')) {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    const SnackBar(
-                      content: Text('Email chưa hợp lệ.'),
-                    ),
-                  );
-                  return;
-                }
-
-                Navigator.pop(dialogContext, {
-                  'name': newName,
-                  'email': newEmail,
-                  'phone': newPhone,
-                });
-              },
-              child: const Text('Lưu thay đổi'),
-            ),
-          ],
-        ),
-      );
-
-      if (!mounted || result == null) return;
-
-      setState(() {
-        fullName = result['name']!;
-        email = result['email']!;
-        phone = result['phone']!;
-      });
-
-      widget.onShowMessage('Đã cập nhật thông tin cá nhân.');
-    } finally {
-      nameController.dispose();
-      emailController.dispose();
-      phoneController.dispose();
-    }
+    widget.onShowMessage('Chưa khả dụng');
   }
 
   void _showHelpDialog() {
     showDialog<void>(
+      useRootNavigator: false,
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Row(
@@ -407,7 +256,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 12),
               const Text(
                 'FitCenter hỗ trợ huấn luyện viên quản lý lịch làm việc, '
-                    'theo dõi buổi tập và xây dựng giáo án cho học viên.',
+                'theo dõi buổi tập và xây dựng giáo án cho học viên.',
               ),
               const SizedBox(height: 16),
               _buildHelpItem(
@@ -437,7 +286,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 8),
               Text(
                 'Lưu ý: Một số dữ liệu trong phiên bản demo được lưu tạm thời '
-                    'và có thể chưa được đồng bộ với máy chủ.',
+                'và có thể chưa được đồng bộ với máy chủ.',
                 style: TextStyle(
                   color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
                   fontSize: 12,
@@ -457,11 +306,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildHelpItem(
-      IconData icon,
-      String title,
-      String description,
-      BuildContext dialogContext,
-      ) {
+    IconData icon,
+    String title,
+    String description,
+    BuildContext dialogContext,
+  ) {
     final colors = Theme.of(dialogContext).colorScheme;
 
     return Padding(
@@ -491,6 +340,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _showAboutDialog() {
     showDialog<void>(
+      useRootNavigator: false,
       context: context,
       builder: (dialogContext) {
         final colors = Theme.of(dialogContext).colorScheme;
@@ -513,14 +363,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 16),
                 Text(
                   'FitCenter',
-                  style: Theme.of(dialogContext).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(dialogContext).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Ứng dụng hỗ trợ huấn luyện viên quản lý lịch làm việc, '
-                      'theo dõi các buổi tập và tổ chức giáo án cho học viên.',
+                  'theo dõi các buổi tập và tổ chức giáo án cho học viên.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: colors.onSurfaceVariant),
                 ),
@@ -548,7 +397,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 12),
                 const Text(
                   'FitCenter hướng đến việc giúp huấn luyện viên làm việc '
-                      'khoa học, thuận tiện và hiệu quả hơn.',
+                  'khoa học, thuận tiện và hiệu quả hơn.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -574,10 +423,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildAboutFeature(
-      IconData icon,
-      String text,
-      BuildContext dialogContext,
-      ) {
+    IconData icon,
+    String text,
+    BuildContext dialogContext,
+  ) {
     final colors = Theme.of(dialogContext).colorScheme;
 
     return Padding(
@@ -594,6 +443,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _showLogoutDialog() {
     showDialog<void>(
+      useRootNavigator: false,
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Đăng xuất'),
@@ -613,137 +463,6 @@ class _ProfilePageState extends State<ProfilePage> {
             child: const Text('Đăng xuất'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _NotificationsPage extends StatelessWidget {
-  final List<Map<String, String>> notifications;
-  final Set<int> readNotifications;
-  final ValueChanged<int> onRead;
-  final VoidCallback onReadAll;
-
-  const _NotificationsPage({
-    required this.notifications,
-    required this.readNotifications,
-    required this.onRead,
-    required this.onReadAll,
-  });
-
-  IconData _notificationIcon(String? type) {
-    switch (type) {
-      case 'schedule':
-        return Icons.calendar_month_outlined;
-      case 'workout':
-        return Icons.fitness_center_outlined;
-      default:
-        return Icons.notifications_active_outlined;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final unreadCount = notifications.length - readNotifications.length;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Thông báo'),
-        actions: [
-          if (unreadCount > 0)
-            TextButton(
-              onPressed: onReadAll,
-              child: const Text('Đọc tất cả'),
-            ),
-        ],
-      ),
-      body: notifications.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.notifications_none,
-              size: 64,
-              color: colors.onSurfaceVariant,
-            ),
-            const SizedBox(height: 12),
-            const Text('Bạn chưa có thông báo nào.'),
-          ],
-        ),
-      )
-          : ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: notifications.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, index) {
-          final notification = notifications[index];
-          final isRead = readNotifications.contains(index);
-
-          return Material(
-            color: isRead
-                ? colors.surface
-                : colors.primaryContainer.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(14),
-            clipBehavior: Clip.antiAlias,
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(12),
-              leading: CircleAvatar(
-                backgroundColor: colors.surface,
-                child: Icon(
-                  _notificationIcon(notification['type']),
-                  color: colors.primary,
-                ),
-              ),
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      notification['title']!,
-                      style: TextStyle(
-                        fontWeight: isRead
-                            ? FontWeight.normal
-                            : FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  if (!isRead)
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: colors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                ],
-              ),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(notification['message']!),
-                    const SizedBox(height: 8),
-                    Text(
-                      notification['time']!,
-                      style: TextStyle(
-                        color: colors.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              onTap: () {
-                if (!isRead) {
-                  onRead(index);
-                }
-              },
-            ),
-          );
-        },
       ),
     );
   }

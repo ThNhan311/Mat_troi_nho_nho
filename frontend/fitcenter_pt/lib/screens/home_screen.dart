@@ -1,17 +1,24 @@
-
 import 'package:flutter/material.dart';
 
 import '../widgets/info_card.dart';
+import '../widgets/api_status.dart';
+import '../services/booking_state.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
     super.key,
+    required this.state,
     required this.onOpenSchedule,
     required this.onShowMessage,
+    this.sessionCount,
+    this.memberCount,
   });
 
   final VoidCallback onOpenSchedule;
+  final int? sessionCount, memberCount;
   final void Function(String message) onShowMessage;
+
+  final BookingState state;
 
   @override
   Widget build(BuildContext context) {
@@ -21,14 +28,11 @@ class HomeScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          ApiStatus(state: state),
           // Tiêu đề trang chủ
           Row(
             children: [
-              Icon(
-                Icons.fitness_center,
-                size: 38,
-                color: colors.primary,
-              ),
+              Icon(Icons.fitness_center, size: 38, color: colors.primary),
               const SizedBox(width: 12),
               const Expanded(
                 child: Column(
@@ -51,19 +55,14 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 30),
 
           const Text(
-            'Xin chào, PT Nam!',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
+            'Xin chào!',
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
 
           Text(
             'Quản lý lịch tập và hỗ trợ học viên của bạn.',
-            style: TextStyle(
-              color: colors.onSurface.withValues(alpha: 0.65),
-            ),
+            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.65)),
           ),
 
           const SizedBox(height: 24),
@@ -113,20 +112,17 @@ class HomeScreen extends StatelessWidget {
 
           const Text(
             'Tổng quan hôm nay',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 14),
 
-          const Row(
+          Row(
             children: [
               Expanded(
                 child: InfoCard(
                   icon: Icons.event_available,
                   title: 'Buổi tập',
-                  value: '2',
+                  value: sessionCount?.toString() ?? '—',
                   subtitle: 'Hôm nay',
                 ),
               ),
@@ -135,8 +131,8 @@ class HomeScreen extends StatelessWidget {
                 child: InfoCard(
                   icon: Icons.people_outline,
                   title: 'Học viên',
-                  value: '5',
-                  subtitle: 'Đang theo dõi',
+                  value: memberCount?.toString() ?? '—',
+                  subtitle: 'Hôm nay',
                 ),
               ),
             ],

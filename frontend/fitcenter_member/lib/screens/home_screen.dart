@@ -2,22 +2,27 @@ import 'package:flutter/material.dart';
 
 import '../widgets/feature_tile.dart';
 import '../widgets/info_card.dart';
-import 'workout_plan_page.dart';
-import 'attendance_history_page.dart';
+import '../widgets/api_status.dart';
+import '../services/booking_state.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
     super.key,
+    required this.state,
     required this.bookingConfirmed,
+    this.bookingCount,
     required this.onOpenSchedule,
     required this.onOpenMembership,
     required this.onShowMessage,
   });
 
   final bool bookingConfirmed;
+  final int? bookingCount;
   final VoidCallback onOpenSchedule;
   final VoidCallback onOpenMembership;
   final void Function(String message) onShowMessage;
+
+  final BookingState state;
 
   @override
   Widget build(BuildContext context) {
@@ -28,21 +33,17 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildBrandHeader(context),
+            ApiStatus(state: state),
             const SizedBox(height: 32),
             const Text(
-              'Xin chào, Nam!',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+              'Xin chào!',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               'Sẵn sàng cho buổi tập hôm nay chưa?',
               style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
+                color: Theme.of(context).colorScheme.onSurface
                     .withValues(alpha: 0.65),
                 fontSize: 14,
               ),
@@ -52,10 +53,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 30),
             const Text(
               'Tổng quan',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 14),
             Row(
@@ -64,8 +62,8 @@ class HomeScreen extends StatelessWidget {
                   child: InfoCard(
                     icon: Icons.local_fire_department,
                     title: 'Buổi tập',
-                    value: bookingConfirmed ? '1' : '0',
-                    subtitle: 'Tuần này',
+                    value: bookingCount?.toString() ?? '—',
+                    subtitle: 'Trong khoảng xem',
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -73,8 +71,10 @@ class HomeScreen extends StatelessWidget {
                   child: InfoCard(
                     icon: Icons.schedule,
                     title: 'Thời lượng',
-                    value: bookingConfirmed ? '1.5 giờ' : '0 giờ',
-                    subtitle: 'Tuần này',
+                    value: bookingCount == null
+                        ? '—'
+                        : '${bookingCount! * 1.5} giờ',
+                    subtitle: 'Trong khoảng xem',
                   ),
                 ),
               ],
@@ -82,10 +82,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 28),
             const Text(
               'Khám phá FitCenter',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 14),
             FeatureTile(
@@ -106,26 +103,14 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.fitness_center,
               title: 'Kế hoạch tập luyện',
               subtitle: 'Xem và theo dõi chương trình tập',
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const WorkoutPlanPage(),
-                  ),
-                );
-              },
+              onTap: () => onShowMessage('Chưa khả dụng'),
             ),
             const SizedBox(height: 10),
             FeatureTile(
               icon: Icons.fact_check_outlined,
               title: 'Lịch sử điểm danh',
               subtitle: 'Theo dõi các buổi đã điểm danh',
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const AttendanceHistoryPage(),
-                  ),
-                );
-              },
+              onTap: () => onShowMessage('Chưa khả dụng'),
             ),
             const SizedBox(height: 20),
           ],
@@ -157,18 +142,13 @@ class HomeScreen extends StatelessWidget {
             children: [
               const Text(
                 'FitCenter',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 3),
               Text(
                 'YOUR FITNESS JOURNEY',
                 style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
+                  color: Theme.of(context).colorScheme.onSurface
                       .withValues(alpha: 0.55),
                   fontSize: 10,
                   letterSpacing: 1.5,
@@ -178,7 +158,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         IconButton(
-          onPressed: () => onShowMessage('Chưa có thông báo mới.'),
+          onPressed: () => onShowMessage('Chưa khả dụng'),
           icon: const Icon(Icons.notifications_none),
         ),
       ],
@@ -220,10 +200,7 @@ class HomeScreen extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.surface,
               foregroundColor: Theme.of(context).colorScheme.onSurface,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             ),
             icon: const Icon(Icons.calendar_month),
             label: const Text('Đặt lịch tập'),
