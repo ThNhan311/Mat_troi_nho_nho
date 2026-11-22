@@ -1,77 +1,102 @@
-
 import 'package:flutter/material.dart';
 
-class AccountsPage extends StatefulWidget {
-  const AccountsPage({super.key});
+import '../services/admin_account_service.dart';
+import '../services/api_client.dart';
 
+class AccountsPage extends StatefulWidget {
+  final AdminAccountService service;
+  final VoidCallback onLogout;
+  const AccountsPage({
+    super.key,
+    required this.service,
+    required this.onLogout,
+  });
   @override
   State<AccountsPage> createState() => _AccountsPageState();
 }
 
 class _AccountsPageState extends State<AccountsPage> {
-  String _selectedRole = 'Member';
-  String _searchQuery = '';
-  String _selectedStatus = 'Tất cả';
-
-  final List<Map<String, dynamic>> _members = [
-    {
-      'name': 'Nguyễn Văn An',
-      'email': 'member1@gmail.com',
-      'active': true,
-    },
-    {
-      'name': 'Trần Thị Bình',
-      'email': 'member2@gmail.com',
-      'active': true,
-    },
-    {
-      'name': 'Lê Minh Cường',
-      'email': 'member3@gmail.com',
-      'active': false,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _pts = [
-    {
-      'name': 'Phạm Minh Đức',
-      'email': 'pt1@gmail.com',
-      'active': true,
-    },
-    {
-      'name': 'Nguyễn Hoàng Long',
-      'email': 'pt2@gmail.com',
-      'active': false,
-    },
-  ];
-
-  List<Map<String, dynamic>> get _accounts =>
-      _selectedRole == 'Member' ? _members : _pts;
-
-  List<Map<String, dynamic>> get _filteredAccounts {
-    return _accounts.where((account) {
-      final name = account['name'].toString().toLowerCase();
-      final email = account['email'].toString().toLowerCase();
-      final query = _searchQuery.toLowerCase();
-      final isActive = account['active'] as bool;
-
-      final matchesSearch =
-          name.contains(query) || email.contains(query);
-
-      final matchesStatus =
-          _selectedStatus == 'Tất cả' ||
-              (_selectedStatus == 'Đang hoạt động' && isActive) ||
-              (_selectedStatus == 'Đã tạm khóa' && !isActive);
-
-      return matchesSearch && matchesStatus;
-    }).toList();
+  String _role = 'MEMBER', _query = '', _status = 'Tất cả';
+  List<AdminAccount> _rows = [];
+  bool _loading = true, _modal = false;
+  String? _error;
+  int _read = 0;
+  late final int _epoch = widget.service.api.sessionEpoch;
+  bool get _current =>
+      mounted &&
+      widget.service.api.authenticated &&
+      widget.service.api.sessionEpoch == _epoch;
+  @override
+  void initState() {
+    super.initState();
+    _load();
   }
 
+  Future<void> _load() async {
+    final read = ++_read, role = _role;
+    if (_current)
+      setState(() {
+        _loading = true;
+        _error = null;
+        _rows = [];
+      });
+    try {
+      final rows = await widget.service.list(role);
+      if (_current && read == _read)
+        setState(() {
+          _rows = rows;
+          _loading = false;
+        });
+    } on ApiError catch (e) {
+      if (_current && read == _read)
+        setState(() {
+          _loading = false;
+          _error = e.toString();
+        });
+    }
+  }
+
+  Future<void> _add() async {
+    if (_modal || !_current) return;
+    setState(() => _modal = true);
+    final created = await showDialog<AdminAccount>(
+      context: context,
+      useRootNavigator: false,
+      barrierDismissible: false,
+      builder: (_) =>
+          _AccountDialog(service: widget.service, role: _role, reload: _load),
+    );
+    if (!mounted || !_current) return;
+    setState(() {
+      _modal = false;
+      if (created != null) _role = created.role;
+    });
+    if (created != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Đã tạo tài khoản chưa kích hoạt. Mã: ${created.userId}',
+          ),
+        ),
+      );
+      await _load();
+    }
+  }
+
+  void _unavailable() =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Chưa khả dụng')));
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
-    final accounts = _filteredAccounts;
-
+    final theme = Theme.of(context), primary = theme.colorScheme.primary;
+    final rows = _rows
+        .where(
+          (a) =>
+              (a.fullName.toLowerCase().contains(_query) ||
+                  a.email.toLowerCase().contains(_query)) &&
+              (_status == 'Tất cả' || a.statusLabel == _status),
+        )
+        .toList();
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -79,17 +104,26 @@ class _AccountsPageState extends State<AccountsPage> {
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Tải lại tài khoản',
+            onPressed: _loading ? null : _load,
+            icon: const Icon(Icons.refresh),
+          ),
+          IconButton(
+            tooltip: 'Đăng xuất',
+            onPressed: widget.onLogout,
+            icon: const Icon(Icons.logout),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: FilledButton.icon(
-              onPressed: _showAddAccountDialog,
+              onPressed: _modal || _loading || _error != null ? null : _add,
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Thêm tài khoản'),
             ),
           ),
         ],
       ),
-
       body: SafeArea(
         child: Column(
           children: [
@@ -98,7 +132,7 @@ class _AccountsPageState extends State<AccountsPage> {
               child: SegmentedButton<String>(
                 segments: const [
                   ButtonSegment(
-                    value: 'Member',
+                    value: 'MEMBER',
                     label: Text('Hội viên'),
                     icon: Icon(Icons.people_outline),
                   ),
@@ -108,22 +142,20 @@ class _AccountsPageState extends State<AccountsPage> {
                     icon: Icon(Icons.fitness_center),
                   ),
                 ],
-                selected: {_selectedRole},
-                onSelectionChanged: (selection) {
+                selected: {_role},
+                onSelectionChanged: (s) {
                   setState(() {
-                    _selectedRole = selection.first;
-                    _searchQuery = '';
+                    _role = s.first;
+                    _query = '';
                   });
+                  _load();
                 },
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
               child: TextField(
-                onChanged: (value) {
-                  setState(() => _searchQuery = value);
-                },
+                onChanged: (v) => setState(() => _query = v.toLowerCase()),
                 decoration: InputDecoration(
                   hintText: 'Tìm theo tên hoặc email...',
                   prefixIcon: const Icon(Icons.search),
@@ -136,12 +168,10 @@ class _AccountsPageState extends State<AccountsPage> {
                 ),
               ),
             ),
-
-
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
               child: DropdownButtonFormField<String>(
-                initialValue: _selectedStatus,
+                initialValue: _status,
                 decoration: InputDecoration(
                   labelText: 'Lọc theo trạng thái',
                   prefixIcon: const Icon(Icons.filter_list),
@@ -149,39 +179,28 @@ class _AccountsPageState extends State<AccountsPage> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Tất cả',
-                    child: Text('Tất cả tài khoản'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Đang hoạt động',
-                    child: Text('Đang hoạt động'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Đã tạm khóa',
-                    child: Text('Đã tạm khóa'),
-                  ),
+                items: [
+                  for (final s in [
+                    'Tất cả',
+                    'Đang hoạt động',
+                    'Chưa kích hoạt',
+                    'Đã tạm khóa',
+                    'Đã vô hiệu hóa',
+                  ])
+                    DropdownMenuItem(value: s, child: Text(s)),
                 ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedStatus = value;
-                    });
-                  }
+                onChanged: (s) {
+                  if (s != null) setState(() => _status = s);
                 },
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      _selectedRole == 'Member'
-                          ? 'DANH SÁCH HỘI VIÊN'
-                          : 'DANH SÁCH PT',
+                      _role == 'MEMBER' ? 'DANH SÁCH HỘI VIÊN' : 'DANH SÁCH PT',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
@@ -190,418 +209,248 @@ class _AccountsPageState extends State<AccountsPage> {
                     ),
                   ),
                   Text(
-                    '${accounts.length} tài khoản',
+                    '${rows.length} tài khoản',
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 8),
-
+            if (_loading) const LinearProgressIndicator(),
+            if (_error != null)
+              Padding(padding: const EdgeInsets.all(16), child: Text(_error!)),
             Expanded(
-              child: accounts.isEmpty
+              child: !_loading && _error == null && rows.isEmpty
                   ? const Center(
-                child: Text('Không tìm thấy tài khoản phù hợp.'),
-              )
+                      child: Text('Không tìm thấy tài khoản phù hợp.'),
+                    )
                   : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-                itemCount: accounts.length,
-                itemBuilder: (context, index) {
-                  final account = accounts[index];
-                  final isActive = account['active'] as bool;
-
-                  return Card(
-                    elevation: 0,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      side: BorderSide(
-                        color: theme.dividerColor.withOpacity(0.12),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 25,
-                            backgroundColor:
-                            primary.withOpacity(0.13),
-                            child: Icon(
-                              _selectedRole == 'Member'
-                                  ? Icons.person_outline
-                                  : Icons.fitness_center,
-                              color: primary,
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                      itemCount: rows.length,
+                      itemBuilder: (context, index) {
+                        final a = rows[index], active = a.status == 'ACTIVE';
+                        return Card(
+                          elevation: 0,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(
+                              color: theme.dividerColor.withValues(alpha: 0.12),
                             ),
                           ),
-                          const SizedBox(width: 12),
-
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
                               children: [
-                                Text(
-                                  account['name'].toString(),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
+                                CircleAvatar(
+                                  radius: 25,
+                                  backgroundColor: primary.withValues(
+                                    alpha: 0.13,
+                                  ),
+                                  child: Icon(
+                                    a.role == 'MEMBER'
+                                        ? Icons.person_outline
+                                        : Icons.fitness_center,
+                                    color: primary,
                                   ),
                                 ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  account['email'].toString(),
-                                  style: theme.textTheme.bodySmall,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        a.fullName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        a.email,
+                                        style: theme.textTheme.bodySmall,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(a.statusLabel),
+                                      SelectableText('User: ${a.userId}'),
+                                      SelectableText('Profile: ${a.profileId}'),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding:
-                                  const EdgeInsets.symmetric(
-                                    horizontal: 9,
-                                    vertical: 4,
+                                IconButton(
+                                  tooltip: 'Sửa tài khoản — Chưa khả dụng',
+                                  onPressed: _unavailable,
+                                  icon: const Icon(Icons.edit_outlined),
+                                ),
+                                IconButton(
+                                  tooltip: 'Xóa tài khoản — Chưa khả dụng',
+                                  onPressed: _unavailable,
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: isActive
-                                        ? Colors.green.withOpacity(0.12)
-                                        : Colors.red.withOpacity(0.12),
-                                    borderRadius:
-                                    BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    isActive
-                                        ? 'Đang hoạt động'
-                                        : 'Đã tạm khóa',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: isActive
-                                          ? Colors.green
-                                          : Colors.redAccent,
-                                    ),
-                                  ),
+                                ),
+                                Switch(
+                                  value: active,
+                                  onChanged: (_) => _unavailable(),
                                 ),
                               ],
                             ),
                           ),
-                          IconButton(
-                            tooltip: 'Sửa tài khoản',
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: () => _showEditAccountDialog(account),
-                          ),
-                          IconButton(
-                            tooltip: 'Xóa tài khoản',
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.red,
-                            ),
-                            onPressed: () => _deleteAccount(account),
-                          ),
-                          Switch(
-                            value: isActive,
-                            onChanged: (value) {
-                              setState(() {
-                                account['active'] = value;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),
       ),
     );
   }
+}
 
+class _AccountDialog extends StatefulWidget {
+  final AdminAccountService service;
+  final String role;
+  final Future<void> Function() reload;
+  const _AccountDialog({
+    required this.service,
+    required this.role,
+    required this.reload,
+  });
+  @override
+  State<_AccountDialog> createState() => _AccountDialogState();
+}
 
-
-  void _showAddAccountDialog() {
-    String name = '';
-    String email = '';
-    String selectedRole = _selectedRole;
-    String? errorMessage;
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog(
-              title: const Text('Thêm tài khoản'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Họ và tên',
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                      onChanged: (value) {
-                        name = value;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
-                      ),
-                      onChanged: (value) {
-                        email = value.trim();
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedRole,
-                      decoration: const InputDecoration(
-                        labelText: 'Vai trò',
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'Member',
-                          child: Text('Hội viên'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'PT',
-                          child: Text('Huấn luyện viên'),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          setDialogState(() {
-                            selectedRole = value;
-                          });
-                        }
-                      },
-                    ),
-                    if (errorMessage != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        errorMessage!,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Hủy'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    final cleanName = name.trim();
-                    final cleanEmail = email.trim();
-
-                    if (cleanName.isEmpty ||
-                        cleanEmail.isEmpty ||
-                        !cleanEmail.contains('@') ||
-                        !cleanEmail.contains('.')) {
-                      setDialogState(() {
-                        errorMessage =
-                        'Vui lòng nhập họ tên và email hợp lệ.';
-                      });
-                      return;
-                    }
-
-                    final emailExists = [
-                      ..._members,
-                      ..._pts,
-                    ].any(
-                          (account) =>
-                      account['email'].toString().toLowerCase() ==
-                          cleanEmail.toLowerCase(),
-                    );
-
-                    if (emailExists) {
-                      setDialogState(() {
-                        errorMessage = 'Email này đã tồn tại.';
-                      });
-                      return;
-                    }
-
-                    setState(() {
-                      final accounts = selectedRole == 'Member'
-                          ? _members
-                          : _pts;
-
-                      accounts.add({
-                        'name': cleanName,
-                        'email': cleanEmail,
-                        'active': false,
-                      });
-
-                      _selectedRole = selectedRole;
-                      _searchQuery = '';
-                    });
-
-                    Navigator.pop(dialogContext);
-
-                    ScaffoldMessenger.of(this.context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Đã thêm tài khoản trên giao diện thử nghiệm.',
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text('Thêm'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+class _AccountDialogState extends State<_AccountDialog> {
+  final _form = GlobalKey<FormState>(),
+      _name = TextEditingController(),
+      _email = TextEditingController();
+  late String _role = widget.role;
+  bool _busy = false, _unknown = false;
+  String? _error;
+  late final int _epoch = widget.service.api.sessionEpoch;
+  bool get _current =>
+      mounted &&
+      widget.service.api.authenticated &&
+      widget.service.api.sessionEpoch == _epoch;
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    super.dispose();
   }
 
-
-  void _showEditAccountDialog(Map<String, dynamic> account) {
-    String name = account['name'].toString();
-    String email = account['email'].toString();
-    String? errorMessage;
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog(
-              title: const Text('Sửa tài khoản'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    initialValue: name,
-                    decoration: const InputDecoration(
-                      labelText: 'Họ và tên',
-                      prefixIcon: Icon(Icons.person_outline),
-                    ),
-                    onChanged: (value) => name = value,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    initialValue: email,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                    onChanged: (value) => email = value.trim(),
-                  ),
-                  if (errorMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      errorMessage!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ],
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Hủy'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    final cleanName = name.trim();
-                    final cleanEmail = email.trim();
-
-                    if (cleanName.isEmpty ||
-                        cleanEmail.isEmpty ||
-                        !cleanEmail.contains('@') ||
-                        !cleanEmail.contains('.')) {
-                      setDialogState(() {
-                        errorMessage =
-                        'Vui lòng nhập họ tên và email hợp lệ.';
-                      });
-                      return;
-                    }
-
-                    final emailExists = [
-                      ..._members,
-                      ..._pts,
-                    ].any(
-                          (item) =>
-                      !identical(item, account) &&
-                          item['email'].toString().toLowerCase() ==
-                              cleanEmail.toLowerCase(),
-                    );
-
-                    if (emailExists) {
-                      setDialogState(() {
-                        errorMessage = 'Email này đã tồn tại.';
-                      });
-                      return;
-                    }
-
-                    setState(() {
-                      account['name'] = cleanName;
-                      account['email'] = cleanEmail;
-                    });
-
-                    Navigator.pop(dialogContext);
-
-                    ScaffoldMessenger.of(this.context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Đã cập nhật tài khoản thử nghiệm.'),
-                      ),
-                    );
-                  },
-                  child: const Text('Lưu thay đổi'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> _deleteAccount(Map<String, dynamic> account) async {
-    final name = account['name'].toString();
-    final roleName = _members.contains(account) ? 'hội viên' : 'PT';
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Xóa tài khoản'),
-        content: Text(
-          'Bạn có chắc chắn muốn xóa $roleName "$name" không?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Hủy'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('Xóa'),
-          ),
-        ],
-      ),
-    );
-
-    if (!mounted || confirmed != true) return;
-
+  Future<void> _save() async {
+    if (_busy || _unknown || !_current || !_form.currentState!.validate())
+      return;
     setState(() {
-      _accounts.remove(account);
+      _busy = true;
+      _error = null;
     });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Đã xóa tài khoản "$name"')),
-    );
+    try {
+      final account = await widget.service.create(
+        _role,
+        _email.text,
+        _name.text,
+      );
+      if (mounted && _current) Navigator.pop(context, account);
+    } on ApiError catch (e) {
+      if (_current)
+        setState(() {
+          _busy = false;
+          _unknown = e.outcomeUnknown;
+          _error =
+              '${e.toString()}${_unknown ? '\nChưa rõ kết quả. Không gửi lại; tải lại danh sách để đối chiếu.' : ''}';
+        });
+    }
   }
+
+  @override
+  Widget build(BuildContext context) => PopScope(
+    canPop: !_busy,
+    child: AlertDialog(
+      title: const Text('Thêm tài khoản'),
+      content: SizedBox(
+        width: 420,
+        child: Form(
+          key: _form,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _name,
+                  enabled: !_busy && !_unknown,
+                  decoration: const InputDecoration(
+                    labelText: 'Họ và tên',
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty || v.runes.length > 150
+                      ? 'Nhập họ tên, tối đa 150 ký tự.'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _email,
+                  enabled: !_busy && !_unknown,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                  validator: (v) =>
+                      v == null ||
+                          v.trim().length > 255 ||
+                          !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                              .hasMatch(v.trim())
+                      ? 'Email chưa hợp lệ.'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _role,
+                  decoration: const InputDecoration(labelText: 'Vai trò'),
+                  items: const [
+                    DropdownMenuItem(value: 'MEMBER', child: Text('Hội viên')),
+                    DropdownMenuItem(
+                      value: 'PT',
+                      child: Text('Huấn luyện viên'),
+                    ),
+                  ],
+                  onChanged: _busy || _unknown
+                      ? null
+                      : (v) {
+                          if (v != null) setState(() => _role = v);
+                        },
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Tạo tài khoản chưa kích hoạt, không kích hoạt gói hội viên.',
+                ),
+                if (_busy) const LinearProgressIndicator(),
+                if (_error != null) Text(_error!),
+                if (_unknown)
+                  TextButton(
+                    onPressed: widget.reload,
+                    child: const Text('Tải lại danh sách để đối chiếu'),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _busy ? null : () => Navigator.pop(context),
+          child: const Text('Đóng'),
+        ),
+        FilledButton(
+          onPressed: _busy || _unknown ? null : _save,
+          child: const Text('Thêm'),
+        ),
+      ],
+    ),
+  );
 }

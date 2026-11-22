@@ -25,3 +25,13 @@ Chưa đọc đầy đủ từng assertion của tất cả test, toàn bộ see
 | Session/no replay/exact UUID cleanup | ApiClient giữ nguyên; navigator epoch, modal phiên; [UI runner](../../../frontend/verify-membership-plan-ui.mjs), [DB guard/audit](../../../frontend/verify-membership-plan-demo.mjs) | Log/manifest ngoài Git; hashes/evidence cuối, không gọi Member GET là Member UI |
 
 [Quyết định đã giao M-01](../decisions/2026-11-22_M01_PLAN_CREATE.md). Bốn tài liệu research giữ nguyên snapshot khảo sát; không tự áp các proposal Membership/Payment/V7 còn mở.
+
+## Admin account/PT activation22/11
+
+| Yêu cầu | Source | Evidence/giới hạn |
+|---|---|---|
+| Admin tạo inactive User+profile nguyên tử | [service](../../../backend/src/main/java/vn/edu/tdtu/fitcenter/service/AdminAccountService.java), [controller](../../../backend/src/main/java/vn/edu/tdtu/fitcenter/controller/AdminAccountController.java) | [HTTP/PG](../../../backend/src/test/java/vn/edu/tdtu/fitcenter/http/AccountHttpTest.java): role/validation/FK/audit/rollback/race duplicate/noJWT |
+| OTP5phút/one-use/grant/password | [service](../../../backend/src/main/java/vn/edu/tdtu/fitcenter/activation/PtActivationService.java), [JDBC](../../../backend/src/main/java/vn/edu/tdtu/fitcenter/activation/JdbcActivationStore.java) | [unit](../../../backend/src/test/java/vn/edu/tdtu/fitcenter/activation/PtActivationServiceTest.java), SMTP loopback; schema candidate chưa áp, chưa HTTP/PG activation race |
+| Original Admin/PT UI, session/no-replay | [Admin](../../../frontend/fitcenter_ad/lib/screens/account_page.dart), [PT](../../../frontend/fitcenter_pt/lib/screens/pt_activation_page.dart) | [báo cáo](ACCOUNT_PT_ACTIVATION.md), client/widget + Chrome/DB account; PT UI thật chỉ gate503 |
+
+[Quyết định/candidate](../decisions/2026-11-22_ACCOUNT_PT_ACTIVATION.md). Source hashes gắn working tree, không cộng focused vào full, không tuyên bố E2E toàn FitCenter.

@@ -10,6 +10,7 @@ param(
     [ValidatePattern('^[a-z][a-z0-9_]+$')][string]$AppUsername = 'fitcenter_baseline_app',
     [ValidateRange(1024,65535)][int]$DatabasePort = 15437,
     [switch]$StartDatabase,
+    [switch]$AccountFocused,
     [switch]$FullSuite
 )
 
@@ -123,7 +124,11 @@ FROM pg_roles WHERE rolname=current_user;
     $locationPushed = $true
     $runStartedUtc = [DateTime]::UtcNow
     $mavenArguments = @('-B','-ntp','test')
-    if (!$FullSuite) { $mavenArguments += '-Dtest=HttpBaselineTest' }
+    if ($FullSuite -and $AccountFocused) { throw 'Choose full or account focused, not both.' }
+    if (!$FullSuite) {
+        if ($AccountFocused) { $mavenArguments += '-Dtest=HttpBaselineTest,AccountHttpTest,PtActivationServiceTest,TestSmtpActivationMailerTest' }
+        else { $mavenArguments += '-Dtest=HttpBaselineTest' }
+    }
     $ErrorActionPreference = 'Continue'
     & '.\mvnw.cmd' @mavenArguments 2>&1 | ForEach-Object {
         $line = $_.ToString()

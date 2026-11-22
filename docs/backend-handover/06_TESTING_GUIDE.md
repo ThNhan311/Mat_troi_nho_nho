@@ -86,3 +86,9 @@ Policy dùng UUID riêng từng ca, Clock kiểm soát; membership fixture đư�
 ## M-01 regression
 
 [Quyết định](decisions/2026-11-22_M01_PLAN_CREATE.md), [kết quả mới](evidence/M01_PLAN_CREATE.md), [chạy lại Web/DB](15_BOOKING_WEB_QUICKSTART.md#m-01--admin-tạo-membership-plan-22112026). Có executable Java mới nên chạy focused HttpBaselineTest rồi full bằng test-http-baseline.ps1/JDK21/DB riêng. MembershipPlanCreateCases nằm trong full, không cộng dồn. Admin client/widget riêng; UI Chrome/HTTP read-back/DB checks báo tách biệt. Không dùng668 lịch sử làm kết quả mới; không cần chạy Member/PT khi không sửa source/client/helper chung của hai app.
+
+## Account/PT activation22/11 — cách chạy lại
+
+[Contract và giới hạn schema](decisions/2026-11-22_ACCOUNT_PT_ACTIVATION.md), [evidence/hashes](evidence/ACCOUNT_PT_ACTIVATION.md). Trên JDK21 dùng guarded `backend/scripts/test-http-baseline.ps1` theo lệnh DB riêng đã có: thêm `-AccountFocused` để chạy HttpBaselineTest+AccountHttpTest+PtActivationServiceTest+TestSmtpActivationMailerTest; hoặc `-FullSuite` cho regression, không kết hợp hai switch. DB_PASSWORD chỉ process/secure prompt, truyền đúng64ký tự containerID đã inspect, không copy password vào lệnh/doc. Không bật activation flag/áp SQL candidate để lách blocker.
+
+Flutter: ở Admin/PT chạy `flutter analyze`, `flutter test`, `flutter build web --dart-define=API_BASE_URL=http://127.0.0.1:18081/api/v1`; focused là `test/admin_account_test.dart` / `test/pt_activation_test.dart`. Unit SMTP dùng ServerSocket loopback/in-memory, không thư gửi người thật. Không coi test mockstore là bằng chứng transaction/concurrency OTP trên PostgreSQL.

@@ -1,0 +1,28 @@
+# Quyết định FitCenter
+
+Nguồn chuẩn: yêu cầu người dùng của phiên, Topic11 và tài liệu quyết định chi tiết. Các bảng đề xuất trong [khảo sát](backend-handover/research/2026-11-22_CORE_MEMBERSHIP_PAYMENT_SURVEY.md) chưa tự trở thành quyết định.
+
+## Đã chốt
+
+- Booking auto-confirm,90phút; D01–D07/PT cancel/service eligibility: [quyết định Booking](backend-handover/decisions/2026-11-20_BOOKING_DECISIONS.md). Eligibility chỉ snapshot, không start marker; completion giữ R04.
+- M-01 Admin create plan ACTIVE, ngày/price0/tên không unique; [contract](backend-handover/decisions/2026-11-22_M01_PLAN_CREATE.md). M-01 đã kiểm chứng, đóng tại commit6fbf9fc; không làm lại trong task account.
+- Admin tạo account chưa kích hoạt. User+Member/PT profile nguyên tử; account creation không tạo/activate membership.
+- Chỉ PT first activation được giao: email → OTP email5phút → verify thành công → đặt mật khẩu → ACTIVE → login email/password. Không suy ra MEMBER activation.
+- OTP một lần, không lưu/log rõ, kiểm expiry/attempt/resend; verify/password transition nguyên tử, không cấp JWT thường khi chưa ACTIVE.
+- Chỉ mail test, không người thật; không áp migration chưa thống nhất. Yêu cầu mới cho phép commit/push phần đã review lên nhánh chức năng riêng, chưa merge.
+
+## Lựa chọn kỹ thuật trong task hiện tại
+
+- Dùng status DISABLED sẵn có cho account chưa kích hoạt để không sửa V1/enum. Audit event ACCOUNT_CREATED_PENDING_ACTIVATION là dấu nguồn Admin tạo mới; không hiểu mọi tài khoản DISABLED cũ là được tự kích hoạt. Membership status độc lập.
+- Hai endpoint Admin riêng /admin/members và /admin/personal-trainers, role server; response userId/profileId khác nhau. Password placeholder BCrypt ngẫu nhiên không bàn giao, không thể login trước ACTIVE.
+- OTP6chữ số SecureRandom, BCrypt digest,5attempt/challenge; resend tối thiểu60giây,tối đa5lần/giờ/account. Grant đặt mật khẩu ngẫu nhiên32byte, chỉ lưuSHA256,TTL5phút,một lần; không phải JWT. Các giới hạn chống lạm dụng là lựa chọn kỹ thuật, không sửa Booking/Membership policy.
+- Password8ký tự trở lên, tối đa72byteUTF-8 theo BCrypt, không silent truncation/composition rule mới.
+- Khóa User → activation row; Clock lấy sau chờ khóa. Mọi bước kiểm lại rolePT/status/marker; completed không tái kích hoạt.
+
+## Chưa được chốt/triển khai an toàn
+
+- Canonical V1–V6 không có bảng OTP/grant/counter. Chuẩn bị SQL candidate ở docs/backend-handover/proposals, không tên V7/V8, không tự apply hoặc sửa guards. V7 của Duy558fb03 là membership periods và còn rủi ro DROP chưa backfill: [review](backend-handover/research/2026-11-22_DATABASE_V7_REVIEW.md).
+- PT activation mặc định tắt trước khi schema/version được thống nhất. Code/unit/mail test không thay bằng chứng HTTP/PostgreSQL activation thật.
+- MEMBER activation, production mail delivery, password reset, account edit/status/delete, membership activation/renewal/payment chưa thuộc task.
+
+Chi tiết API/error/lock, giới hạn SMTP và checklist thống nhất schema: [Account/PT activation](backend-handover/decisions/2026-11-22_ACCOUNT_PT_ACTIVATION.md). SQL candidate không phải migration được phép apply.

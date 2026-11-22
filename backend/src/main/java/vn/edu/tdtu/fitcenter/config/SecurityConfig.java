@@ -59,7 +59,10 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/auth/login",
-                                "/api/v1/auth/refresh"
+                                "/api/v1/auth/refresh",
+                                "/api/v1/auth/pt-activation/request-otp",
+                                "/api/v1/auth/pt-activation/verify-otp",
+                                "/api/v1/auth/pt-activation/password"
                         ).permitAll()
 
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

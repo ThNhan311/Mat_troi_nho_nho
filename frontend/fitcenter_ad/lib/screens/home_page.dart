@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'booking_policy_page.dart';
 import 'membership_page.dart';
+import 'account_page.dart';
+import '../services/admin_account_service.dart';
 import '../services/membership_plan_service.dart';
 
 class AdminHomePage extends StatelessWidget {
@@ -132,9 +134,9 @@ class AdminHomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                      builder: (_) => const _ComingSoonPage(
-                        title: 'Chưa khả dụng',
-                        description: 'Chức năng chưa khả dụng.',
+                      builder: (_) => AccountsPage(
+                        service: AdminAccountService(service.api),
+                        onLogout: onLogout,
                       ),
                     ),
                   );

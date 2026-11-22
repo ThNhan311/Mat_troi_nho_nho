@@ -1,11 +1,173 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: membership-plan-create-working-tree
-  description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Account/activation/renewal/payment write chưa có.
+  version: account-pt-activation-working-tree
+  description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation code được gate503 đến khi schema được thống nhất, chưa nghiệm thu activation PostgreSQL. Renewal/payment write chưa có.
 servers:
 - url: http://localhost:18081
 paths:
+  /api/v1/admin/members:
+    get:
+      operationId: listAdminMembers
+      summary: ADMIN ACTIVE đọc Member accounts từ profiles thật
+      security: [{bearerAuth: []}]
+      responses:
+        '200':
+          description: Array, không hash hoặc credential
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/AccountResponse'}}
+        '401': {$ref: '#/components/responses/LifecycleUnauthorized'}
+        '403': {$ref: '#/components/responses/LifecycleForbidden'}
+    post:
+      operationId: createInactiveMemberAccount
+      summary: ADMIN ACTIVE tạo User DISABLED + Member profile nguyên tử
+      description: Không kích hoạt membership hoặc triển khai Member first activation. Role/UUID server; không nhận password/status/owner. Không replay POST chưa rõ kết quả.
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AccountCreate'}
+      responses:
+        '201':
+          description: User/profile mới khác UUID, activationPending true
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AccountResponse'}
+        '400': {$ref: '#/components/responses/LifecycleValidation'}
+        '401': {$ref: '#/components/responses/LifecycleUnauthorized'}
+        '403': {$ref: '#/components/responses/LifecycleForbidden'}
+        '409': {$ref: '#/components/responses/AccountConflict'}
+  /api/v1/admin/personal-trainers:
+    get:
+      operationId: listAdminPersonalTrainers
+      summary: ADMIN ACTIVE đọc PT accounts từ profiles thật
+      security: [{bearerAuth: []}]
+      responses:
+        '200':
+          description: Array AccountResponse, không credential
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/AccountResponse'}}
+        '401': {$ref: '#/components/responses/LifecycleUnauthorized'}
+        '403': {$ref: '#/components/responses/LifecycleForbidden'}
+    post:
+      operationId: createInactivePtAccount
+      summary: ADMIN ACTIVE tạo User DISABLED + PT profile nguyên tử
+      description: Tạo audit pending marker trong cùng transaction; không membership/payment. Không tự gửi OTP. Trùng email case insensitive409, không replay POST.
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AccountCreate'}
+      responses:
+        '201':
+          description: PT DISABLED, activationPending true, UUID server
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AccountResponse'}
+        '400': {$ref: '#/components/responses/LifecycleValidation'}
+        '401': {$ref: '#/components/responses/LifecycleUnauthorized'}
+        '403': {$ref: '#/components/responses/LifecycleForbidden'}
+        '409': {$ref: '#/components/responses/AccountConflict'}
+  /api/v1/auth/pt-activation/request-otp:
+    post:
+      operationId: requestPtFirstActivationOtp
+      summary: PT first activation — đang gate503 chờ schema thống nhất
+      description: Public, không JWT. Khi được bật chỉ PT DISABLED có Admin pending audit; OTP5phút, resend>=60giây/max5lần giờ. Email không đủ điều kiện vẫn202 chung, không gửi mail. Adapter hiện chỉ loopback mail test @example.invalid. Không tự replay write.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: {type: string, format: email, maxLength: 255}
+      responses:
+        '202':
+          description: Chỉ khi feature/schema được cho phép; không xác nhận email tồn tại
+          headers:
+            Cache-Control: {schema: {type: string}, example: no-store}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, expiresInSeconds, resendAfterSeconds]
+                properties:
+                  message: {type: string}
+                  expiresInSeconds: {type: integer, enum: [300]}
+                  resendAfterSeconds: {type: integer, enum: [60]}
+        '400': {$ref: '#/components/responses/LifecycleValidation'}
+        '429': {$ref: '#/components/responses/ActivationFailure'}
+        '503': {$ref: '#/components/responses/ActivationFailure'}
+  /api/v1/auth/pt-activation/verify-otp:
+    post:
+      operationId: verifyPtFirstActivationOtp
+      summary: Tiêu thụ OTP, cấp grant đặt mật khẩu một lần — đang gate503
+      description: OTP hết hạn khi now>=expiry; tối đa5attempts. Grant32byte random, hashSHA256 trong DB, TTL300s, không JWT. Chưa hoàn thành kích hoạt ở bước này.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otp]
+              properties:
+                email: {type: string, format: email, maxLength: 255}
+                otp: {type: string, pattern: '^[0-9]{6}$', writeOnly: true}
+      responses:
+        '200':
+          description: Grant chỉ memory, không log/persist ở client
+          headers:
+            Cache-Control: {schema: {type: string}, example: no-store}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [verificationToken, expiresInSeconds]
+                properties:
+                  verificationToken: {type: string, minLength: 43, maxLength: 43}
+                  expiresInSeconds: {type: integer, enum: [300]}
+        '400': {$ref: '#/components/responses/ActivationFailure'}
+        '409': {$ref: '#/components/responses/ActivationFailure'}
+        '429': {$ref: '#/components/responses/ActivationFailure'}
+        '503': {$ref: '#/components/responses/ActivationFailure'}
+  /api/v1/auth/pt-activation/password:
+    post:
+      operationId: completePtFirstActivationPassword
+      summary: Tiêu thụ grant và đặt mật khẩu + ACTIVE nguyên tử — đang gate503
+      description: Password>=8codepoints và<=72byteUTF8 theo BCrypt. User->activation row lock, Clock sau khóa; không JWT, không MEMBER flow. Không replay POST khi timeout.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [verificationToken, password]
+              properties:
+                verificationToken: {type: string, minLength: 43, maxLength: 43, writeOnly: true}
+                password: {type: string, minLength: 8, writeOnly: true, description: Tối đa72byteUTF8, không silent truncation}
+      responses:
+        '200':
+          description: Login email/password riêng sau kích hoạt, không accessToken
+          headers:
+            Cache-Control: {schema: {type: string}, example: no-store}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: {type: string, enum: [ACTIVE]}
+        '400': {$ref: '#/components/responses/ActivationFailure'}
+        '409': {$ref: '#/components/responses/ActivationFailure'}
+        '503': {$ref: '#/components/responses/ActivationFailure'}
   /api/v1/admin/membership-plans:
     post:
       operationId: createMembershipPlan
@@ -1097,6 +1259,18 @@ paths:
           - COMPLETED
 components:
   responses:
+    AccountConflict:
+      description: ERR_CONFLICT — email case insensitive đã tồn tại hoặc constraint/concurrency; không trả SQL hoặc password.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    ActivationFailure:
+      description: Error envelope hiện có; ERR_ACTIVATION_NOT_READY503 mặc định, ERR_TEST_MAIL_ONLY/ERR_TEST_MAIL_UNAVAILABLE503, ERR_ACTIVATION_INVALID400, ERR_OTP_EXPIRED400, ERR_OTP_ALREADY_USED409, ERR_ACTIVATION_CONFLICT409, ERR_OTP_ATTEMPT_LIMIT/ERR_OTP_RESEND_TOO_SOON/ERR_OTP_SEND_LIMIT429. Lỗi validation theo convention400.
+      headers:
+        Cache-Control: {schema: {type: string}, example: no-store}
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
     LifecycleValidation:
       description: ERR_VALIDATION, UUID/input không hợp lệ
       content:
@@ -1160,6 +1334,24 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    AccountCreate:
+      type: object
+      additionalProperties: false
+      required: [email, fullName]
+      properties:
+        email: {type: string, format: email, maxLength: 255}
+        fullName: {type: string, minLength: 1, maxLength: 150, description: Không blank; PostgreSQL VARCHAR150 codepoints}
+    AccountResponse:
+      type: object
+      required: [userId, profileId, email, fullName, role, status, activationPending]
+      properties:
+        userId: {type: string, format: uuid}
+        profileId: {type: string, format: uuid, description: Khác User UUID}
+        email: {type: string, format: email}
+        fullName: {type: string}
+        role: {type: string, enum: [MEMBER, PT]}
+        status: {type: string, enum: [ACTIVE, SUSPENDED, DISABLED]}
+        activationPending: {type: boolean, description: Audit pending chưa activated và status DISABLED; không áp legacy tự động}
     ServiceEligibility:
       type: object
       additionalProperties: false

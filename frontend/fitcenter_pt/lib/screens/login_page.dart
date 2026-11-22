@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_client.dart';
+import '../services/pt_activation_service.dart';
+import 'pt_activation_page.dart';
 
 class LoginPage extends StatefulWidget {
   final ApiClient api;
@@ -204,6 +206,19 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 20),
 
+                  TextButton(
+                    onPressed: _busy
+                        ? null
+                        : () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => PtActivationPage(
+                                service: PtActivationService(widget.api),
+                              ),
+                            ),
+                          ),
+                    child: const Text('Kích hoạt tài khoản PT lần đầu'),
+                  ),
                   Text(
                     'Chưa có tài khoản? Liên hệ phòng tập để được hỗ trợ.',
                     textAlign: TextAlign.center,
