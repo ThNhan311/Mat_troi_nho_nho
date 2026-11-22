@@ -8,3 +8,10 @@
 - Không lưu/log password, OTP, token, credential/manifest/raw logs/SDK/cache/build vào Git hoặc docs. Mail chỉ test loopback và địa chỉ tổng hợp khi chưa triển khai adapter production.
 - Chạy focused khi sửa, regression phù hợp trước bàn giao; không cộng focused với full hoặc HTTP/DB/UI checks. Evidence phải gắn source hashes. Không gọi kết quả lịch sử là vừa chạy.
 - Cập nhật PROJECT_STATUS trước kết thúc; ghi blocker chính xác và phần chưa kiểm chứng. Không tự mở rộng Membership/Payment/Face/Workout.
+
+- Quyền mới22/11: được rehearsal schema OTP trên DB test riêng đã guard, không chờ Duy. V8 activation ở location riêng, không Flyway mặc định; không áp V7/out-of-order/history edits. Đồng bộ version/order trước merge/release. Commit/push nhánh chức năng được phép sau review, không merge.
+
+## Learnings
+
+- Runner Java/PostgreSQL phải cố định JVM UTC; alias Asia/Saigon từ Windows có thể bị image PostgreSQL từ chối. PowerShell5 có thể coi native stderr của JAVA_TOOL_OPTIONS là lỗi terminating: chỉ đổi ErrorActionPreference quanh lệnh native rồi kiểm exit code/fresh reports, không bỏ kiểm lỗi.
+- Guard JDBC URL bằng URI host/port/path và identity DB/role thật; PGSimpleDataSource có thể thêm query suffix. Migration rehearsal phải ở location riêng khi chưa bảo đảm thứ tự canonical; V8 trước V7 không được chữa bằng out-of-order/history edits. Xem [quickstart](docs/backend-handover/16_PT_ACTIVATION_REHEARSAL_QUICKSTART.md).

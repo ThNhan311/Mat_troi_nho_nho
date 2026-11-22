@@ -35,3 +35,11 @@ Chưa đọc đầy đủ từng assertion của tất cả test, toàn bộ see
 | Original Admin/PT UI, session/no-replay | [Admin](../../../frontend/fitcenter_ad/lib/screens/account_page.dart), [PT](../../../frontend/fitcenter_pt/lib/screens/pt_activation_page.dart) | [báo cáo](ACCOUNT_PT_ACTIVATION.md), client/widget + Chrome/DB account; PT UI thật chỉ gate503 |
 
 [Quyết định/candidate](../decisions/2026-11-22_ACCOUNT_PT_ACTIVATION.md). Source hashes gắn working tree, không cộng focused vào full, không tuyên bố E2E toàn FitCenter.
+
+## PT activation rehearsal PostgreSQL —22/11
+
+| Yêu cầu | Source | Evidence |
+|---|---|---|
+| V8 riêng, không V7/canonical mutation | [SQL](../../../database/activation-rehearsal/V8__pt_account_activation.sql), [pre-Flyway guard](../../../backend/src/main/java/vn/edu/tdtu/fitcenter/activation/ActivationRehearsalConfiguration.java) | [schema10tests](../../../backend/src/test/java/vn/edu/tdtu/fitcenter/http/ActivationSchemaRehearsalTest.java), [báo cáo](PT_ACTIVATION_POSTGRES.md) |
+| OTP/grant/password atomic và concurrent | [HTTP20tests](../../../backend/src/test/java/vn/edu/tdtu/fitcenter/http/PtActivationPostgresTest.java), [SMTP sink](../../../backend/src/test/java/vn/edu/tdtu/fitcenter/http/ActivationLoopbackMailSink.java) | Full801, focused65 là tập con; Clock sau lock, PostgreSQL wait_event thật, rollback |
+| UI gốc email→OTP→password→ACTIVE→login | [UI runner](../../../frontend/verify-pt-activation-e2e.mjs), [mail sink](../../../frontend/activation-mail-sink.mjs), [DBaudit/cleanup](../../../frontend/verify-activation-rehearsal-db.mjs) |13UI/4HTTP/DBaudit4, source hashes và ảnh trong báo cáo; không production email |

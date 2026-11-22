@@ -19,10 +19,14 @@ Nguồn chuẩn: yêu cầu người dùng của phiên, Topic11 và tài liệu
 - Password8ký tự trở lên, tối đa72byteUTF-8 theo BCrypt, không silent truncation/composition rule mới.
 - Khóa User → activation row; Clock lấy sau chờ khóa. Mọi bước kiểm lại rolePT/status/marker; completed không tái kích hoạt.
 
-## Chưa được chốt/triển khai an toàn
+## Snapshot trước quyền rehearsal (được cập nhật ở phần quyền mới bên dưới)
 
 - Canonical V1–V6 không có bảng OTP/grant/counter. Chuẩn bị SQL candidate ở docs/backend-handover/proposals, không tên V7/V8, không tự apply hoặc sửa guards. V7 của Duy558fb03 là membership periods và còn rủi ro DROP chưa backfill: [review](backend-handover/research/2026-11-22_DATABASE_V7_REVIEW.md).
 - PT activation mặc định tắt trước khi schema/version được thống nhất. Code/unit/mail test không thay bằng chứng HTTP/PostgreSQL activation thật.
 - MEMBER activation, production mail delivery, password reset, account edit/status/delete, membership activation/renewal/payment chưa thuộc task.
 
 Chi tiết API/error/lock, giới hạn SMTP và checklist thống nhất schema: [Account/PT activation](backend-handover/decisions/2026-11-22_ACCOUNT_PT_ACTIVATION.md). SQL candidate không phải migration được phép apply.
+
+## Quyền mới và kết quả rehearsal PT activation — 22/11/2026
+
+Người dùng cho phép tạo/apply schema trên PostgreSQL test riêng và commit/push nhánh chức năng, không phải DB chung/production. Hạn chế chờ Duy ở các snapshot cũ được thay trong phạm vi test này. V8 ở location riêng; default profile vẫn false/503, không áp V7/out-of-order/repair. Đã đạt HTTP/PostgreSQL/SMTP/UI activation thực; cần đồng bộ Duy trước merge/release, không còn chặn test độc lập. [Quyết định chi tiết](backend-handover/decisions/2026-11-22_PT_ACTIVATION_REHEARSAL.md).

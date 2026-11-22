@@ -1,3 +1,5 @@
+Cập nhật rehearsal22/11: PT activation đã đạt HTTP/PostgreSQL/mail sink/UI thật trên DB riêng với V8 ở location riêng. Default vẫn503; chỉ profile test đã guard được bật. Không đổi API/contract OTP, không áp V7. [Evidence](evidence/PT_ACTIVATION_POSTGRES.md), [schema/order](decisions/2026-11-22_PT_ACTIVATION_REHEARSAL.md). Các thông tin chờ schema bên dưới là snapshot trước quyền mới, còn áp cho release production.
+
 Cập nhật Account/PT activation22/11: Admin GET/POST `/api/v1/admin/members` và `/api/v1/admin/personal-trainers` chạy trên V1–V6, tạo DISABLED + profile nguyên tử, không membership. Ba POST `/api/v1/auth/pt-activation/{request-otp|verify-otp|password}` đã chuẩn bị nhưng **mặc định503**, chưa được bật trước thống nhất schema. [Contract/khóa/gate](decisions/2026-11-22_ACCOUNT_PT_ACTIVATION.md), [evidence](evidence/ACCOUNT_PT_ACTIVATION.md), [OpenAPI](api/openapi.yaml). Mọi đoạn “chưa account” phía dưới là checkpoint lịch sử, không phủ định cập nhật này; chưa nghiệm thu activation PostgreSQL/email production.
 # API hiện có
 

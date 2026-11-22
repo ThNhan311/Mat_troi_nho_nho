@@ -139,6 +139,13 @@
 				</includes>
 				<filtering>false</filtering>
 			</resource>
+            <!-- Opt-in test rehearsal only; NOT part of db/migration. -->
+            <resource>
+                <directory>../database/activation-rehearsal</directory>
+                <targetPath>db/activation-rehearsal</targetPath>
+                <includes><include>V8__pt_account_activation.sql</include></includes>
+                <filtering>false</filtering>
+            </resource>
 		</resources>
 
 		<plugins>

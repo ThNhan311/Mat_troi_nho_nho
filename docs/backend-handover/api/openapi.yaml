@@ -1,10 +1,13 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: account-pt-activation-working-tree
-  description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation code được gate503 đến khi schema được thống nhất, chưa nghiệm thu activation PostgreSQL. Renewal/payment write chưa có.
+  version: pt-activation-rehearsal-working-tree
+  description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation mặc định503; profile activation-rehearsal đã đạt HTTP/PostgreSQL/SMTP/UI trên DB test riêng với V8 ở location riêng, không production rollout. Renewal/payment write chưa có.
 servers:
 - url: http://localhost:18081
+  description: Default profile, activation503
+- url: http://127.0.0.1:18082
+  description: Dedicated guarded activation rehearsal only
 paths:
   /api/v1/admin/members:
     get:
@@ -75,7 +78,7 @@ paths:
   /api/v1/auth/pt-activation/request-otp:
     post:
       operationId: requestPtFirstActivationOtp
-      summary: PT first activation — đang gate503 chờ schema thống nhất
+      summary: PT first activation — mặc định503, rehearsal test có thể202
       description: Public, không JWT. Khi được bật chỉ PT DISABLED có Admin pending audit; OTP5phút, resend>=60giây/max5lần giờ. Email không đủ điều kiện vẫn202 chung, không gửi mail. Adapter hiện chỉ loopback mail test @example.invalid. Không tự replay write.
       security: []
       requestBody:
@@ -107,7 +110,7 @@ paths:
   /api/v1/auth/pt-activation/verify-otp:
     post:
       operationId: verifyPtFirstActivationOtp
-      summary: Tiêu thụ OTP, cấp grant đặt mật khẩu một lần — đang gate503
+      summary: Tiêu thụ OTP, cấp grant đặt mật khẩu một lần — mặc định503, đã nghiệm thu rehearsal test
       description: OTP hết hạn khi now>=expiry; tối đa5attempts. Grant32byte random, hashSHA256 trong DB, TTL300s, không JWT. Chưa hoàn thành kích hoạt ở bước này.
       security: []
       requestBody:
@@ -140,7 +143,7 @@ paths:
   /api/v1/auth/pt-activation/password:
     post:
       operationId: completePtFirstActivationPassword
-      summary: Tiêu thụ grant và đặt mật khẩu + ACTIVE nguyên tử — đang gate503
+      summary: Tiêu thụ grant và đặt mật khẩu + ACTIVE nguyên tử — mặc định503, đã nghiệm thu rehearsal test
       description: Password>=8codepoints và<=72byteUTF8 theo BCrypt. User->activation row lock, Clock sau khóa; không JWT, không MEMBER flow. Không replay POST khi timeout.
       security: []
       requestBody:

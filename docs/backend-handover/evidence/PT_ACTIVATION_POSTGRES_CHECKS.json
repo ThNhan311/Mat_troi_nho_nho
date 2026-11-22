@@ -1,0 +1,366 @@
+{
+  "atUtc": "2026-11-22T15:54:50.723416+00:00",
+  "branch": "feature/pt-activation-postgres-rehearsal",
+  "sourceBase": "66a70311517ccd0bf287eff45b476f1ce5138a16",
+  "workingTreeAtTest": true,
+  "jdk": "Temurin21.0.13+9",
+  "jvmTimezone": "UTC",
+  "backendFull": {
+    "passed": 801,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "focused": {
+    "passed": 65,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "subsetOfFull": true
+  },
+  "newSuites": {
+    "schemaRehearsal": 10,
+    "httpPostgresActivation": 20,
+    "guardUnit": 9,
+    "includedInFull": true
+  },
+  "surefireReports": {
+    "TEST-vn.edu.tdtu.fitcenter.activation.ActivationRehearsalGuardTest.xml": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "ff54f6f91daf36845e674b588ee7c73ec6bf1873d9301152f592caf94a42f699"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.activation.PtActivationServiceTest.xml": {
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "643e4a3ac2d5f8125c4d00864f77bc6c41fb6e912b131a21682d88aacbab9d77"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.activation.TestSmtpActivationMailerTest.xml": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "d59a18dce8f3d54bfcccf973898c1f1b7557d6d1d0705a90b003320429655688"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.controller.BookingControllerTest.xml": {
+      "tests": 33,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "1ff12a7c434625525e784206a6300a3986fc8e4db03d847433d41f4b52516650"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.controller.MembershipControllerTest.xml": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "5cc1bbc5b0abcb28e97febcc0cc29351fd19e1450e2556fa5a91364bd1d6b468"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.controller.PersonalTrainerControllerTest.xml": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "718f983d61d7d30e25130aefffc49db6c3371f8df594709d021285b416314fc1"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.controller.PtAvailabilityControllerTest.xml": {
+      "tests": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "4fa8e9c33605476c06fbb591aef4d51f2d0f495d1ed82c71d5b1cd95a7a3fc27"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.controller.PtBookingControllerTest.xml": {
+      "tests": 33,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "3c2d5a52d1f395361ee9a06aade22a80cc0be4c51f47294621031d0aad95fc8b"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.DatabaseAlignmentTest.xml": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "5e54e585ae2e0aec51927505af7f3846f328736d5961923cbc8148801efa64d3"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.FitcenterApplicationTests.xml": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "4bc11757ed16b623c48cb2898fb61b5f24e0c98896d2c2077c2bb3bb8e395e73"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.http.AccountHttpTest.xml": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "b3762fef7e56412d97ce2c837e80996f3a97ba339378f3b1122000b328fbe3d1"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.http.ActivationSchemaRehearsalTest.xml": {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "b1ccf7a457a685417d33f25fab7ea5051d2a9ef67b654181b8ee6e36e7af85a1"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.http.HttpBaselineTest.xml": {
+      "tests": 433,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "cd89ba5c80810732389bdc1ef7d43ab50b50db39dbab0e00492b61ad5dc7a74b"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.http.PtActivationPostgresTest.xml": {
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "3d0ffe0bcb667eb23e56e3c091f97a7698bd8dc3f4ce0f3bca00fe73e5e5e4e1"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.repository.BookingRepositoryQueryTest.xml": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "a35959c616beba26611892b90fc445ef250d609bad8c5c1a5d3ea6056dd23e2d"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.security.JwtAuthenticationFilterTest.xml": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "30dec605bd7a39440785064e85f8bbe083f4dbdc081829932c47ffe9c5dd59d6"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.security.JwtServiceTest.xml": {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "9c60500afdd79c1282391c4a1f66f8fbb86710ed875f103b065fe061b5b0982c"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.AuthServiceTest.xml": {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "d796e3688d1a8f5c39af54ca5e08437a5602b69a6421e5001723a06e7ab847da"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.AvailabilityServiceTest.xml": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "fbb9bc8b7e6bb873da4d5e5d6a5cb3af30e5caf982c911d52067611d6b020ac9"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.BookingEligibilityValidatorTest.xml": {
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "adcd75b053b226709c0282fa9403aeb56d5fbdafc07ead1d3881d4353b097597"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.BookingLifecycleValidatorTest.xml": {
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "c9bd7ce8ef6e89ee4dcccdd107c117b9fa185fddeecd549c552f0af3bc95fdd4"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.BookingPolicyServiceTest.xml": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "a4a427e8f4692fc1cd198f7ad9618cdc144f288ade83753e6d784fdd08727d86"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.BookingPolicyWriteServiceTest.xml": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "6200fe9457cb9dd58d7b87184052c578c86caf4d7bb38f21088c7325d5a89cb0"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.BookingQueryServiceTest.xml": {
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "ff714630a2ade28ea41698ae1e3298e5df8919121a84905d117954433d8059ec"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.MembershipPlanCreateServiceTest.xml": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "a7b5ed3eb381f13b7c59120516190d100a9589e8867777e97ff219fde7328397"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.MembershipServiceTest.xml": {
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "c872c540361323a9d2f7ef5988941886a60b9becc4b5ec0b54ba7473e95b093a"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.PtBookingQueryServiceTest.xml": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "acdc73e13e01123c5225d9138af0abcf75f17a3ce6f20cd2c07fb04f4970bcee"
+    },
+    "TEST-vn.edu.tdtu.fitcenter.service.ServiceEligibilityValidatorTest.xml": {
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "sha256": "1b63d8dcf464fbfdcf273a94df98c35857f9f42ae08c97463e184393a972d292"
+    }
+  },
+  "schema": {
+    "version": "8",
+    "location": "database/activation-rehearsal",
+    "defaultCanonicalVersions": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "rehearsalHistory": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      8
+    ],
+    "v7DatabaseRef": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+    "v7Executed": false,
+    "actualV7ValidateOnly": true,
+    "outOfOrder": false,
+    "cleanOrRepair": false,
+    "membershipPaymentSnapshotPreserved": true,
+    "paymentPeriodColumnsPreserved": true,
+    "columnsAdded": 11,
+    "tablesAdded": 1
+  },
+  "datasource": {
+    "containerId": "3861f4ddcc45cb5d71a1fa74bfbf562f64145d444a575e49f4ebb7430b2ee78c",
+    "volume": "fitcenter_activation_20261122_data",
+    "image": "sha256:b60e90042aa6b8dbecd58e224b3e36114dbf8ad754465264c2476ad58a86e45c",
+    "portBinding": "127.0.0.1:15439",
+    "role": "fitcenter_activation_app",
+    "privileged": false,
+    "emptyDatabase": "fitcenter_activation_fcc9cbec2f3e_empty_test",
+    "historyDatabase": "fitcenter_activation_fcc9cbec2f3e_history_test"
+  },
+  "realUi": {
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "separateHttpChecks": 4,
+    "dbPrepare": 2,
+    "dbAudit": 4,
+    "userId": "b8867ebd-2c69-4341-bba8-356adf14f1fa",
+    "profileId": "8dfb7266-de11-4c79-b630-d3095c5d062f",
+    "status": "ACTIVE",
+    "flow": "Original Admin create DISABLED -> PT email -> actual loopback SMTP -> OTP -> password -> ACTIVE -> login/relogin",
+    "targetE2EPassed": true,
+    "viewport": [
+      1024,
+      768
+    ],
+    "browserTimezone": "America/Los_Angeles",
+    "realExternalEmail": false,
+    "screenshotsReviewed": 7
+  },
+  "flutter": {
+    "adminWebBuildExit": 0,
+    "ptWebBuildExit": 0,
+    "apiBaseUrl": "http://127.0.0.1:18082/api/v1",
+    "dartSourceChanged": false,
+    "analyzeWidgetTestsRerun": false,
+    "historicalCountsNotReused": true
+  },
+  "cleanup": {
+    "exactUiCleanupChecks": 5,
+    "repeatUiNoOpChecks": 1,
+    "fixtureRunsCleaned": 3,
+    "fixtureCleanupRuns": 2,
+    "postgresBaselineStopped": true,
+    "postgresRehearsalStopped": true,
+    "volumesRetained": true,
+    "stoppedJava": 32516,
+    "stoppedWrapper": 24364,
+    "stoppedNodes": [
+      28792,
+      9124,
+      30272
+    ],
+    "taskPortsListening": 0
+  },
+  "releaseLimits": [
+    "Default activation remains503",
+    "Coordinate canonical version/path/order with Duy before merge/release",
+    "Do not replay V7 after rehearsalV8 with out-of-order/history edits",
+    "No production SMTP, MEMBER activation or Membership/Payment expansion"
+  ],
+  "scope": [
+    "AGENTS.md",
+    "backend/pom.xml",
+    "backend/scripts/activation-rehearsal.ps1",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/activation/ActivationRehearsalConfiguration.java",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/activation/ActivationSchemaGuard.java",
+    "backend/src/main/resources/application-activation-rehearsal.properties",
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/activation/ActivationRehearsalGuardTest.java",
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/http/ActivationLoopbackMailSink.java",
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/http/ActivationRehearsalDatabase.java",
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/http/ActivationSchemaRehearsalTest.java",
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/http/PtActivationPostgresTest.java",
+    "database/activation-rehearsal/V8__pt_account_activation.sql",
+    "docs/DECISIONS.md",
+    "docs/PROJECT_STATUS.md",
+    "docs/backend-handover/05_API_DOCUMENTATION.md",
+    "docs/backend-handover/06_TESTING_GUIDE.md",
+    "docs/backend-handover/15_BOOKING_WEB_QUICKSTART.md",
+    "docs/backend-handover/16_PT_ACTIVATION_REHEARSAL_QUICKSTART.md",
+    "docs/backend-handover/api/openapi.yaml",
+    "docs/backend-handover/decisions/2026-11-22_PT_ACTIVATION_REHEARSAL.md",
+    "docs/backend-handover/evidence/PT_ACTIVATION_POSTGRES.md",
+    "docs/backend-handover/evidence/PT_ACTIVATION_POSTGRES_CHECKS.json",
+    "docs/backend-handover/evidence/PT_ACTIVATION_POSTGRES_HASHES.json",
+    "docs/backend-handover/evidence/SOURCE_TRACEABILITY.md",
+    "docs/backend-handover/evidence/pt-activation-postgres/admin-created-disabled-pt.png",
+    "docs/backend-handover/evidence/pt-activation-postgres/pt-activated-original-home.png",
+    "docs/backend-handover/evidence/pt-activation-postgres/pt-activated-relogin.png",
+    "docs/backend-handover/evidence/pt-activation-postgres/pt-activation-complete.png",
+    "docs/backend-handover/evidence/pt-activation-postgres/pt-activation-email.png",
+    "docs/backend-handover/evidence/pt-activation-postgres/pt-activation-otp-prompt.png",
+    "docs/backend-handover/evidence/pt-activation-postgres/pt-activation-password-form.png",
+    "frontend/activation-mail-sink.mjs",
+    "frontend/verify-activation-rehearsal-db.mjs",
+    "frontend/verify-pt-activation-e2e.mjs"
+  ],
+  "review": {
+    "files": 34,
+    "executableHashes": 14,
+    "imagesReviewed": 7,
+    "secretsScanPassed": true,
+    "canonicalAndOldDependencyHashesVerified": true,
+    "research4Preserved": true,
+    "ciBeforePush": {
+      "workflows": 0,
+      "deployments": 0,
+      "webhooks": 0
+    },
+    "testsNotRerunForCommit": true
+  }
+}
