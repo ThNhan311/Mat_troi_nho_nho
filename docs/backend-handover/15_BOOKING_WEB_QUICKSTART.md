@@ -196,3 +196,48 @@ foreach ($action in @('Capture','Audit','LifecycleAudit','Cleanup')) {
 Nếu shell đặt TMP/TEMP vào một sandbox khác, hai probe cũ yêu cầu manifest nằm dưới os.tmpdir(); chạy chúng trong process có TMP/TEMP trỏ thư mục Temp chứa manifest đã xác minh. Không di chuyển credential vào repo để vượt guard. verify-booking-demo dùng nhánh **verify**, không dùng claim khi đối chiếu. Lifecycle probe đọc metadata trước, chỉ gửi các negative request dự kiến409/403/404, không tạo rebook/replacement thay UI.
 
 Cuối cùng dừng đúng PID/command line của Node serve-booking-web, Java/guarded runner do lượt này khởi động; xác minh port3000/3001/18081 đã đóng. Dừng đúng container đã verify ID/label/volume, giữ volume. Không kill theo tên process rộng hoặc stop container khác. Cleanup đã kiểm tám bảng về baseline0 và history1–6 thành công ở lượt nghiệm thu; đây không phải lệnh truncate.
+## Admin Booking Policy Web
+
+Task giao diện gốc Member/PT đã đóng local commit425a0a8. Admin đang ở feature/frontend-admin-booking-policy, giữ Home/BookingPolicyPage/theme từ0307242; [báo cáo và ảnh trước/sau](evidence/ADMIN_BOOKING_POLICY.md). Các phần lịch sử hai app phía trên vẫn là evidence của thời điểm đó; phần này bổ sung app thứ ba.
+
+Từ [Admin project](../../frontend/fitcenter_ad), cùng SDK/PUB_CACHE riêng:
+
+~~~powershell
+& $flutter pub get --enforce-lockfile
+& $flutter analyze --no-fatal-infos
+& $flutter test --reporter expanded
+& $flutter build web --no-web-resources-cdn --dart-define=API_BASE_URL=http://127.0.0.1:18081/api/v1
+# Từ repository root, server riêng:
+node frontend/serve-booking-web.mjs ad
+~~~
+
+Admin ở http://localhost:3002. Kiểm port trống trước khi chạy. ServeBackend dùng guard như trên, **thêm -IncludeAdminWeb** để CORS process có đúng http://localhost:3000, http://localhost:3001, http://localhost:3002. Không có switch thì giữ hai origin cũ. Không sửa cấu hình Backend chung hoặc wildcard.
+
+~~~powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-demo.ps1 -Action ServeBackend -JavaHome $JavaHome -ExpectedContainerId $verifiedId -ManifestPath $manifest -BackendPort 18081 -IncludeAdminWeb
+~~~
+
+Để demo cấu hình đầu tiên: dùng DB demo riêng đã guard/cleanup sạch, Seed actors như trên nhưng **không chạy action Policy trước UI**. Login Admin bằng credential trong manifest ngoài Git → Home gốc → Chính sách đặt lịch. GET404 phải hiện chưa cấu hình và form trống. Nhập14/2/4/5, lưu200; reload/login lại phải đọc đúng UUID/giá trị/effectiveFrom server. Đây là cấu hình fixture, không phải fallback nghiệp vụ. Không cấp Admin token cho Member/PT.
+
+[UI runner](../../frontend/verify-admin-policy-ui.mjs) yêu cầu Playwright ngoài repo như phần trên. Chạy đúng thứ tự trong một lượt fixture sạch. Results `admin-policy-ui-results.json` nằm cạnh manifest, có source hashes và write intents. Không xóa intent để thử lại write; khi lỗi phải Capture/đối chiếu DB, giữ kết quả riêng và cleanup trước một lượt mới. Kết quả cũ cần archive local với tên riêng; không ghi đè manifest/credential khác.
+
+~~~powershell
+node frontend/verify-admin-policy-ui.mjs $manifest $playwright initial
+# initial đã đăng ký policy UUID vào manifest sau UI PUT200.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/booking-demo.ps1 -Action LifecycleSeed -JavaHome $JavaHome -ExpectedContainerId $verifiedId -ManifestPath $manifest
+# Probe DB cần PGPASSWORD chỉ trong process, từ secret store/prompt riêng; không ghi ra terminal.
+node frontend/verify-admin-policy-demo.mjs $manifest baseline
+node frontend/verify-admin-policy-ui.mjs $manifest $playwright restrict
+node frontend/verify-admin-policy-demo.mjs $manifest restrict
+node frontend/verify-admin-policy-ui.mjs $manifest $playwright allow
+node frontend/verify-admin-policy-demo.mjs $manifest allow
+node frontend/verify-admin-policy-ui.mjs $manifest $playwright feedback
+~~~
+
+LifecycleSeed tạo booking tổng hợp trước khi đổi policy, không phải UI tạo booking ở task này. Restrict: Admin đổi deadline48/maxfuture1, MemberA hủy booking future24giờ qua lịch sử gốc →409; DB mọi booking/slot không đổi. Allow: Admin đổi deadline0, cùng booking hủy200 → CANCELLED/AVAILABLE; booking khác giữ nguyên. Không đổi Clock production/chờ90phút. Feedback abort PUT bằng browser route để kiểm no-replay và GET đối chiếu; không sửa server.
+
+Nếu UI PUT đầu tiên được thao tác thủ công thay runner: ghi **đúng UUID response** vào key policy của manifest local sau khi kiểm policy đó thuộc Admin fixture; không thay UUID đang trỏ policy khác. Cleanup chỉ xóa policy UUID có updated_by đúng actor fixture. Không cleanup bằng xóa toàn bảng nếu thất bại/chưa rõ.
+
+Sau kiểm tra, logout, dừng đúng PID ba static server/Java/guarded wrapper do lượt này tạo, Capture rồi Cleanup như trên; chạy Cleanup lần hai để kiểm idempotence. Kiểm rows fixture/history, dừng đúng DB nếu tự khởi động, giữ volume. Không để port3000/3001/3002/18081 hoặc tài khoản demo còn chạy mà báo đã cleanup.
+
+Không làm Admin UI khác hoặc API/migration mới. Admin API chỉ cho ADMIN; Member/PT không được gọi policy Admin để hiển thị deadline. D01 vẫn là snapshot eligibility, completion vẫn theo R04.

@@ -1,0 +1,257 @@
+{
+  "date": "2026-11-22",
+  "head": "425a0a86b498f88d96d3e49cde3aa9a76dd20ab7",
+  "branch": "feature/frontend-admin-booking-policy",
+  "frontendSource": "0307242a34ceb76a289f7ed1f43653e5a1862948",
+  "flutter": "3.50.1",
+  "dart": "3.14.0",
+  "jdk": "21.0.13+9",
+  "flutterTests": {
+    "admin": {
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0
+    },
+    "member": {
+      "passed": 37,
+      "failed": 0,
+      "skipped": 0
+    },
+    "pt": {
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "adminAnalyze": {
+    "errors": 0,
+    "warnings": 0,
+    "infos": 33
+  },
+  "adminReleaseWebBuild": "passed",
+  "staticServer": {
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ui": {
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "timezone": "America/Los_Angeles",
+    "phases": {
+      "initial": {
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:51:40.721Z"
+      },
+      "restrict": {
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:53:03.471Z"
+      },
+      "allow": {
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:53:36.978Z"
+      },
+      "feedback": {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "at": "2026-11-22T03:54:59.139Z"
+      }
+    },
+    "policyFromUi": {
+      "id": "fce355eb-eb33-498f-9e21-c33c4f61bbf5",
+      "maxAdvanceDays": 14,
+      "minNoticeHours": 2,
+      "cancelDeadlineHours": 0,
+      "maxFutureBookings": 1,
+      "effectiveFrom": "2026-11-22T03:53:32.957318Z"
+    },
+    "memberCancel": {
+      "status": 200,
+      "id": "998ca0df-7999-457b-ae9d-980d7d9b47e1",
+      "bookingStatus": "CANCELLED"
+    },
+    "httpObservations": [
+      {
+        "method": "GET",
+        "path": "/api/v1/admin/booking-policy",
+        "status": 404
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/admin/booking-policy",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/admin/booking-policy",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/admin/booking-policy",
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/admin/booking-policy",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/bookings/998ca0df-7999-457b-ae9d-980d7d9b47e1/cancel",
+        "status": 409
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/admin/booking-policy",
+        "status": 200
+      },
+      {
+        "method": "PUT",
+        "path": "/api/v1/admin/booking-policy",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/bookings/998ca0df-7999-457b-ae9d-980d7d9b47e1/cancel",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/trainers",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/bookings/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/admin/booking-policy",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/admin/booking-policy",
+        "status": 200
+      }
+    ],
+    "sourceHashes": {
+      "backend/scripts/booking-demo.ps1": "89d23b0aa9e177e521adcffbacefc6a733907c4063aa9a0aa3636fed949c53b9",
+      "frontend/fitcenter_ad/lib/main.dart": "522bff1e58238074e728509d5895748b418cd9c23b9e0f008aa0beb03d1fd23f",
+      "frontend/fitcenter_ad/lib/screens/account_page.dart": "e8853627bea16a405933dd910e4359d3a337d83b8e1f34e134bb0bd2ca546b24",
+      "frontend/fitcenter_ad/lib/screens/activity_records_page.dart": "e5ae7c1c8b205c625ef19724713806068d4299d35dd5a4b7ad332b1e68c674b8",
+      "frontend/fitcenter_ad/lib/screens/booking_policy_page.dart": "5c7d588cb2d084aebdfe6004e70b15950a926e53c708339e98db44fbe2a0e211",
+      "frontend/fitcenter_ad/lib/screens/home_page.dart": "032cf9c01de9b4e008122d9b829c567e710d1f60366fb2ba1760c66605fed733",
+      "frontend/fitcenter_ad/lib/screens/initial_activation_page.dart": "076863816502e115430ff7b5e2c374a67444eba660f5287e67ee470067a967a3",
+      "frontend/fitcenter_ad/lib/screens/login_page.dart": "0817ab08d1894bcf1d4fd4840004c2f0a5be6b9d905db09b6c916accbace09d9",
+      "frontend/fitcenter_ad/lib/screens/membership_page.dart": "006fd971c3b667a721fafe856ca528fb2b582c749572684db09569d78d60c0aa",
+      "frontend/fitcenter_ad/lib/services/api_client.dart": "e4c79c2747aebcb06e031aec3b14b8208fc18013ed07a4b77086e048ea21ec15",
+      "frontend/fitcenter_ad/lib/services/booking_policy_service.dart": "9a5d597099ae4110397203148e5bf279007dedae8ce99b56a353ffe02ff3b1d6",
+      "frontend/fitcenter_ad/lib/services/vietnam_time.dart": "dd7dd4b36c570bad3ab70cf23530a24c7bd13d1bc870956f983c777d7b2ff914",
+      "frontend/fitcenter_ad/lib/theme/app_theme.dart": "da13bb3ae1f8613da1cf5dd48ac069605531085625247248392c8c3988911d6b",
+      "frontend/fitcenter_ad/pubspec.lock": "dc4424144979111121c2ae9373d990cacd356a0c6b2482ac3d9e36f468ac97c9",
+      "frontend/fitcenter_ad/pubspec.yaml": "c08cda87bc94e46c630216b8a955ddc7ee7e814a772c09292948ad79274bafd5",
+      "frontend/fitcenter_ad/test/api_client_test.dart": "1d504397f99cab41b02bf5d4dba4ece8d50f7c30d2f722a3df74a8f341d5ae68",
+      "frontend/fitcenter_ad/test/booking_policy_test.dart": "0cff11356fa15ff4cb5df60c1e2b2913b8ff074a50bb891abd41f48b01cd8e61",
+      "frontend/serve-booking-web.mjs": "4fa316f6b5fee584b8e825744e5283fb66ecdbf4af3a2f78860d55fbe375b695",
+      "frontend/verify-admin-policy-ui.mjs": "e3aef44dbeded7c49ed4c437c03aeb92d2f1b8a649a1ceda879b4d7ca53e8518"
+    }
+  },
+  "probePhases": [
+    {
+      "phase": "baseline",
+      "db": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "http": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "at": "2026-11-22T03:52:54.116Z"
+    },
+    {
+      "phase": "restrict",
+      "db": {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0
+      },
+      "http": {
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0
+      },
+      "at": "2026-11-22T03:53:27.591Z"
+    },
+    {
+      "phase": "allow",
+      "db": {
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0
+      },
+      "http": {
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0
+      },
+      "at": "2026-11-22T03:54:54.175Z"
+    }
+  ],
+  "cleanup": {
+    "verified": "users=0,members=0,pts=0,plans=0,memberships=0,slots=0,bookings=0,policy=0,flyway=1,2,3,4,5,6",
+    "ownProcessesStopped": true,
+    "dbStopped": true,
+    "volumeRetained": true
+  },
+  "limits": [
+    "HTTP checks repeated for two policy states; do not add into a unique-test total.",
+    "UI assertions include repeated login; report per phase.",
+    "No production Backend executable/migration changes; no Backend regression this task.",
+    "Fault-injected aborted PUT tests client behavior; not an actual server outage."
+  ]
+}

@@ -3,10 +3,10 @@ import { readFile, stat } from 'node:fs/promises';
 import { dirname, resolve, sep, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Loopback-only static server for the two built demo apps; never serves the fixture folder.
+// Loopback-only static server for the three built demo apps; never serves the fixture folder.
 const role = process.argv[2];
-if (!['member', 'pt'].includes(role)) throw new Error('Choose member or pt');
-const port = role === 'member' ? 3000 : 3001;
+if (!['member', 'pt', 'ad'].includes(role)) throw new Error('Choose member, pt or ad');
+const port = role === 'member' ? 3000 : role === 'pt' ? 3001 : 3002;
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'fitcenter_' + role, 'build/web');
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.json': 'application/json',
   '.wasm': 'application/wasm', '.png': 'image/png', '.svg': 'image/svg+xml', '.css': 'text/css', '.ttf': 'font/ttf' };

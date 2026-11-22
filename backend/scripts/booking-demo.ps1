@@ -5,6 +5,7 @@ param(
  [Parameter(Mandatory=$true)][ValidatePattern('^[a-f0-9]{64}$')][string]$ExpectedContainerId,
  [Parameter(Mandatory=$true)][string]$ManifestPath,
  [ValidateRange(1024,65535)][int]$BackendPort=18081,
+ [switch]$IncludeAdminWeb,
  [switch]$StartDatabase
 )
 $ErrorActionPreference='Stop'
@@ -76,6 +77,7 @@ SELECT current_database()||'|'||current_user||'|'||(rolsuper OR rolcreatedb OR r
   try{$listener.Start()}finally{$listener.Stop()}
   $env:SERVER_PORT=[string]$BackendPort; $env:SERVER_ADDRESS='127.0.0.1'
   $env:CORS_ALLOWED_ORIGINS='http://localhost:3000,http://localhost:3001'
+  if($IncludeAdminWeb){$env:CORS_ALLOWED_ORIGINS+=',http://localhost:3002'}
   $env:SPRING_PROFILES_ACTIVE='default'
   $random=New-Object byte[] 48;$rng=[Security.Cryptography.RandomNumberGenerator]::Create()
   try{$rng.GetBytes($random)}finally{$rng.Dispose()}
@@ -93,7 +95,7 @@ SELECT current_database()||'|'||current_user||'|'||(rolsuper OR rolcreatedb OR r
     if($packagedHash -ne (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $repo ('database/migrations/'+$entry.Name))).Hash){throw 'Packaged migration differs from canonical source.'}
    }
   }finally{$archive.Dispose()}
-  Write-Host 'Starting loopback Backend with verified test datasource, default V1-V6, two explicit web origins and an in-memory JWT key.'
+  Write-Host 'Starting loopback Backend with verified test datasource, default V1-V6, explicit fixed web origins (3000/3001; 3002 only with -IncludeAdminWeb) and an in-memory JWT key.'
   & $java '-Duser.timezone=UTC' -jar $jar.FullName
   if($LASTEXITCODE){throw 'Backend exited with error; inspect local log without sharing secrets.'}
  }elseif($Action -eq 'Verify'){
