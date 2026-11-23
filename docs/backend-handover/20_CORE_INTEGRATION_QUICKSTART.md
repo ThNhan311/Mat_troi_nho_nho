@@ -64,3 +64,4 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File backend/scripts/core-int
 ```
 
 Cleanup chỉ runs thuộc manifest I-01, seal UUID ledger trước DELETE, child rows phải suy ra từ owned UUID, snapshot rows ngoài ledger phải giữ nguyên. Giữ schema/history/volume. Không stop Docker Desktop/tài nguyên ngoài task. Nếu scoped full đã tự khởi động baseline15437, đối chiếu own container và không có session rồi dừng riêng; không dừng baseline đang được người khác sử dụng. Credentials/manifests/raw logs/build/SDK ngoài Git.
+I-01 pin EOL ch?n SQL b?ng [.gitattributes](../../.gitattributes) ?? checkout m?i gi? ??ng bytes manifest d? core.autocrlf=true/false. Kh?ng ??i SQL/version/Flyway checksum; [hai th? nghi?m checkout ri?ng](evidence/I01_CHECKOUT_RESULTS.json) ki?m ??9file/mode. Kh?ng ch?y renormalize hay stage l?i migration.

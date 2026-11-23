@@ -27,3 +27,4 @@ Bước tiếp: review nhánh I-01, thu inventory từ chủDB bằng SQL chỉ 
 ## Mốc đã hoàn thành trước I-01
 
 MEMBER activation **9503110**, M-03 **5399c57**, M-04 **92328e0**, PT rehearsal **0c31947**, account core **66a7031**, M-01 **6fbf9fc**. [MEMBER activation evidence](backend-handover/evidence/MEMBER_ACCOUNT_ACTIVATION.md), [quyết định tổng hợp](DECISIONS.md), [quy tắc repository](../AGENTS.md). Số914/60/55 và E2E của Member task là lịch sử, không cộng vào I-01.
+B? sung review sau checkpoint core **093c593**: pin EOL SQL qua [.gitattributes](../.gitattributes),2checkout experiments (autocrlf true/false,9SQL m?i mode) ??t v? source hashes core v?n kh?p. Kh?ng s?a migration hay rerun full/UI khi executable kh?ng ??i. [Evidence checkout](backend-handover/evidence/I01_CHECKOUT_RESULTS.json).

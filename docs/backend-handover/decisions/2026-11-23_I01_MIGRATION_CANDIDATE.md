@@ -36,3 +36,6 @@ M-03 hiện ghi COUNTER SUCCESS có payment + receipt/audit + snapshot/idempoten
 5. Flyway nâng từ history8/9/10 mà bổ sung V7 sẽ validation fail với outOfOrder=false. I-01 kiểm chứng fail này mà **không chạy DDL V7**. Không bật out-of-order hoặc sửa history để lách.
 
 Cần đồng bộ với Duy: inventory DB thực tế và checksum V7; nguồn backfill đã mất/đang còn; mapping COUNTER initial; thứ tự/location/artifact V7–V10; lộ trình forward compatibility và rollback/backup. Không bị chặn kiểm thử riêng, nhưng **releaseReady=false** cho đến khi các mục này được giải quyết.
+## T?i l?p bytes khi checkout
+
+[.gitattributes](../../../.gitattributes) pin EOL th?c t? ?? ki?m: V1?V6/V9/V10 CRLF, V8 LF. ??y l? l?a ch?n t?i l?p artifact, kh?ng s?a content/versions c?a SQL ?? c?ng b?. Hai checkout v?o th? m?c tr?ng v?i core.autocrlf=true/false ??u gi? SHA-256 c?a9SQL theo manifest; kh?ng checkout ?? repository. [B?ng ch?ng](../evidence/I01_CHECKOUT_RESULTS.json).

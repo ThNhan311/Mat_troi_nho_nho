@@ -282,5 +282,11 @@
       }
     }
   },
-  "historicalResultsNotReusedAsNew": true
+  "historicalResultsNotReusedAsNew": true,
+  "additionalCheckoutExperiments": {
+    "count": 2,
+    "notAddedToJUnitCount": true,
+    "evidence": "I01_CHECKOUT_RESULTS.json",
+    "executableSourcesUnchanged": true
+  }
 }

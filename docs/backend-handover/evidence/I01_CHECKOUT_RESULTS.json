@@ -1,0 +1,18 @@
+{
+  "configuration": ".gitattributes",
+  "sqlContentChanged": false,
+  "checks": [
+    {
+      "core.autocrlf": "true",
+      "migrationsVerified": 9,
+      "passed": true
+    },
+    {
+      "core.autocrlf": "false",
+      "migrationsVerified": 9,
+      "passed": true
+    }
+  ],
+  "attributesSha256": "a7d401d46feafbf33c12e745dea92b5f3f2da3ffe0aebcc9255db159c8d83839",
+  "coreEvidenceCommit": "093c5937699235f560bf1efb03edf58e4f01e36a"
+}
