@@ -16,6 +16,8 @@ final class AccountIntegrationDatabase {
     static PGSimpleDataSource empty,history;
     static HttpBaselineFixture fixture;
     static Map<String,List<String>> before;
+    static Map<String,List<String>> beforeAdditive;
+    static final Map<String,Object> migrationEvidence=new LinkedHashMap<>();
     static UUID payment;
     static final List<UUID> payments=new ArrayList<>();
     static String nonce;
@@ -44,7 +46,7 @@ final class AccountIntegrationDatabase {
         for(var d:List.of(empty,history)){
             var j=new JdbcTemplate(d);
             if(j.queryForObject("SELECT count(*) FROM pg_tables WHERE schemaname='public'",Integer.class)!=0)throw new IllegalStateException("Each rehearsal needs two fresh empty DBs; do not clean existing data");
-            flyway(d,false).migrate();
+            Flyway.configure().dataSource(d).locations("classpath:db/migration").outOfOrder(false).cleanDisabled(true).load().migrate();
         }
         var j=new JdbcTemplate(history);fixture=new HttpBaselineFixture(j,new TransactionTemplate(new DataSourceTransactionManager(history)));fixture.seed(new BCryptPasswordEncoder());
         payment=UUID.randomUUID();j.update("INSERT INTO payment_transactions(id,member_id,plan_id,membership_id,provider_ref,amount,status,processed_at,period_start,period_end) VALUES(?,?,?,?,?,100000.00,'SUCCESS',now(),?,?)",payment,fixture.memberA.profileId,fixture.planId,fixture.membershipA,"activation-preserve-"+payment,fixture.today,fixture.expiry);
@@ -53,6 +55,13 @@ final class AccountIntegrationDatabase {
             UUID id=UUID.randomUUID();payments.add(id);j.update("INSERT INTO payment_transactions(id,member_id,plan_id,membership_id,provider_ref,amount,status,period_start,period_end) VALUES(?,?,?,?,?,123.45,?,?,?)",id,fixture.memberA.profileId,fixture.planId,fixture.membershipA,"m03-legacy-"+id,state,fixture.today,fixture.expiry);
         }
         UUID noLink=UUID.randomUUID();payments.add(noLink);j.update("INSERT INTO payment_transactions(id,member_id,plan_id,provider_ref,amount,status) VALUES(?,?,?,?,0,'PENDING')",noLink,fixture.memberB.profileId,fixture.planId,"m03-no-link-"+noLink);
+        // I-01: preserve genuine V1-V6 historical rows while adding V8/V9, without reseeding.
+        beforeAdditive=snapshot(j);
+        for(var d:List.of(empty,history))flyway(d,false).migrate();
+        if(!beforeAdditive.entrySet().stream().allMatch(e->e.getValue().equals(snapshot(j).get(e.getKey()))))throw new IllegalStateException("V8/V9 changed historical V1-V6 rows");
+        migrationEvidence.put("v1to6BeforeHash",hash(beforeAdditive));
+        migrationEvidence.put("v8v9PreservedTables",beforeAdditive.size());
+        migrationEvidence.put("legacyPaymentCount",payments.size());
         // Existing PT state and genuine M03 service-written receipt must survive adding V10.
         j.update("INSERT INTO pt_account_activation(user_id,send_window_started_at,send_count,last_sent_at,completed_at) VALUES(?,now(),1,now(),now())",fixture.ptA.userId);
         UUID legacyUser=UUID.randomUUID(),legacyMember=UUID.randomUUID();
@@ -64,6 +73,12 @@ final class AccountIntegrationDatabase {
         before=snapshot(j);
         for(var d:List.of(empty,history))flyway(d,true).migrate();
         if(!before.equals(snapshot(j)))throw new IllegalStateException("Migration changed pre-existing data");
+        migrationEvidence.put("v8v9BeforeV10Hash",hash(before));
+        migrationEvidence.put("v10PreservedTables",before.size());
+        migrationEvidence.put("emptyApplied",new JdbcTemplate(empty).queryForList("SELECT version,script,checksum,success FROM flyway_schema_history ORDER BY installed_rank"));
+        migrationEvidence.put("historyApplied",j.queryForList("SELECT version,script,checksum,success FROM flyway_schema_history ORDER BY installed_rank"));
+        migrationEvidence.put("releaseReady",false);
+        try{Files.writeString(Path.of(env("ACCOUNT_PRIVATE_DIRECTORY"),"migration-results-"+nonce+".json"),new tools.jackson.databind.ObjectMapper().writeValueAsString(migrationEvidence),StandardOpenOption.CREATE_NEW);}catch(java.io.IOException e){throw new IllegalStateException("Cannot save sanitized migration evidence",e);}
         saveRegistry();prepared=true;
     }
     static void saveRegistry(){
@@ -89,5 +104,6 @@ final class AccountIntegrationDatabase {
         }catch(java.io.IOException e){throw new IllegalStateException("Cannot persist private fixture registry");}
     }
     static List<String> jTables(){return new JdbcTemplate(history).queryForList("SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename NOT IN ('flyway_schema_history','member_account_activation') ORDER BY tablename",String.class);}
-    static String dataHash(){try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(before.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8)));}catch(Exception e){throw new IllegalStateException(e);}}
+    static String dataHash(){return hash(before);}
+    static String hash(Map<String,List<String>> rows){try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(rows.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8)));}catch(Exception e){throw new IllegalStateException(e);}}
 }

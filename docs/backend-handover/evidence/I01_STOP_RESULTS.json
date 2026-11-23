@@ -1,0 +1,39 @@
+{
+  "atUtc": "2026-11-23T14:53:10.7699794Z",
+  "stoppedProcesses": [
+    {
+      "kind": "mail",
+      "pid": 16176
+    },
+    {
+      "kind": "member-web",
+      "pid": 20664
+    },
+    {
+      "kind": "pt-web",
+      "pid": 28780
+    },
+    {
+      "kind": "ad-web",
+      "pid": 30752
+    }
+  ],
+  "backendPortAlreadyClosedAfterVerifiedJavaStop": true,
+  "taskPortsClosed": [
+    18084,
+    11035,
+    11036,
+    3000,
+    3001,
+    3002,
+    15441,
+    15437
+  ],
+  "accountContainerStopped": true,
+  "baselineContainerStopped": true,
+  "volumesRetained": [
+    "fitcenter_account_20261123_data",
+    "fitcenter_baseline_20261120_data"
+  ],
+  "otherResourcesUnchanged": true
+}

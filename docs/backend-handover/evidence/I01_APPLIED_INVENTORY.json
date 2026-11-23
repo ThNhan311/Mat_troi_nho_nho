@@ -1,0 +1,708 @@
+{
+  "at": "2026-11-23T14:46:54.696Z",
+  "containerId": "597f29e3297204351b3c81f1ac63eed4ccd8e37e267ee66cbe4bf4ba37cf2cbe",
+  "volume": "fitcenter_account_20261123_data",
+  "sharedDatabaseInventory": "UNKNOWN; not contacted",
+  "databases": [
+    {
+      "database": "fitcenter_account_6519819aec26_empty_test",
+      "role": "fitcenter_account_app",
+      "applied": [
+        {
+          "installed_rank": 1,
+          "version": "1",
+          "script": "V1__core_users_members.sql",
+          "checksum": 1458726014,
+          "success": true
+        },
+        {
+          "installed_rank": 2,
+          "version": "2",
+          "script": "V2__membership_payment.sql",
+          "checksum": 989506803,
+          "success": true
+        },
+        {
+          "installed_rank": 3,
+          "version": "3",
+          "script": "V3__checkin.sql",
+          "checksum": -515824181,
+          "success": true
+        },
+        {
+          "installed_rank": 4,
+          "version": "4",
+          "script": "V4__pt_booking.sql",
+          "checksum": 568475058,
+          "success": true
+        },
+        {
+          "installed_rank": 5,
+          "version": "5",
+          "script": "V5__workout_notification.sql",
+          "checksum": 1125685481,
+          "success": true
+        },
+        {
+          "installed_rank": 6,
+          "version": "6",
+          "script": "V6__audit_log.sql",
+          "checksum": -1514799074,
+          "success": true
+        },
+        {
+          "installed_rank": 7,
+          "version": "8",
+          "script": "V8__pt_account_activation.sql",
+          "checksum": -750065425,
+          "success": true
+        },
+        {
+          "installed_rank": 8,
+          "version": "9",
+          "script": "V9__membership_initial_activation.sql",
+          "checksum": 2048807649,
+          "success": true
+        },
+        {
+          "installed_rank": 9,
+          "version": "10",
+          "script": "V10__member_account_activation.sql",
+          "checksum": 1490426486,
+          "success": true
+        }
+      ],
+      "postgresVersion": "17.12 (Debian 17.12-1.pgdg13+1)"
+    },
+    {
+      "database": "fitcenter_account_6519819aec26_history_test",
+      "role": "fitcenter_account_app",
+      "applied": [
+        {
+          "installed_rank": 1,
+          "version": "1",
+          "script": "V1__core_users_members.sql",
+          "checksum": 1458726014,
+          "success": true
+        },
+        {
+          "installed_rank": 2,
+          "version": "2",
+          "script": "V2__membership_payment.sql",
+          "checksum": 989506803,
+          "success": true
+        },
+        {
+          "installed_rank": 3,
+          "version": "3",
+          "script": "V3__checkin.sql",
+          "checksum": -515824181,
+          "success": true
+        },
+        {
+          "installed_rank": 4,
+          "version": "4",
+          "script": "V4__pt_booking.sql",
+          "checksum": 568475058,
+          "success": true
+        },
+        {
+          "installed_rank": 5,
+          "version": "5",
+          "script": "V5__workout_notification.sql",
+          "checksum": 1125685481,
+          "success": true
+        },
+        {
+          "installed_rank": 6,
+          "version": "6",
+          "script": "V6__audit_log.sql",
+          "checksum": -1514799074,
+          "success": true
+        },
+        {
+          "installed_rank": 7,
+          "version": "8",
+          "script": "V8__pt_account_activation.sql",
+          "checksum": -750065425,
+          "success": true
+        },
+        {
+          "installed_rank": 8,
+          "version": "9",
+          "script": "V9__membership_initial_activation.sql",
+          "checksum": 2048807649,
+          "success": true
+        },
+        {
+          "installed_rank": 9,
+          "version": "10",
+          "script": "V10__member_account_activation.sql",
+          "checksum": 1490426486,
+          "success": true
+        }
+      ],
+      "postgresVersion": "17.12 (Debian 17.12-1.pgdg13+1)"
+    },
+    {
+      "database": "fitcenter_account_28074329177e_empty_test",
+      "role": "fitcenter_account_app",
+      "applied": [
+        {
+          "installed_rank": 1,
+          "version": "1",
+          "script": "V1__core_users_members.sql",
+          "checksum": 1458726014,
+          "success": true
+        },
+        {
+          "installed_rank": 2,
+          "version": "2",
+          "script": "V2__membership_payment.sql",
+          "checksum": 989506803,
+          "success": true
+        },
+        {
+          "installed_rank": 3,
+          "version": "3",
+          "script": "V3__checkin.sql",
+          "checksum": -515824181,
+          "success": true
+        },
+        {
+          "installed_rank": 4,
+          "version": "4",
+          "script": "V4__pt_booking.sql",
+          "checksum": 568475058,
+          "success": true
+        },
+        {
+          "installed_rank": 5,
+          "version": "5",
+          "script": "V5__workout_notification.sql",
+          "checksum": 1125685481,
+          "success": true
+        },
+        {
+          "installed_rank": 6,
+          "version": "6",
+          "script": "V6__audit_log.sql",
+          "checksum": -1514799074,
+          "success": true
+        },
+        {
+          "installed_rank": 7,
+          "version": "8",
+          "script": "V8__pt_account_activation.sql",
+          "checksum": -750065425,
+          "success": true
+        },
+        {
+          "installed_rank": 8,
+          "version": "9",
+          "script": "V9__membership_initial_activation.sql",
+          "checksum": 2048807649,
+          "success": true
+        },
+        {
+          "installed_rank": 9,
+          "version": "10",
+          "script": "V10__member_account_activation.sql",
+          "checksum": 1490426486,
+          "success": true
+        }
+      ],
+      "postgresVersion": "17.12 (Debian 17.12-1.pgdg13+1)"
+    },
+    {
+      "database": "fitcenter_account_28074329177e_history_test",
+      "role": "fitcenter_account_app",
+      "applied": [
+        {
+          "installed_rank": 1,
+          "version": "1",
+          "script": "V1__core_users_members.sql",
+          "checksum": 1458726014,
+          "success": true
+        },
+        {
+          "installed_rank": 2,
+          "version": "2",
+          "script": "V2__membership_payment.sql",
+          "checksum": 989506803,
+          "success": true
+        },
+        {
+          "installed_rank": 3,
+          "version": "3",
+          "script": "V3__checkin.sql",
+          "checksum": -515824181,
+          "success": true
+        },
+        {
+          "installed_rank": 4,
+          "version": "4",
+          "script": "V4__pt_booking.sql",
+          "checksum": 568475058,
+          "success": true
+        },
+        {
+          "installed_rank": 5,
+          "version": "5",
+          "script": "V5__workout_notification.sql",
+          "checksum": 1125685481,
+          "success": true
+        },
+        {
+          "installed_rank": 6,
+          "version": "6",
+          "script": "V6__audit_log.sql",
+          "checksum": -1514799074,
+          "success": true
+        },
+        {
+          "installed_rank": 7,
+          "version": "8",
+          "script": "V8__pt_account_activation.sql",
+          "checksum": -750065425,
+          "success": true
+        },
+        {
+          "installed_rank": 8,
+          "version": "9",
+          "script": "V9__membership_initial_activation.sql",
+          "checksum": 2048807649,
+          "success": true
+        },
+        {
+          "installed_rank": 9,
+          "version": "10",
+          "script": "V10__member_account_activation.sql",
+          "checksum": 1490426486,
+          "success": true
+        }
+      ],
+      "postgresVersion": "17.12 (Debian 17.12-1.pgdg13+1)"
+    },
+    {
+      "database": "fitcenter_account_ae15e24eafd5_empty_test",
+      "role": "fitcenter_account_app",
+      "applied": [
+        {
+          "installed_rank": 1,
+          "version": "1",
+          "script": "V1__core_users_members.sql",
+          "checksum": 1458726014,
+          "success": true
+        },
+        {
+          "installed_rank": 2,
+          "version": "2",
+          "script": "V2__membership_payment.sql",
+          "checksum": 989506803,
+          "success": true
+        },
+        {
+          "installed_rank": 3,
+          "version": "3",
+          "script": "V3__checkin.sql",
+          "checksum": -515824181,
+          "success": true
+        },
+        {
+          "installed_rank": 4,
+          "version": "4",
+          "script": "V4__pt_booking.sql",
+          "checksum": 568475058,
+          "success": true
+        },
+        {
+          "installed_rank": 5,
+          "version": "5",
+          "script": "V5__workout_notification.sql",
+          "checksum": 1125685481,
+          "success": true
+        },
+        {
+          "installed_rank": 6,
+          "version": "6",
+          "script": "V6__audit_log.sql",
+          "checksum": -1514799074,
+          "success": true
+        },
+        {
+          "installed_rank": 7,
+          "version": "8",
+          "script": "V8__pt_account_activation.sql",
+          "checksum": -750065425,
+          "success": true
+        },
+        {
+          "installed_rank": 8,
+          "version": "9",
+          "script": "V9__membership_initial_activation.sql",
+          "checksum": 2048807649,
+          "success": true
+        },
+        {
+          "installed_rank": 9,
+          "version": "10",
+          "script": "V10__member_account_activation.sql",
+          "checksum": 1490426486,
+          "success": true
+        }
+      ],
+      "postgresVersion": "17.12 (Debian 17.12-1.pgdg13+1)"
+    },
+    {
+      "database": "fitcenter_account_ae15e24eafd5_history_test",
+      "role": "fitcenter_account_app",
+      "applied": [
+        {
+          "installed_rank": 1,
+          "version": "1",
+          "script": "V1__core_users_members.sql",
+          "checksum": 1458726014,
+          "success": true
+        },
+        {
+          "installed_rank": 2,
+          "version": "2",
+          "script": "V2__membership_payment.sql",
+          "checksum": 989506803,
+          "success": true
+        },
+        {
+          "installed_rank": 3,
+          "version": "3",
+          "script": "V3__checkin.sql",
+          "checksum": -515824181,
+          "success": true
+        },
+        {
+          "installed_rank": 4,
+          "version": "4",
+          "script": "V4__pt_booking.sql",
+          "checksum": 568475058,
+          "success": true
+        },
+        {
+          "installed_rank": 5,
+          "version": "5",
+          "script": "V5__workout_notification.sql",
+          "checksum": 1125685481,
+          "success": true
+        },
+        {
+          "installed_rank": 6,
+          "version": "6",
+          "script": "V6__audit_log.sql",
+          "checksum": -1514799074,
+          "success": true
+        },
+        {
+          "installed_rank": 7,
+          "version": "8",
+          "script": "V8__pt_account_activation.sql",
+          "checksum": -750065425,
+          "success": true
+        },
+        {
+          "installed_rank": 8,
+          "version": "9",
+          "script": "V9__membership_initial_activation.sql",
+          "checksum": 2048807649,
+          "success": true
+        },
+        {
+          "installed_rank": 9,
+          "version": "10",
+          "script": "V10__member_account_activation.sql",
+          "checksum": 1490426486,
+          "success": true
+        }
+      ],
+      "postgresVersion": "17.12 (Debian 17.12-1.pgdg13+1)"
+    },
+    {
+      "database": "fitcenter_account_4820e1ba430e_empty_test",
+      "role": "fitcenter_account_app",
+      "applied": [
+        {
+          "installed_rank": 1,
+          "version": "1",
+          "script": "V1__core_users_members.sql",
+          "checksum": 1458726014,
+          "success": true
+        },
+        {
+          "installed_rank": 2,
+          "version": "2",
+          "script": "V2__membership_payment.sql",
+          "checksum": 989506803,
+          "success": true
+        },
+        {
+          "installed_rank": 3,
+          "version": "3",
+          "script": "V3__checkin.sql",
+          "checksum": -515824181,
+          "success": true
+        },
+        {
+          "installed_rank": 4,
+          "version": "4",
+          "script": "V4__pt_booking.sql",
+          "checksum": 568475058,
+          "success": true
+        },
+        {
+          "installed_rank": 5,
+          "version": "5",
+          "script": "V5__workout_notification.sql",
+          "checksum": 1125685481,
+          "success": true
+        },
+        {
+          "installed_rank": 6,
+          "version": "6",
+          "script": "V6__audit_log.sql",
+          "checksum": -1514799074,
+          "success": true
+        },
+        {
+          "installed_rank": 7,
+          "version": "8",
+          "script": "V8__pt_account_activation.sql",
+          "checksum": -750065425,
+          "success": true
+        },
+        {
+          "installed_rank": 8,
+          "version": "9",
+          "script": "V9__membership_initial_activation.sql",
+          "checksum": 2048807649,
+          "success": true
+        },
+        {
+          "installed_rank": 9,
+          "version": "10",
+          "script": "V10__member_account_activation.sql",
+          "checksum": 1490426486,
+          "success": true
+        }
+      ],
+      "postgresVersion": "17.12 (Debian 17.12-1.pgdg13+1)"
+    },
+    {
+      "database": "fitcenter_account_4820e1ba430e_history_test",
+      "role": "fitcenter_account_app",
+      "applied": [
+        {
+          "installed_rank": 1,
+          "version": "1",
+          "script": "V1__core_users_members.sql",
+          "checksum": 1458726014,
+          "success": true
+        },
+        {
+          "installed_rank": 2,
+          "version": "2",
+          "script": "V2__membership_payment.sql",
+          "checksum": 989506803,
+          "success": true
+        },
+        {
+          "installed_rank": 3,
+          "version": "3",
+          "script": "V3__checkin.sql",
+          "checksum": -515824181,
+          "success": true
+        },
+        {
+          "installed_rank": 4,
+          "version": "4",
+          "script": "V4__pt_booking.sql",
+          "checksum": 568475058,
+          "success": true
+        },
+        {
+          "installed_rank": 5,
+          "version": "5",
+          "script": "V5__workout_notification.sql",
+          "checksum": 1125685481,
+          "success": true
+        },
+        {
+          "installed_rank": 6,
+          "version": "6",
+          "script": "V6__audit_log.sql",
+          "checksum": -1514799074,
+          "success": true
+        },
+        {
+          "installed_rank": 7,
+          "version": "8",
+          "script": "V8__pt_account_activation.sql",
+          "checksum": -750065425,
+          "success": true
+        },
+        {
+          "installed_rank": 8,
+          "version": "9",
+          "script": "V9__membership_initial_activation.sql",
+          "checksum": 2048807649,
+          "success": true
+        },
+        {
+          "installed_rank": 9,
+          "version": "10",
+          "script": "V10__member_account_activation.sql",
+          "checksum": 1490426486,
+          "success": true
+        }
+      ],
+      "postgresVersion": "17.12 (Debian 17.12-1.pgdg13+1)"
+    },
+    {
+      "database": "fitcenter_account_c747e146b150_empty_test",
+      "role": "fitcenter_account_app",
+      "applied": [
+        {
+          "installed_rank": 1,
+          "version": "1",
+          "script": "V1__core_users_members.sql",
+          "checksum": 1458726014,
+          "success": true
+        },
+        {
+          "installed_rank": 2,
+          "version": "2",
+          "script": "V2__membership_payment.sql",
+          "checksum": 989506803,
+          "success": true
+        },
+        {
+          "installed_rank": 3,
+          "version": "3",
+          "script": "V3__checkin.sql",
+          "checksum": -515824181,
+          "success": true
+        },
+        {
+          "installed_rank": 4,
+          "version": "4",
+          "script": "V4__pt_booking.sql",
+          "checksum": 568475058,
+          "success": true
+        },
+        {
+          "installed_rank": 5,
+          "version": "5",
+          "script": "V5__workout_notification.sql",
+          "checksum": 1125685481,
+          "success": true
+        },
+        {
+          "installed_rank": 6,
+          "version": "6",
+          "script": "V6__audit_log.sql",
+          "checksum": -1514799074,
+          "success": true
+        },
+        {
+          "installed_rank": 7,
+          "version": "8",
+          "script": "V8__pt_account_activation.sql",
+          "checksum": -750065425,
+          "success": true
+        },
+        {
+          "installed_rank": 8,
+          "version": "9",
+          "script": "V9__membership_initial_activation.sql",
+          "checksum": 2048807649,
+          "success": true
+        },
+        {
+          "installed_rank": 9,
+          "version": "10",
+          "script": "V10__member_account_activation.sql",
+          "checksum": 1490426486,
+          "success": true
+        }
+      ],
+      "postgresVersion": "17.12 (Debian 17.12-1.pgdg13+1)"
+    },
+    {
+      "database": "fitcenter_account_c747e146b150_history_test",
+      "role": "fitcenter_account_app",
+      "applied": [
+        {
+          "installed_rank": 1,
+          "version": "1",
+          "script": "V1__core_users_members.sql",
+          "checksum": 1458726014,
+          "success": true
+        },
+        {
+          "installed_rank": 2,
+          "version": "2",
+          "script": "V2__membership_payment.sql",
+          "checksum": 989506803,
+          "success": true
+        },
+        {
+          "installed_rank": 3,
+          "version": "3",
+          "script": "V3__checkin.sql",
+          "checksum": -515824181,
+          "success": true
+        },
+        {
+          "installed_rank": 4,
+          "version": "4",
+          "script": "V4__pt_booking.sql",
+          "checksum": 568475058,
+          "success": true
+        },
+        {
+          "installed_rank": 5,
+          "version": "5",
+          "script": "V5__workout_notification.sql",
+          "checksum": 1125685481,
+          "success": true
+        },
+        {
+          "installed_rank": 6,
+          "version": "6",
+          "script": "V6__audit_log.sql",
+          "checksum": -1514799074,
+          "success": true
+        },
+        {
+          "installed_rank": 7,
+          "version": "8",
+          "script": "V8__pt_account_activation.sql",
+          "checksum": -750065425,
+          "success": true
+        },
+        {
+          "installed_rank": 8,
+          "version": "9",
+          "script": "V9__membership_initial_activation.sql",
+          "checksum": 2048807649,
+          "success": true
+        },
+        {
+          "installed_rank": 9,
+          "version": "10",
+          "script": "V10__member_account_activation.sql",
+          "checksum": 1490426486,
+          "success": true
+        }
+      ],
+      "postgresVersion": "17.12 (Debian 17.12-1.pgdg13+1)"
+    }
+  ]
+}

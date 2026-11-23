@@ -1,25 +1,29 @@
 # FitCenter — trạng thái tiếp tục
 
-Cập nhật23/11/2026 tại worktree Mat_troi_nho_nho-booking-integration, branch **feature/member-account-activation**, base/HEAD trước commit **5399c5707288669997e898740daa36c57d04d632** (M-03). Xác minh Git khi tiếp tục; SHA commit task tra Git history, file không tự tham chiếu SHA của chính nó.
+Cập nhật23/11/2026 tại worktree Mat_troi_nho_nho-booking-integration, branch **feature/core-integration-rehearsal**, base/HEAD trước commit **950311082d4cc5b2c5b85b1a3f8cd644246cd932** (MEMBER activation). Xác minh Git khi tiếp tục; commit đóng I-01 tra history, không tự tham chiếu SHA của chính file này.
 
-## MEMBER account activation đã triển khai và kiểm chứng rehearsal
+## I-01 đã kiểm chứng rehearsal
 
-Login/theme/navigation Member gốc→email→OTP300s→verify→password→ACTIVE→login. Tái sử dụng core an toàn PT, role/store/challenge/grant riêng, kiểm profile + Admin-created marker; không legacy/suspended/completed reactivation, không normalJWT trướcACTIVE. Không cần Membership, không mutate Membership/payment. M-03 Member-first và activation User-first độc lập; race cả hai commit đúng một lần. [Contract/decisions](backend-handover/decisions/2026-11-23_MEMBER_ACCOUNT_ACTIVATION.md), [evidence/hashes/ảnh](backend-handover/evidence/MEMBER_ACCOUNT_ACTIVATION.md), [quickstart](backend-handover/19_MEMBER_ACCOUNT_ACTIVATION_QUICKSTART.md).
+Frozen manifest/version/path/SHA-256/FlywayCRC32 và runner fail-closed cho **V1–V6,V8,V9,V10**, V7 database558fb03 quarantined. Không đổi SQL/version/schema sản phẩm, default gates hoặc source Java/Dart sản phẩm. Upgrade DB trống và dữ liệu lịch sử tổng hợp:1–6→8/9→10, snapshots giữ nguyên payment periods/status/null, PT state, M03 receipt/audit/idempotency/price-duration snapshots. Validate-only đưa V7late thất bại không chạyDDL. Shared inventory **chưa biết**, không giả định DB đồng đội chưa ápV7; **releaseReady=false**.
 
-Thực chạy scoped full **914 passed/0failed/0errors/0skipped**, focused159 tập con. PT23 + Member24 HTTP/PG/SMTP cases trên integrated profile; M0354 và schema5 trong cùng full. Không chọn3 PG classes profile riêng cũ (đã có lớp integrated thay thế), không tính chúng là pass. Member Flutter**60 passed**, PT Flutter**55 passed**,0failed/skipped; PT source không đổi. Member analyze0error/0warning/58info, --no-fatal-infos exit0; Member/Admin JS Web build đạt. Admin Dart unchanged, không rerun Admin tests.
+Thực chạy scoped full **918 passed/0failed/0errors/0skipped**,33XMLsuites tươi. Focused163 là tập con. Không chọn3lớp PG profile cũ, đã có integrated counterparts; chi tiết selector trong evidence. Flutter Web build cả3app cùngAPI18084 đạt; không sửa Dart nên không rerun widget/analyze và không lấy kết quả lịch sử làm lượt mới.
 
-E2E Chrome thật **15 UI/5HTTP/3DB checks**: Admin UI tạoMember DISABLED→M03 cấp Membership→Member SMTP loopback OTP/password→ACTIVE→login→M04→reload/login cùngUUID/date. Chỉ Admin vàplan được seed, **không ACTIVE Member fixture để thay activation**. Snapshot Membership/payment/chứng từ/Booking/PT cũ không đổi sau activation. Mail test @example.invalid, chưa production email/E2E toàn hệ thống.
+E2E mới **26UI/29HTTP/9DB checks**,0failed/skipped: cùngbackend18084/DB15441/mail sink. Chỉ seedAdmin; Admin UI tạo plan, HTTP tạo DISABLEDMember/PT A/B và M03 thuquầy +policy; Member/PT A kích hoạt OTP/password qua UI gốc, B quaHTTP+SMTP; Member M04→PT UI slot→Member UI CONFIRMED→cancel→AVAILABLE→hành động mới rebook/newUUID→reload/login; PT đọc cùngUUID/time. Ownership/role và payment/Membership snapshots giữ nguyên. Ba lỗi helper UI trước đã sửa/cleanup rồi chạy lại toàn bộ pair mới, không phải lỗi production code.
 
-## Database/release
-
-V10 riêng CREATE member_account_activation, không sửa V1–V6/V8/V9 hoặcPT role constraint. Profile account-integration-rehearsal guard trướcFlyway URL127.0.0.1:15441/app-role/tênDB/flag/4locations; migrate1–6,8,9,10, không compose profiles cũ. M03 guard giữ target15440 cũ và thêm nhánh integrated cóguard. Default Member/PT/M03 vẫn false/503. DBtrống và history1–6,8,9 cóPTstate/counterreceipts/payment periods giữ nguyên quaV10.
-
-History gapV7 là rehearsal, **không release**. Blocker rollout: đồng bộ Duy V7/V8/V9/V10 ordering và backfill V7 DROP periods chưa bảo toàn dữ liệu. Không applyV7/out-of-order/history edit/clean/repair, không DBchung/production. Production mail adapter/rate-limit tầng hạ tầng vẫn chưa triển khai; không quảng bá mail thật.
+[Evidence/hashes/ảnh](backend-handover/evidence/I01_CORE_INTEGRATION.md), [quickstart tích hợp](backend-handover/20_CORE_INTEGRATION_QUICKSTART.md), [inventory/chuỗi ứng viên/release gates](backend-handover/decisions/2026-11-23_I01_MIGRATION_CANDIDATE.md).
 
 ## Git và tài nguyên
 
-Task được review rồi commit/push nhánh riêng theo quyền người dùng, không merge/force. Fetch23/11 database ref558fb03 không đổi; CI/CD remote0workflow/0run/0deployment/0webhook, không gọi là CI pass. Bốn research22/11 untracked giữ nguyên ngoài scope; Face checkout gốc089b5e2 không sửa. Credentials/OTP/grant/token/private manifest/raw logs/tools/build ngoàiGit. Private sandbox cũ mất sau môi trường phiên đổi: own container/namespace/role verified, phục hồi exactUUIDregistry và rotate riêng app test credential, không đổi rows/history. Không lặp914 vì app source không đổi.
+Review để commit/push nhánh riêng theo quyền người dùng, không merge/force. Thay đổi task chỉ runner/test/helper/manifest/docs/evidence; không migration áp dụng hoặc code sản phẩm. Bốn research22/11 untracked giữ ngoài commit; Face và survey untracked checkout gốc089b5e2 nguyên vẹn. Credentials/OTP/grant/token/private manifests/raw logs/tools/build ngoài Git. Remote23/11 không workflow/run/deployment/webhook; không gọi CI pass.
 
-Cleanup exactUUID trên6DB task,18checks, chạy lại đạt; dừng ownbackend/web/mail/container/ports, giữ volume fitcenter_account_20261123_data. Hai container ngoài task không đụng. Bước tiếp theo review nhánh và đồng bộ migration release + mail adapter phù hợp; không tự mở rộng renewal/gateway/Face/Workout.
+Cleanup exactUUID trên10DB của5pair task,30checks, lặp lại đạt; ngoài fixture không đổi, giữ schema/history/volume. Đã dừng ownbackend/wrappers/3web/mail và DB test; task ports đóng, volume account/baseline còn. Không DB chung/production/Docker Desktop/tài nguyên ngoài task bị đổi.
 
-Mốc trước: M-03 **5399c57**, M-04 **92328e0**, PT rehearsal **0c31947**, account core **66a7031**, M-01 **6fbf9fc**. Báo cáo các mốc đó là lịch sử; lần914/60/55 vàE2E ở trên là thực chạy trong task Member này. [AGENTS](../AGENTS.md), [DECISIONS](DECISIONS.md).
+## Blocker phát hành và bước tiếp theo
+
+Cần chủ DB cung cấp actual Flyway inventory/checksum (V7 có thể đã áp), backup/export periods bị DROP, thống nhất mapping initial COUNTER và thứ tự/location/artifact V7–V10. V7 hiện DROP payment periods chưa backfill và khác semantics M03; không chạy nguyên bản. Có phương án release có điều kiện trong decision, chưa là migration được phép apply. Không out-of-order/history edits/clean/repair hoặc đổi số published để lách.
+
+Bước tiếp: review nhánh I-01, thu inventory từ chủDB bằng SQL chỉ đọc được cung cấp, quyết định compatibility/backfill trước canonical release. Production email adapter vẫn chưa có; không tự mở gateway/renewal/Workout/Face. Complete/cancel boundaries có regression, không sửa Clock production để giả hoàn thành tương lai.
+
+## Mốc đã hoàn thành trước I-01
+
+MEMBER activation **9503110**, M-03 **5399c57**, M-04 **92328e0**, PT rehearsal **0c31947**, account core **66a7031**, M-01 **6fbf9fc**. [MEMBER activation evidence](backend-handover/evidence/MEMBER_ACCOUNT_ACTIVATION.md), [quyết định tổng hợp](DECISIONS.md), [quy tắc repository](../AGENTS.md). Số914/60/55 và E2E của Member task là lịch sử, không cộng vào I-01.

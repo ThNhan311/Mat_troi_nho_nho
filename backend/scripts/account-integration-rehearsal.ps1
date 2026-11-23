@@ -102,7 +102,7 @@ try{
    $code=$LASTEXITCODE
   }else{
    Push-Location (Join-Path $repo 'backend')
-   try{ $ErrorActionPreference='Continue'; & .\mvnw.cmd -B -ntp test '-Dtest=MemberAccountActivationPostgresTest,IntegratedPtActivationPostgresTest,IntegratedInitialMembershipPostgresTest,MemberActivationSchemaPostgresTest,MemberActivationServiceTest,MemberActivationGuardTest,PtActivationServiceTest' *> (Join-Path $private 'focused-maven-private.log');$code=$LASTEXITCODE;$ErrorActionPreference='Stop' }finally{Pop-Location}
+   try{ $ErrorActionPreference='Continue'; & .\mvnw.cmd -B -ntp test '-Dtest=CoreMigrationCandidatePostgresTest,MemberAccountActivationPostgresTest,IntegratedPtActivationPostgresTest,IntegratedInitialMembershipPostgresTest,MemberActivationSchemaPostgresTest,MemberActivationServiceTest,MemberActivationGuardTest,PtActivationServiceTest' *> (Join-Path $private 'focused-maven-private.log');$code=$LASTEXITCODE;$ErrorActionPreference='Stop' }finally{Pop-Location}
   }
   $sum=@{tests=0;failures=0;errors=0;skipped=0};$reports=@(Get-ChildItem (Join-Path $repo 'backend/target/surefire-reports/TEST-*.xml')|Where-Object LastWriteTimeUtc -ge $started)
   foreach($file in $reports){[xml]$x=Get-Content -LiteralPath $file.FullName;foreach($key in @('tests','failures','errors','skipped')){$sum[$key]+=[int]$x.testsuite.$key}}
