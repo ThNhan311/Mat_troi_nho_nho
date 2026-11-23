@@ -30,3 +30,7 @@ Chi tiết API/error/lock, giới hạn SMTP và checklist thống nhất schema
 ## Quyền mới và kết quả rehearsal PT activation — 22/11/2026
 
 Người dùng cho phép tạo/apply schema trên PostgreSQL test riêng và commit/push nhánh chức năng, không phải DB chung/production. Hạn chế chờ Duy ở các snapshot cũ được thay trong phạm vi test này. V8 ở location riêng; default profile vẫn false/503, không áp V7/out-of-order/repair. Đã đạt HTTP/PostgreSQL/SMTP/UI activation thực; cần đồng bộ Duy trước merge/release, không còn chặn test độc lập. [Quyết định chi tiết](backend-handover/decisions/2026-11-22_PT_ACTIVATION_REHEARSAL.md).
+
+## M-04 — Member Membership read —23/11/2026
+
+Người dùng giao nối GET `/api/v1/memberships/me` vào MembershipPage/navigation Member gốc. Array không có ordering/current-selection contract; hiển thị danh sách tất cả rows, không suy phần tử đầu là current/next. Dùng id/planId/planName/startDate/endDate/status server; DATE là lịch Việt Nam, trạng thái hiệu lực đã do Backend tính. Không dựng price/paidAt/payment history hoặc period model. Gia hạn/thanh toán Chưa khả dụng; MEMBER ACTIVE chỉ seed test, chưa triển khai MEMBER activation. Không API/schema/Booking/default activation thay đổi. [Evidence](backend-handover/evidence/M04_MEMBER_MEMBERSHIP.md), [chạy lại](backend-handover/17_MEMBER_MEMBERSHIP_READ_QUICKSTART.md).

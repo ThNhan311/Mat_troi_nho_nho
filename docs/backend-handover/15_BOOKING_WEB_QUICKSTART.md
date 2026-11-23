@@ -309,3 +309,7 @@ Giữ guarded booking-demo.ps1/JDK21/manifest private và CORS đúng3000/3001/3
 ## PT activation Web đã nghiệm thu trên rehearsal riêng
 
 Dùng [quickstart activation](16_PT_ACTIVATION_REHEARSAL_QUICKSTART.md) cho Backend18082/SMTP11025/control11026/Admin3002/PT3001 với DB riêng15439. Build cả hai app bằng API_BASE_URL18082; không dùng process booking-demo mặc định18081 để suy ra activation đã bật. Default503 vẫn giữ, profile test riêng mới bật sau guard. Đã chạy UI email→OTP→password→ACTIVE→login/re-login; [evidence](evidence/PT_ACTIVATION_POSTGRES.md). Không mail người thật, lưu/log OTP hoặc mở CORS wildcard.
+
+## M-04 — Member xem Membership
+
+Tab Gói hội viên đã nối GET array `/memberships/me`, không chọn current/next hoặc dựng payment/history. Xem [quickstart M-04](17_MEMBER_MEMBERSHIP_READ_QUICKSTART.md) và [evidence cuối](evidence/M04_MEMBER_MEMBERSHIP.md). Gia hạn/thanh toán vẫn Chưa khả dụng; dữ liệu MEMBER ACTIVE demo là fixture, không phải luồng kích hoạt MEMBER.

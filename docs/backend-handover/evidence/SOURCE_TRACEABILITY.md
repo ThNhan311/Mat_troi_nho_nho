@@ -43,3 +43,12 @@ Chưa đọc đầy đủ từng assertion của tất cả test, toàn bộ see
 | V8 riêng, không V7/canonical mutation | [SQL](../../../database/activation-rehearsal/V8__pt_account_activation.sql), [pre-Flyway guard](../../../backend/src/main/java/vn/edu/tdtu/fitcenter/activation/ActivationRehearsalConfiguration.java) | [schema10tests](../../../backend/src/test/java/vn/edu/tdtu/fitcenter/http/ActivationSchemaRehearsalTest.java), [báo cáo](PT_ACTIVATION_POSTGRES.md) |
 | OTP/grant/password atomic và concurrent | [HTTP20tests](../../../backend/src/test/java/vn/edu/tdtu/fitcenter/http/PtActivationPostgresTest.java), [SMTP sink](../../../backend/src/test/java/vn/edu/tdtu/fitcenter/http/ActivationLoopbackMailSink.java) | Full801, focused65 là tập con; Clock sau lock, PostgreSQL wait_event thật, rollback |
 | UI gốc email→OTP→password→ACTIVE→login | [UI runner](../../../frontend/verify-pt-activation-e2e.mjs), [mail sink](../../../frontend/activation-mail-sink.mjs), [DBaudit/cleanup](../../../frontend/verify-activation-rehearsal-db.mjs) |13UI/4HTTP/DBaudit4, source hashes và ảnh trong báo cáo; không production email |
+
+## M-04 — Member Membership read —23/11
+
+| Yêu cầu | Source | Evidence |
+|---|---|---|
+| Owner từ principal, array, effective status theo DATE Việt Nam | [Backend hiện có](../../../backend/src/main/java/vn/edu/tdtu/fitcenter/service/MembershipService.java), [V2 canonical](../../../database/migrations/V2__membership_payment.sql) |14HTTP thật,7stored-status audits, không sửa Backend |
+| MembershipPage/theme/navigation gốc, list không tự chọn current | [screen](../../../frontend/fitcenter_member/lib/screens/membership_page.dart), [Home](../../../frontend/fitcenter_member/lib/screens/home_page.dart), [DTO/client](../../../frontend/fitcenter_member/lib/services/membership_service.dart) |19Chrome UI, DTO=DB, ảnh cùng viewport1024×768 |
+| Loading/empty/error/session epoch/no mock | [tests](../../../frontend/fitcenter_member/test/membership_test.dart) |52Member tests gồm15focused; analyze44info/0warning/error, JS build passed |
+| Fixture tổng hợp, exact UUID cleanup, không MEMBER activation | [runner](../../../frontend/verify-member-membership.mjs) |[report/hashes/checks](M04_MEMBER_MEMBERSHIP.md),10DB audit + cleanup4 riêng, không cộng vào tests |

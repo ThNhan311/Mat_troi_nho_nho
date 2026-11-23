@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../services/booking_service.dart';
 import '../services/booking_state.dart';
-import '../widgets/api_status.dart';
+import '../services/membership_service.dart';
+import 'membership_page.dart';
 import 'home_screen.dart';
 import 'schedule_page.dart';
 import 'profile_page.dart';
@@ -76,7 +77,10 @@ class _HomePageState extends State<HomePage> {
             onShowMessage: _showMessage,
           ),
           SchedulePage(state: state),
-          const UnavailablePage(title: 'Gói hội viên'),
+          MembershipPage(
+            service: MembershipService(widget.service.api),
+            active: selectedIndex == 2,
+          ),
           ProfilePage(
             isDark: Theme.of(context).brightness == Brightness.dark,
             onToggleTheme: widget.onToggleTheme,
