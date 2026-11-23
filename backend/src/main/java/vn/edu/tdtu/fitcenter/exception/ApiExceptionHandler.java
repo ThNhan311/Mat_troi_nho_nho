@@ -25,6 +25,11 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+    @ExceptionHandler(vn.edu.tdtu.fitcenter.membershipinitial.InitialActivationFailure.class)
+    ResponseEntity<Object> initial(vn.edu.tdtu.fitcenter.membershipinitial.InitialActivationFailure ex, HttpServletRequest request) {
+        var response=error(ex.status,ex.code,ex.getMessage(),Map.of(),request);
+        return ResponseEntity.status(ex.status).headers(response.getHeaders()).cacheControl(org.springframework.http.CacheControl.noStore()).body(response.getBody());
+    }
     @ExceptionHandler(vn.edu.tdtu.fitcenter.activation.ActivationFailure.class)
     ResponseEntity<Object> activation(vn.edu.tdtu.fitcenter.activation.ActivationFailure ex, HttpServletRequest request) {
         var response = error(ex.getStatus(), ex.getCode(), ex.getMessage(), Map.of(), request);

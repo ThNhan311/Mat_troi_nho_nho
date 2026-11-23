@@ -1,0 +1,308 @@
+{
+  "at": "2026-11-23T08:24:19.816Z",
+  "sourceBase": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+  "ui": [
+    "Real login ad",
+    "Original activation page",
+    "Read-only price zero",
+    "Confirmation before financial write",
+    "UI POST status 201",
+    "Server target/ACTIVE/payment0",
+    "Real result UUID, no local fake success",
+    "Reload drops memory session",
+    "Real login ad",
+    "Original activation page",
+    "Admin readback after reload/login",
+    "Same committed Membership UUID after reload",
+    "Real login ad",
+    "Original activation page",
+    "Confirmation before financial write",
+    "UI POST status 409",
+    "Duplicate receipt no fake success",
+    "Real login member",
+    "M04 GET200",
+    "M04 same UUID/calendar dates",
+    "M04 real screen status/UUID",
+    "Member reload requires login",
+    "Real login member",
+    "Member relogin persists Membership"
+  ],
+  "http": [
+    "Other MEMBER cannot see UI-created Membership",
+    "Member cannot use Admin receipt read",
+    "DISABLED synthetic Member has no normal JWT"
+  ],
+  "db": [
+    "Membership UUID/owner/date/status match UI",
+    "COUNTER SUCCESS amount0 and inclusive payment periods",
+    "Receipt links and price/duration snapshot",
+    "No User/account/Booking/slot/policy/legacy mutation; exactly one audit",
+    "Duplicate receipt rolls back other Member completely"
+  ],
+  "created": [
+    {
+      "payment": {
+        "id": "e3dea5f8-ecbb-4955-badd-e3c97199d77f",
+        "amount": 0,
+        "status": "SUCCESS",
+        "provider": "COUNTER",
+        "processedAt": "2026-11-23T08:24:28.356189100Z",
+        "providerRef": "counter:e3dea5f8-ecbb-4955-badd-e3c97199d77f"
+      },
+      "receipt": {
+        "note": null,
+        "receiptRef": "DEMO-M03-07e4db06-cd28-476d-8951-bf540d4dbd00",
+        "confirmedAt": "2026-11-23T08:24:28.356189100Z",
+        "confirmedByUserId": "0db790f1-f2bc-45ab-b897-a9381116d8a8"
+      },
+      "memberId": "8cab0dd6-dd16-4d29-a233-d60d39980f64",
+      "requestId": "824249e9-4854-41d8-a338-72592f99d59d",
+      "membership": {
+        "id": "639d8e58-f77c-4aba-bc15-20a021da13d5",
+        "planId": "8a62c2e1-d573-45c4-8c6e-c27e4412231e",
+        "status": "ACTIVE",
+        "endDate": "2026-12-22",
+        "planName": "M03 UI zero plan",
+        "startDate": "2026-11-23"
+      },
+      "activationId": "dcba6dae-7fae-4128-881e-df5afc1427c7",
+      "planSnapshot": {
+        "name": "M03 UI zero plan",
+        "currency": "VND",
+        "listedPrice": 0,
+        "durationDays": 30
+      }
+    }
+  ],
+  "observedHttp": [
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/members",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/membership-plans",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/members/8cab0dd6-dd16-4d29-a233-d60d39980f64/activate-membership",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/members",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/membership-plans",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/members/8cab0dd6-dd16-4d29-a233-d60d39980f64/membership-activation",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/members",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/membership-plans",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/members/f5e28ae1-1de7-4009-a3e3-131cbe21809a/activate-membership",
+      "status": 409
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/bookings/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/trainers",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/memberships/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/trainers",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/bookings/me",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/memberships/me",
+      "status": 200
+    }
+  ],
+  "sourceHashes": {
+    "backend/pom.xml": "4a3489a5de6f7eb41e70856f0786c76364845591bbe2fe6eee61dcd77d66d1c8",
+    "backend/scripts/MembershipInitialDemo.java": "f0663221b96c6f20489430c1facd36193e0f07907e99a6c9a1ce72a9215fa824",
+    "backend/scripts/membership-rehearsal.ps1": "b681a5b6b7ed1d17ed149626ca4f80065b922085526785f2f45730716bd96c47",
+    "backend/scripts/test-http-baseline.ps1": "1d910d74be450345ee0c1ac8919e52a4fbb2daffcbdc692ca7814c84cfb29cfb",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/config/WebConfig.java": "1651917deee839059f30427f4de7671c415ece7d6d6a5cbd10e314dbf93ede35",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/controller/AdminInitialMembershipController.java": "5aef15c819da7151ce78c254e6e16a64c8b39e7e8d77f4d55a969ab62a29503a",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/exception/ApiExceptionHandler.java": "eb2821cbea26aa5a8452e1b9a366ed9771af15e3b5808dc357fbf582972ad88c",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/membershipinitial/InitialActivationFailure.java": "ef848dcd5d85e850b3e1c0f7af369759e83a89244be7dd22c4c1906240478019",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/membershipinitial/InitialActivationRequest.java": "508493226ae95cf7ff403da8d3554ea49dc0fe38434550dde08e892a4160578e",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/membershipinitial/InitialMembershipRehearsalConfiguration.java": "b9ca6dd4ddc6b5d98cc3a479a1b2356d21a6f6f95771a16cd047f7660a4804b5",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/membershipinitial/InitialMembershipSchemaGuard.java": "e7d348b2f4270d3c631e5511f039b84baa126bb56b5f3fc5c4993a87f444b7b9",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/membershipinitial/InitialMembershipService.java": "c3858049dbb4df11b4afcf670d094771d47b90ee1f281a251bd0b36c3fe575c7",
+    "backend/src/main/resources/application-membership-rehearsal.properties": "dbc7480fbab90061e95242e767221543e3cbaba2756d7bca538702efebc5ff6d",
+    "backend/src/main/resources/application.properties": "720113731d277127b695dbcfa3f3e8ab4f25652ed0319d1beaff232e5d2805bf",
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/http/InitialMembershipDatabase.java": "ea9fc268c8a23880a52f8f41bd95bb4fa21539d02ea6f0fccaa6711daf443929",
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/http/InitialMembershipPostgresTest.java": "4378d55ddf8ce6db81a37b08dae2f168ed5761d778f188476920324bcb0a536e",
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/membershipinitial/InitialMembershipGuardTest.java": "1fc666a4263a43e0d5228460e4d3846e6276aada4c61fa8d9e28fccc1ce9fe78",
+    "database/membership-rehearsal/V9__membership_initial_activation.sql": "98783c7fcbfba450c46d9d625d74f5b8bca85cce897bd7887222c2e1bbee2648",
+    "frontend/fitcenter_ad/lib/main.dart": "2c5e38ab38a4ad5f137f5fbb770ab262d92ea8042b6bf1bae1a0d15fdc5ad3ae",
+    "frontend/fitcenter_ad/lib/screens/account_page.dart": "95124c957b52a1423ac15894e15a5ca57be453f68d0e1cc0a48f0ae359018e4e",
+    "frontend/fitcenter_ad/lib/screens/activity_records_page.dart": "e5ae7c1c8b205c625ef19724713806068d4299d35dd5a4b7ad332b1e68c674b8",
+    "frontend/fitcenter_ad/lib/screens/booking_policy_page.dart": "5c7d588cb2d084aebdfe6004e70b15950a926e53c708339e98db44fbe2a0e211",
+    "frontend/fitcenter_ad/lib/screens/home_page.dart": "d5ffe46e6c4d4dbf2a4d5fb520572ed6b2dbbf2383fcd32d4e054e983eb04a9c",
+    "frontend/fitcenter_ad/lib/screens/initial_activation_page.dart": "5b3a9370f98160479058d3757d86bd9d3c5873b43ecbb5034f244ef47fb1f0b5",
+    "frontend/fitcenter_ad/lib/screens/login_page.dart": "0817ab08d1894bcf1d4fd4840004c2f0a5be6b9d905db09b6c916accbace09d9",
+    "frontend/fitcenter_ad/lib/screens/membership_page.dart": "ab7981c1f07d405df0410fcc862e635b613a2a59f44b037b5f7cbb2110770033",
+    "frontend/fitcenter_ad/lib/services/admin_account_service.dart": "88492b9da674ba340572c0fa016a7bfe2a5f01da267acc63ae665560c41ff379",
+    "frontend/fitcenter_ad/lib/services/api_client.dart": "edec865641b676e586d96c37249633464c0be69fd0bc91d0c3835a76fd0f6e93",
+    "frontend/fitcenter_ad/lib/services/booking_policy_service.dart": "9a5d597099ae4110397203148e5bf279007dedae8ce99b56a353ffe02ff3b1d6",
+    "frontend/fitcenter_ad/lib/services/initial_activation_service.dart": "6951ed0f26ee336070f07af549222ff0b43136738834dd23fa560190631545a0",
+    "frontend/fitcenter_ad/lib/services/membership_plan_service.dart": "28ef31d79389cdbe50c573c45b13a4108922f01027cc85953802dac132e6f524",
+    "frontend/fitcenter_ad/lib/services/vietnam_time.dart": "dd7dd4b36c570bad3ab70cf23530a24c7bd13d1bc870956f983c777d7b2ff914",
+    "frontend/fitcenter_ad/lib/theme/app_theme.dart": "da13bb3ae1f8613da1cf5dd48ac069605531085625247248392c8c3988911d6b",
+    "frontend/fitcenter_ad/pubspec.lock": "dc4424144979111121c2ae9373d990cacd356a0c6b2482ac3d9e36f468ac97c9",
+    "frontend/fitcenter_ad/pubspec.yaml": "c08cda87bc94e46c630216b8a955ddc7ee7e814a772c09292948ad79274bafd5",
+    "frontend/fitcenter_ad/test/admin_account_test.dart": "2708800c3ba38032764704c168163fed4a7d32fa9fb53f3d6094b0fc2dd9a905",
+    "frontend/fitcenter_ad/test/api_client_test.dart": "1d504397f99cab41b02bf5d4dba4ece8d50f7c30d2f722a3df74a8f341d5ae68",
+    "frontend/fitcenter_ad/test/booking_policy_test.dart": "0cff11356fa15ff4cb5df60c1e2b2913b8ff074a50bb891abd41f48b01cd8e61",
+    "frontend/fitcenter_ad/test/initial_activation_test.dart": "8b5f284795e34529dd2456bf9115e941e2f0a71cb3c3a20a06a422848c2fecf9",
+    "frontend/fitcenter_ad/test/membership_plan_test.dart": "0b18a7b4ebb37e57d8781ea53b6ec9372487e3ccb4647d8a289b409d591d035b",
+    "frontend/fitcenter_member/lib/data/workout_history_data.dart": "02d3cb56becaf8e419bba71ad6e68176d1604f50b3ba4f82d31c0201948dc353",
+    "frontend/fitcenter_member/lib/main.dart": "3272b9c968a235472d9007741e5b2646275ee7d8f2953795ef33f6bf7d693baa",
+    "frontend/fitcenter_member/lib/screens/about_page.dart": "cdf07d5aea8f4b47011357cc6b1976d3764a8ad024aae211af09c81b8dea46b4",
+    "frontend/fitcenter_member/lib/screens/attendance_history_page.dart": "f5e82119bee37810e097e8f0565975b4d80179008d3ca333ab3a05e3a9a9598b",
+    "frontend/fitcenter_member/lib/screens/booking_dashboard.dart": "42f6e0386aed0a70e0c024ba2edfce7b9c804505a2a878bb764bd6f281fd2547",
+    "frontend/fitcenter_member/lib/screens/booking_history_page.dart": "9f820dbd234fdddf52b13fc0193310825b89b5bb83f3f70aced41fb40b960935",
+    "frontend/fitcenter_member/lib/screens/help_page.dart": "d019194de5cc82eb932d2b50edf688949c184706dfb0721971f95cbe8f458a30",
+    "frontend/fitcenter_member/lib/screens/home_page.dart": "277129f61f5f2ce54e87f22d423ef9dd8e383092e014de275186c6c868f243e4",
+    "frontend/fitcenter_member/lib/screens/home_screen.dart": "467f22608ea55b062dc0ef97c72c404a3a8df02c6df41a119fdf241492afdfbd",
+    "frontend/fitcenter_member/lib/screens/login_page.dart": "4682b2b4c23f153d5a62d2cc1209c4d548b9ea6ae8b52b30ee3737a599c2a113",
+    "frontend/fitcenter_member/lib/screens/membership_page.dart": "9357047c96d73ba97daa8a5a9f7c9352db6ea2c46c38189304a91f029d93d2ac",
+    "frontend/fitcenter_member/lib/screens/notification_page.dart": "6caf9870c04a379d8ed4ab0c19ce7d047d1af3129b9190914c3a29fcadb40198",
+    "frontend/fitcenter_member/lib/screens/profile_page.dart": "675151852bd08c76ec415a9bb625f975e3d8407fe3b92b130e9e135c00951d71",
+    "frontend/fitcenter_member/lib/screens/renewal_payment_page.dart": "9f5ba6bb26e6205c2a790ac04fbc1a02e4aa1d47ac97ac94c654abccf3adaed5",
+    "frontend/fitcenter_member/lib/screens/schedule_page.dart": "65ed03a94df00be045620c0576708924a22f0a674d3929c118763e450f08411b",
+    "frontend/fitcenter_member/lib/screens/trainer_detail_page.dart": "0aad9fdb0706b690adff840ad24553172e34033dc67eac08aab9dd43cb0dd259",
+    "frontend/fitcenter_member/lib/screens/trainer_list_page.dart": "7edabde6041b2c19da938b613a7b44641e21f9c658468d2fcd07eee5e4a82e8c",
+    "frontend/fitcenter_member/lib/screens/workout_history_page.dart": "08efc150cee97eb7b03b45d2482aa3d8911cccfdf1169b5442f4dd5711077d92",
+    "frontend/fitcenter_member/lib/screens/workout_plan_page.dart": "08e303d178033d772869f02b695496f7f877d1429a1ce34368ed43ce4d25b07c",
+    "frontend/fitcenter_member/lib/services/api_client.dart": "e4c79c2747aebcb06e031aec3b14b8208fc18013ed07a4b77086e048ea21ec15",
+    "frontend/fitcenter_member/lib/services/booking_models.dart": "1c3ceaa74c4644f05ed2ff5949cc85a41521ec974f0558a69571aeb2cf3fb7f4",
+    "frontend/fitcenter_member/lib/services/booking_service.dart": "680524ab8267b048b6e6d4ed9b265de864d19c24ddcb039fbc3c63a3dac092a1",
+    "frontend/fitcenter_member/lib/services/booking_state.dart": "963907dd604eb0f7d5f4f616e8066a040da23be481cf8343a45e4374f9e1b446",
+    "frontend/fitcenter_member/lib/services/membership_service.dart": "5e87e2391090f77aae388310ffef342114caa954175fbb2abcda96c17dd0cce5",
+    "frontend/fitcenter_member/lib/services/vietnam_time.dart": "dd7dd4b36c570bad3ab70cf23530a24c7bd13d1bc870956f983c777d7b2ff914",
+    "frontend/fitcenter_member/lib/theme/app_theme.dart": "da13bb3ae1f8613da1cf5dd48ac069605531085625247248392c8c3988911d6b",
+    "frontend/fitcenter_member/lib/widgets/api_status.dart": "92db8ddde1ace4dc407bdbd373a596286777c88d4877368c6acb54235e7e7dd5",
+    "frontend/fitcenter_member/lib/widgets/detail_row.dart": "b1be0475fc32bd54464ca741394ceadd28bb40f31255a28f1571ce8edb3a3749",
+    "frontend/fitcenter_member/lib/widgets/feature_tile.dart": "d706f0064e8ba6a512670647b99064495c6b86e4179931adc517d43b127dee4c",
+    "frontend/fitcenter_member/lib/widgets/info_card.dart": "9db8137ed66f9d31b65236436f8d2ee87ce3df5d65de3c72da2ac80b38b130fd",
+    "frontend/fitcenter_member/lib/widgets/page_header.dart": "71aaa262074c63b17dc4c8148690c8ba6cda9b89bd511346d19f591fbc83a622",
+    "frontend/fitcenter_member/lib/widgets/section_title.dart": "1d1091d60fa7b5494c6eed32b1171b11019506392c47eab30fc7cdc1ee54e76f",
+    "frontend/fitcenter_member/lib/widgets/trainer_card.dart": "ff703207cf651e59860f4f8e56207ac6c9e28837ca2b17eee4e1ef219d141bc2",
+    "frontend/fitcenter_member/pubspec.lock": "12258f9ebe4c441274b94f0ed59547755142323e532ed8e7444b0d411d9da45e",
+    "frontend/fitcenter_member/pubspec.yaml": "595f150bdf23e42bf16ea630f0315f789765e1f17a32530c17f2260f10357485",
+    "frontend/fitcenter_member/test/api_client_test.dart": "e11552db862a9cd6783047fe12c14269d1dd5d2b5d402170f0830cdfa0524ba6",
+    "frontend/fitcenter_member/test/booking_service_test.dart": "65b88d35a95cb55a1f6dcf295ee7816de8e247e71af21efe960fde5cfac342ef",
+    "frontend/fitcenter_member/test/lifecycle_test.dart": "6ec56df2f12d2ac2342c0502ccb8f46fcfe88ddbc69b3843f824e5ba73d3862e",
+    "frontend/fitcenter_member/test/membership_test.dart": "cbb5cc095230ebe54486bfb758cd69d44247c2fcde71f6ac4c3b2e62c454cd2c",
+    "frontend/fitcenter_member/test/original_ui_test.dart": "ce63d742a8d2afefbbc5166886bee3a9e6725d776f404f7490a3b74fc406056c",
+    "frontend/fitcenter_member/test/widget_test.dart": "60c674ee64d815586cc9346d703874d4a22f23f91e06e73409a1167bf5ff1faf",
+    "frontend/serve-booking-web.mjs": "4fa316f6b5fee584b8e825744e5283fb66ecdbf4af3a2f78860d55fbe375b695",
+    "frontend/verify-initial-membership-ui.mjs": "eafc89c73dea2e328b166ccda13eaa09dd552b5aec20dd1353876e54d8d05c08"
+  },
+  "fixtures": "ACTIVE/DISABLED Members and price0 plan are direct synthetic JDBC seed. No MEMBER account activation implemented; initial Membership is created by real Admin UI.",
+  "readback": {
+    "response": {
+      "payment": {
+        "id": "e3dea5f8-ecbb-4955-badd-e3c97199d77f",
+        "amount": 0,
+        "status": "SUCCESS",
+        "provider": "COUNTER",
+        "processedAt": "2026-11-23T08:24:28.356189100Z",
+        "providerRef": "counter:e3dea5f8-ecbb-4955-badd-e3c97199d77f"
+      },
+      "receipt": {
+        "note": null,
+        "receiptRef": "DEMO-M03-07e4db06-cd28-476d-8951-bf540d4dbd00",
+        "confirmedAt": "2026-11-23T08:24:28.356189100Z",
+        "confirmedByUserId": "0db790f1-f2bc-45ab-b897-a9381116d8a8"
+      },
+      "memberId": "8cab0dd6-dd16-4d29-a233-d60d39980f64",
+      "requestId": "824249e9-4854-41d8-a338-72592f99d59d",
+      "membership": {
+        "id": "639d8e58-f77c-4aba-bc15-20a021da13d5",
+        "planId": "8a62c2e1-d573-45c4-8c6e-c27e4412231e",
+        "status": "ACTIVE",
+        "endDate": "2026-12-22",
+        "planName": "M03 UI zero plan",
+        "startDate": "2026-11-23"
+      },
+      "activationId": "dcba6dae-7fae-4128-881e-df5afc1427c7",
+      "planSnapshot": {
+        "name": "M03 UI zero plan",
+        "currency": "VND",
+        "listedPrice": 0,
+        "durationDays": 30
+      }
+    },
+    "database": {
+      "membership": {
+        "id": "639d8e58-f77c-4aba-bc15-20a021da13d5",
+        "member_id": "8cab0dd6-dd16-4d29-a233-d60d39980f64",
+        "plan_id": "8a62c2e1-d573-45c4-8c6e-c27e4412231e",
+        "start_date": "2026-11-23",
+        "expiry_date": "2026-12-22",
+        "status": "ACTIVE"
+      },
+      "payment": {
+        "id": "e3dea5f8-ecbb-4955-badd-e3c97199d77f",
+        "member_id": "8cab0dd6-dd16-4d29-a233-d60d39980f64",
+        "membership_id": "639d8e58-f77c-4aba-bc15-20a021da13d5",
+        "provider": "COUNTER",
+        "amount": 0,
+        "status": "SUCCESS",
+        "period_start": "2026-11-23",
+        "period_end": "2026-12-22"
+      },
+      "receipt": {
+        "id": "dcba6dae-7fae-4128-881e-df5afc1427c7",
+        "member_id": "8cab0dd6-dd16-4d29-a233-d60d39980f64",
+        "membership_id": "639d8e58-f77c-4aba-bc15-20a021da13d5",
+        "payment_transaction_id": "e3dea5f8-ecbb-4955-badd-e3c97199d77f",
+        "receipt_key": "DEMO-M03-07E4DB06-CD28-476D-8951-BF540D4DBD00",
+        "listed_price_snapshot": 0,
+        "duration_days_snapshot": 30
+      }
+    }
+  },
+  "failed": 0,
+  "skipped": 0,
+  "finishedAt": "2026-11-23T08:24:59.262Z",
+  "sourceNote": "Actual source hashes at successful UI run. Afterwards only two PowerShell wrappers redundant EOF blank lines normalized; Java/Dart/test sources unchanged. Cleanup helper added and executed separately."
+}

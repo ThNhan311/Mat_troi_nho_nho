@@ -34,3 +34,11 @@ Người dùng cho phép tạo/apply schema trên PostgreSQL test riêng và com
 ## M-04 — Member Membership read —23/11/2026
 
 Người dùng giao nối GET `/api/v1/memberships/me` vào MembershipPage/navigation Member gốc. Array không có ordering/current-selection contract; hiển thị danh sách tất cả rows, không suy phần tử đầu là current/next. Dùng id/planId/planName/startDate/endDate/status server; DATE là lịch Việt Nam, trạng thái hiệu lực đã do Backend tính. Không dựng price/paidAt/payment history hoặc period model. Gia hạn/thanh toán Chưa khả dụng; MEMBER ACTIVE chỉ seed test, chưa triển khai MEMBER activation. Không API/schema/Booking/default activation thay đổi. [Evidence](backend-handover/evidence/M04_MEMBER_MEMBERSHIP.md), [chạy lại](backend-handover/17_MEMBER_MEMBERSHIP_READ_QUICKSTART.md).
+
+## M-03 chuẩn bị — chưa chốt nghiệp vụ —23/11/2026
+
+Người dùng giao chuẩn bị Admin ghi nhận thanh toán quầy và kích hoạt Membership lần đầu cho Member đã tồn tại, tách khỏi tạo User/profile. Giữ Member-first locking và Booking; không áp V7 DROP periods chưa backfill, không dùng history rehearsal1–6,8 làm release. **Ngày/giá/chứng từ/MEMBER activation còn chờ xác nhận**, không tự chuyển User DISABLED→ACTIVE. [Contract/schema/test plan đề xuất](backend-handover/proposals/2026-11-23_M03_COUNTER_ACTIVATION.md), [DDL candidate chưa áp](backend-handover/proposals/M03_COUNTER_ACTIVATION_SCHEMA_CANDIDATE.sql). POST/reconcile GET, Idempotency-Key, receipt uniqueness, counter SUCCESS so với V7 ACTIVATION không tx, slotV9 đều là đề xuất, chưa triển khai hoặc phê duyệt.
+
+## M-03 đã phê duyệt và triển khai —23/11/2026
+
+Quyết định mới thay phần đề xuất chưa chốt ở trên: Clock VN/date inclusive, giá ACTIVE server (giá0), chứng từ global/idempotency, initial chưa có lịch sử, không kích hoạt User. [Contract/khóa/chuẩn hóa/schema và giới hạn](backend-handover/decisions/2026-11-23_M03_INITIAL_MEMBERSHIP.md). MEMBER email OTP/password được đồng ý là task riêng, chưa triển khai trong M-03. V9 location rehearsal riêng/default-off; không áp V7 hoặc đưa history1–6,9 thành release.

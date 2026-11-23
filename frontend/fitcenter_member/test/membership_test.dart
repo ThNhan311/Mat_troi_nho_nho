@@ -53,6 +53,18 @@ Future<void> screen(WidgetTester t, ApiClient api) async {
 }
 
 void main() {
+  test('expanded ISO DATE from long duration keeps calendar without a new business cap', () {
+    final m = Membership.fromJson(row(end: '+10000-02-29'));
+    expect(Membership.displayDate(m.endDate), '29/02/+10000');
+    expect(
+      Membership.fromJson(row(end: '+5874897-12-31')).endDate,
+      '+5874897-12-31',
+    );
+    expect(
+      () => Membership.fromJson(row(end: '+10001-02-29')),
+      throwsA(isA<ApiError>()),
+    );
+  });
   for (final status in Membership.labels.keys) {
     test(
       'DTO preserves $status and calendar date, without client status inference',

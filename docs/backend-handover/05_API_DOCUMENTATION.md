@@ -196,3 +196,7 @@ Lỗi thường gặp: 400 `ERR_VALIDATION` cho input sai; 401 `ERR_UNAUTHORIZED
 ## OpenAPI và giới hạn
 
 [OpenAPI nháp](api/openapi.yaml) liệt kê các endpoint hiện có, role, DTO và tham số; cần review contract, ví dụ tổng hợp và kiểm tra bằng công cụ chuyên dụng trước khi công bố. Đặc tả và tài liệu này chưa có ví dụ request/response đầy đủ riêng cho từng endpoint và chưa phải contract hoàn chỉnh. Không dùng để tạo client production khi chưa review.
+
+## M-03 — Admin initial Membership (rehearsal default-off)
+
+POST `/api/v1/admin/members/{memberId}/activate-membership` (201 hoặc200 replay cùng key), GET `/api/v1/admin/members/{memberId}/membership-activation` (200 snapshot đã commit/404). ADMIN ACTIVE; Idempotency-Key UUID, memberId là profile UUID. Body planId/amountCollected/receiptRef/note, không client dates/owner. Receipt global chuẩn hóa, history bất kỳ chặn initial. Không đổi User hoặc tích hợp gateway. [Contract/error/transaction](decisions/2026-11-23_M03_INITIAL_MEMBERSHIP.md), [OpenAPI](api/openapi.yaml), [evidence](evidence/M03_INITIAL_MEMBERSHIP.md).

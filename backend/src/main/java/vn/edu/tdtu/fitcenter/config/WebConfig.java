@@ -18,8 +18,8 @@ public class WebConfig {
         cors.setAllowedOrigins(Arrays.stream(origins.split(","))
                 .map(String::trim).filter(value -> !value.isEmpty()).toList());
         cors.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
-        cors.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Correlation-Id"));
-        cors.setExposedHeaders(List.of("X-Correlation-Id"));
+        cors.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Correlation-Id", "Idempotency-Key"));
+        cors.setExposedHeaders(List.of("X-Correlation-Id", "Idempotency-Replayed"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/v1/**", cors);
         return source;

@@ -52,3 +52,15 @@ Chưa đọc đầy đủ từng assertion của tất cả test, toàn bộ see
 | MembershipPage/theme/navigation gốc, list không tự chọn current | [screen](../../../frontend/fitcenter_member/lib/screens/membership_page.dart), [Home](../../../frontend/fitcenter_member/lib/screens/home_page.dart), [DTO/client](../../../frontend/fitcenter_member/lib/services/membership_service.dart) |19Chrome UI, DTO=DB, ảnh cùng viewport1024×768 |
 | Loading/empty/error/session epoch/no mock | [tests](../../../frontend/fitcenter_member/test/membership_test.dart) |52Member tests gồm15focused; analyze44info/0warning/error, JS build passed |
 | Fixture tổng hợp, exact UUID cleanup, không MEMBER activation | [runner](../../../frontend/verify-member-membership.mjs) |[report/hashes/checks](M04_MEMBER_MEMBERSHIP.md),10DB audit + cleanup4 riêng, không cộng vào tests |
+
+## M-03 — initial counter activation,23/11/2026
+
+| Yêu cầu | Source | Kiểm chứng |
+|---|---|---|
+| Initial only, server price/date, no User activation | InitialMembershipService / InitialActivationRequest | InitialMembershipPostgresTest, HTTP+PG thật |
+| Atomic payment/receipt/audit, unique key/receipt, Member lock | V9 rehearsal / service | empty+history migration, synchronized races,4 fault-injection rollback stages |
+| UI gốc / uncertain POST / session epoch | InitialActivationPage / InitialActivationService / ApiClient | Admin89 widget/client; Chrome UI + DB audit |
+| M-04 readback DATE inclusive | Member MembershipService | Member53; UI reload/relogin cùng UUID |
+| Scope/default gate/release order | SchemaGuard / rehearsal configuration | guard8, late-V7 validate rejection; V7 không chạy |
+
+[Quyết định](../decisions/2026-11-23_M03_INITIAL_MEMBERSHIP.md), [evidence/hashes](M03_INITIAL_MEMBERSHIP.md). Counts focused là tập con, không cộng vào full.

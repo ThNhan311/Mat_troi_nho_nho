@@ -1,13 +1,15 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: pt-activation-rehearsal-working-tree
-  description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation mặc định503; profile activation-rehearsal đã đạt HTTP/PostgreSQL/SMTP/UI trên DB test riêng với V8 ở location riêng, không production rollout. Renewal/payment write chưa có.
+  version: m03-initial-membership-working-tree
+  description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation mặc định503; profile activation-rehearsal đã đạt HTTP/PostgreSQL/SMTP/UI trên DB test riêng với V8 ở location riêng, không production rollout. M-03 thêm counter receipt/initial Membership trên membership-rehearsal default-off; renewal/gateway chưa có.
 servers:
 - url: http://localhost:18081
   description: Default profile, activation503
 - url: http://127.0.0.1:18082
-  description: Dedicated guarded activation rehearsal only
+  description: Dedicated guarded PT activation rehearsal only
+- url: http://localhost:18083
+  description: Dedicated guarded M03 membership-rehearsal, default gate off
 paths:
   /api/v1/admin/members:
     get:
@@ -1260,6 +1262,98 @@ paths:
           - CONFIRMED
           - CANCELLED
           - COMPLETED
+  /api/v1/admin/members/{memberId}/activate-membership:
+    post:
+      operationId: recordInitialCounterMembership
+      summary: ADMIN ACTIVE ghi nhận đã thu tại quầy và initial Membership
+      description: Rehearsal default-off. Không kích hoạt User. Cùng key/payload replay
+        snapshot gốc; initial từ chối mọi lịch sử Membership. Không thu tiền/gateway.
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: memberId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitialMembershipCommand'
+      responses:
+        '201':
+          description: Membership/payment/receipt/audit commit nguyên tử; no-store
+          headers:
+            Idempotency-Replayed:
+              schema:
+                type: boolean
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitialMembershipSnapshot'
+        '200':
+          description: Cùng key/canonical payload, snapshot và actor gốc; no-store,
+            Idempotency-Replayed true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitialMembershipSnapshot'
+        '400':
+          description: 'ERR_VALIDATION: UUID/key/type/unknown field/receipt/amount'
+        '401':
+          $ref: '#/components/responses/LifecycleUnauthorized'
+        '403':
+          $ref: '#/components/responses/LifecycleForbidden'
+        '404':
+          description: ERR_NOT_FOUND Member hoặc Plan
+        '409':
+          description: ERR_IDEMPOTENCY_KEY_REUSED / ERR_RECEIPT_ALREADY_USED / ERR_MEMBERSHIP_ALREADY_EXISTS
+            / ERR_PLAN_NO_LONGER_AVAILABLE / ERR_AMOUNT_MISMATCH / ERR_CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: ERR_MEMBERSHIP_ACTIVATION_UNAVAILABLE khi default gate tắt
+  /api/v1/admin/members/{memberId}/membership-activation:
+    get:
+      operationId: readCommittedInitialCounterMembership
+      summary: ADMIN ACTIVE đối chiếu snapshot chứng từ đã commit, không phải trạng
+        thái hiện tại
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: memberId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Snapshot gốc, Cache-Control no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitialMembershipSnapshot'
+        '401':
+          $ref: '#/components/responses/LifecycleUnauthorized'
+        '403':
+          $ref: '#/components/responses/LifecycleForbidden'
+        '404':
+          description: ERR_NOT_FOUND chưa có chứng từ đã commit; không chứng minh POST
+            đang chờ đã thất bại
+        '503':
+          description: ERR_MEMBERSHIP_ACTIVATION_UNAVAILABLE
 components:
   responses:
     AccountConflict:
@@ -1660,3 +1754,140 @@ components:
         status:
           type: integer
         message: *id005
+
+    InitialMembershipCommand:
+      type: object
+      additionalProperties: false
+      required:
+      - planId
+      - amountCollected
+      - receiptRef
+      properties:
+        planId:
+          type: string
+          format: uuid
+        amountCollected:
+          type: number
+          minimum: 0
+          maximum: 9999999999.99
+          multipleOf: 0.01
+          description: Xác nhận đúng giá server đã xem; server so giá ACTIVE, không ghi
+            số tiền tùy ý.
+        receiptRef:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: NFC strip, uppercase ROOT làm khóa global; nội bộ whitespace giữ
+            nguyên.
+        note:
+          type: string
+          nullable: true
+          maxLength: 500
+    InitialMembershipSnapshot:
+      type: object
+      required:
+      - activationId
+      - requestId
+      - memberId
+      - membership
+      - payment
+      - receipt
+      - planSnapshot
+      properties:
+        activationId:
+          type: string
+          format: uuid
+        requestId:
+          type: string
+          format: uuid
+        memberId:
+          type: string
+          format: uuid
+        membership:
+          type: object
+          required:
+          - id
+          - planId
+          - planName
+          - startDate
+          - endDate
+          - status
+          properties:
+            id:
+              type: string
+              format: uuid
+            planId:
+              type: string
+              format: uuid
+            planName:
+              type: string
+            startDate:
+              type: string
+              description: LocalDate Asia/Ho_Chi_Minh, expiry inclusive; ISO expanded
+                positive year nếu vượt9999.
+            endDate:
+              type: string
+              description: LocalDate Asia/Ho_Chi_Minh, expiry inclusive; ISO expanded
+                positive year nếu vượt9999.
+            status:
+              type: string
+        payment:
+          type: object
+          required:
+          - id
+          - provider
+          - providerRef
+          - amount
+          - status
+          - processedAt
+          properties:
+            id:
+              type: string
+              format: uuid
+            provider:
+              type: string
+            providerRef:
+              type: string
+            amount:
+              type: number
+            status:
+              type: string
+            processedAt:
+              type: string
+              format: date-time
+        receipt:
+          type: object
+          required:
+          - receiptRef
+          - note
+          - confirmedByUserId
+          - confirmedAt
+          properties:
+            receiptRef:
+              type: string
+            note:
+              type: string
+              nullable: true
+            confirmedByUserId:
+              type: string
+              format: uuid
+            confirmedAt:
+              type: string
+              format: date-time
+        planSnapshot:
+          type: object
+          required:
+          - name
+          - durationDays
+          - listedPrice
+          - currency
+          properties:
+            name:
+              type: string
+            durationDays:
+              type: integer
+              format: int32
+            listedPrice:
+              type: number
+            currency:
+              type: string

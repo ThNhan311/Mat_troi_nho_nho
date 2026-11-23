@@ -146,6 +146,12 @@
                 <includes><include>V8__pt_account_activation.sql</include></includes>
                 <filtering>false</filtering>
             </resource>
+            <resource>
+                <directory>../database/membership-rehearsal</directory>
+                <targetPath>db/membership-rehearsal</targetPath>
+                <includes><include>V9__membership_initial_activation.sql</include></includes>
+                <filtering>false</filtering>
+            </resource>
 		</resources>
 
 		<plugins>

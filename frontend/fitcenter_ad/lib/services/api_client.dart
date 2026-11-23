@@ -76,6 +76,7 @@ class ApiClient extends ChangeNotifier {
     Map<String, String>? query,
     Object? body,
     String? token,
+    String? idempotencyKey,
   }) async {
     final request = http.Request(method, uri(path, query));
     request.headers['Accept'] = 'application/json';
@@ -83,6 +84,8 @@ class ApiClient extends ChangeNotifier {
       request.headers['Content-Type'] = 'application/json';
       request.body = jsonEncode(body);
     }
+    if (idempotencyKey != null)
+      request.headers['Idempotency-Key'] = idempotencyKey;
     if (token != null) request.headers['Authorization'] = 'Bearer $token';
     try {
       return await (() async => http.Response.fromStream(
@@ -210,6 +213,8 @@ class ApiClient extends ChangeNotifier {
     Map<String, String>? query,
     Object? body,
     int expectedStatus = 200,
+    Set<int>? acceptedStatuses,
+    String? idempotencyKey,
   }) async {
     final generation = _generation;
     final sentToken = _access;
@@ -222,6 +227,7 @@ class ApiClient extends ChangeNotifier {
       query: query,
       body: body,
       token: sentToken,
+      idempotencyKey: idempotencyKey,
     );
     if (generation != _generation) {
       throw const ApiError(401, 'SESSION_CHANGED', 'Phiên đã thay đổi.');
@@ -247,7 +253,7 @@ class ApiClient extends ChangeNotifier {
     if (generation != _generation) {
       throw const ApiError(401, 'SESSION_CHANGED', 'Phiên đã thay đổi.');
     }
-    if (response.statusCode != expectedStatus) {
+    if (!(acceptedStatuses ?? {expectedStatus}).contains(response.statusCode)) {
       final failure = _error(response);
       throw ApiError(
         failure.status,

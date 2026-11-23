@@ -15,3 +15,5 @@
 
 - Runner Java/PostgreSQL phải cố định JVM UTC; alias Asia/Saigon từ Windows có thể bị image PostgreSQL từ chối. PowerShell5 có thể coi native stderr của JAVA_TOOL_OPTIONS là lỗi terminating: chỉ đổi ErrorActionPreference quanh lệnh native rồi kiểm exit code/fresh reports, không bỏ kiểm lỗi.
 - Guard JDBC URL bằng URI host/port/path và identity DB/role thật; PGSimpleDataSource có thể thêm query suffix. Migration rehearsal phải ở location riêng khi chưa bảo đảm thứ tự canonical; V8 trước V7 không được chữa bằng out-of-order/history edits. Xem [quickstart](docs/backend-handover/16_PT_ACTIVATION_REHEARSAL_QUICKSTART.md).
+
+- M-03 rehearsal: V9 location riêng/default-off, chỉ runner membership-rehearsal guard DB loopback15440; không áp V7/V8 vào DB này hoặc coi history1–6,9 là release. Initial Membership không ACTIVE hóa User. [Quyết định](docs/backend-handover/decisions/2026-11-23_M03_INITIAL_MEMBERSHIP.md), [chạy lại](docs/backend-handover/18_INITIAL_MEMBERSHIP_QUICKSTART.md).

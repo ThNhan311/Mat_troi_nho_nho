@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$JavaHome,
     [Parameter(Mandatory = $true)][ValidatePattern('^[a-f0-9]{64}$')][string]$ExpectedContainerId,
@@ -11,6 +11,7 @@ param(
     [ValidateRange(1024,65535)][int]$DatabasePort = 15437,
     [switch]$StartDatabase,
     [switch]$AccountFocused,
+    [switch]$ExcludePtRehearsal,
     [switch]$FullSuite
 )
 
@@ -125,6 +126,7 @@ FROM pg_roles WHERE rolname=current_user;
     $runStartedUtc = [DateTime]::UtcNow
     $mavenArguments = @('-B','-ntp','test')
     if ($FullSuite -and $AccountFocused) { throw 'Choose full or account focused, not both.' }
+    if ($FullSuite -and $ExcludePtRehearsal) { $mavenArguments += '-Dtest=*Test,!PtActivationPostgresTest,!ActivationSchemaRehearsalTest' }
     if (!$FullSuite) {
         if ($AccountFocused) { $mavenArguments += '-Dtest=HttpBaselineTest,AccountHttpTest,PtActivationServiceTest,TestSmtpActivationMailerTest' }
         else { $mavenArguments += '-Dtest=HttpBaselineTest' }

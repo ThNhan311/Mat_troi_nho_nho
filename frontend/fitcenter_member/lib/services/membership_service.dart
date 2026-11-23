@@ -5,9 +5,14 @@ import 'booking_models.dart';
 String? membershipDate(Map<String, dynamic> row, String key) {
   final value = row[key];
   if (value == null) return null;
-  if (value is String && RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) {
-    final date = DateTime.tryParse(value);
-    if (date != null && date.toIso8601String().startsWith(value)) return value;
+  if (value is String && RegExp(r'^[+]?\d{4,7}-\d{2}-\d{2}$').hasMatch(value)) {
+    final parts = value.split('-'),
+        y = int.parse(parts[0]),
+        m = int.parse(parts[1]),
+        d = int.parse(parts[2]);
+    final leap = y % 4 == 0 && (y % 100 != 0 || y % 400 == 0),
+        days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (y >= 1 && m >= 1 && m <= 12 && d >= 1 && d <= days[m - 1]) return value;
   }
   throw const ApiError(0, 'INVALID_RESPONSE', 'Ngày hội viên không hợp lệ.');
 }
@@ -38,9 +43,11 @@ class Membership {
     }
   }
   String get statusLabel => labels[status]!;
-  static String displayDate(String? value) => value == null
-      ? 'Chưa xác định'
-      : '${value.substring(8, 10)}/${value.substring(5, 7)}/${value.substring(0, 4)}';
+  static String displayDate(String? value) {
+    if (value == null) return 'Chưa xác định';
+    final p = value.split('-');
+    return '${p[2]}/${p[1]}/${p[0]}';
+  }
 }
 
 class MembershipService {

@@ -1,0 +1,72 @@
+{
+  "cleanup": {
+    "at": "2026-11-23T08:28:26.607Z",
+    "databases": [
+      {
+        "name": "fitcenter_membership_ad0f8bdd08c8_empty_test",
+        "registered": 0,
+        "checks": 3,
+        "remainingNonfixtureRows": 0
+      },
+      {
+        "name": "fitcenter_membership_ad0f8bdd08c8_history_test",
+        "registered": 29,
+        "checks": 3,
+        "remainingNonfixtureRows": 0
+      },
+      {
+        "name": "fitcenter_membership_c8c4bd0b8f09_empty_test",
+        "registered": 0,
+        "checks": 3,
+        "remainingNonfixtureRows": 0
+      },
+      {
+        "name": "fitcenter_membership_c8c4bd0b8f09_history_test",
+        "registered": 179,
+        "checks": 3,
+        "remainingNonfixtureRows": 0
+      },
+      {
+        "name": "fitcenter_membership_d854d3f9ff0b_empty_test",
+        "registered": 0,
+        "checks": 3,
+        "remainingNonfixtureRows": 0
+      },
+      {
+        "name": "fitcenter_membership_d854d3f9ff0b_history_test",
+        "registered": 194,
+        "checks": 3,
+        "remainingNonfixtureRows": 0
+      },
+      {
+        "name": "fitcenter_membership_d0b343106ce0_empty_test",
+        "registered": 0,
+        "checks": 3,
+        "remainingNonfixtureRows": 0
+      },
+      {
+        "name": "fitcenter_membership_d0b343106ce0_history_test",
+        "registered": 203,
+        "checks": 3,
+        "remainingNonfixtureRows": 0
+      }
+    ],
+    "failed": 0
+  },
+  "stopped": {
+    "fixtureCleanupRepeated": true,
+    "taskPortsClosed": true,
+    "containerStopped": true,
+    "volumeRetained": true,
+    "at": "2026-11-23T08:30:25.3727763Z"
+  },
+  "remoteReview": {
+    "at": "2026-11-23T08:30:30.2282447Z",
+    "workflowRuns": 0,
+    "deployments": 0,
+    "workflows": 0,
+    "databaseRef": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+    "webhooks": 0
+  },
+  "repeatedCleanup": "Both passes: 8 databases,24 checks,0 failed; same registered UUIDs. No DROP database/volume."
+}

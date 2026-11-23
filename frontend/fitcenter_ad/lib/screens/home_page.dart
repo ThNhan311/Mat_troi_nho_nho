@@ -1,3 +1,5 @@
+import 'initial_activation_page.dart';
+import '../services/initial_activation_service.dart';
 import '../services/booking_policy_service.dart';
 
 import 'package:flutter/material.dart';
@@ -161,14 +163,13 @@ class AdminHomePage extends StatelessWidget {
               _AdminMenuCard(
                 icon: Icons.person_add_alt_1_outlined,
                 title: 'Kích hoạt Gói hội viên',
-                subtitle: 'Đăng ký hội viên và kích hoạt gói tập lần đầu',
+                subtitle: 'Ghi nhận thanh toán quầy cho Member đã tồn tại',
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                      builder: (_) => const _ComingSoonPage(
-                        title: 'Chưa khả dụng',
-                        description: 'Chức năng chưa khả dụng.',
+                      builder: (_) => InitialActivationPage(
+                        service: InitialActivationService(service.api),
                       ),
                     ),
                   );
