@@ -64,3 +64,14 @@ Chưa đọc đầy đủ từng assertion của tất cả test, toàn bộ see
 | Scope/default gate/release order | SchemaGuard / rehearsal configuration | guard8, late-V7 validate rejection; V7 không chạy |
 
 [Quyết định](../decisions/2026-11-23_M03_INITIAL_MEMBERSHIP.md), [evidence/hashes](M03_INITIAL_MEMBERSHIP.md). Counts focused là tập con, không cộng vào full.
+
+## MEMBER account activation —23/11/2026
+
+| Yêu cầu | Source | Kiểm chứng |
+|---|---|---|
+| Admin-created MEMBER only, no Membership prerequisite | MemberActivationService / JdbcRoleActivationStore / AdminAccountService | MemberAccountActivationPostgresTest + MemberActivationServiceTest |
+| Reuse OTP safety, role isolation, one-use/Clock/rollback | AccountActivationFlow / ActivationRequests / role stores | Member24 và PT23 HTTP/PG/SMTP cases, PT/Member unit23 mỗi role |
+| PT/M03 history preserved / V10 append-only | AccountIntegrationDatabase / MemberActivationSchemaPostgresTest / V10 | empty + history1–6,8,9→10, snapshot equality, integratedM0354 |
+| Original Member login/form, session/uncertain outcome | MemberActivationPage / MemberActivationService | Flutter60; actual Admin→M03→Member OTP→login→M04 UI |
+
+[Evidence/hashes](MEMBER_ACCOUNT_ACTIVATION.md), [contract](../decisions/2026-11-23_MEMBER_ACCOUNT_ACTIVATION.md). Không cộng focused vào scoped full914.

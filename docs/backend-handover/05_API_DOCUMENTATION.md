@@ -200,3 +200,7 @@ Lỗi thường gặp: 400 `ERR_VALIDATION` cho input sai; 401 `ERR_UNAUTHORIZED
 ## M-03 — Admin initial Membership (rehearsal default-off)
 
 POST `/api/v1/admin/members/{memberId}/activate-membership` (201 hoặc200 replay cùng key), GET `/api/v1/admin/members/{memberId}/membership-activation` (200 snapshot đã commit/404). ADMIN ACTIVE; Idempotency-Key UUID, memberId là profile UUID. Body planId/amountCollected/receiptRef/note, không client dates/owner. Receipt global chuẩn hóa, history bất kỳ chặn initial. Không đổi User hoặc tích hợp gateway. [Contract/error/transaction](decisions/2026-11-23_M03_INITIAL_MEMBERSHIP.md), [OpenAPI](api/openapi.yaml), [evidence](evidence/M03_INITIAL_MEMBERSHIP.md).
+
+## MEMBER account activation — rehearsal default-off
+
+POST `/api/v1/auth/member-activation/request-otp`, `/verify-otp`, `/password`: public202→200grant→200ACTIVE, không JWT. Chỉ roleMEMBER DISABLED có profile và nguồn Admin tạo; không cần Membership/không mutate payment. Role challenge/grant tách PT, cùng expiry/attempt/resend/lock/password contract. [Chi tiết](decisions/2026-11-23_MEMBER_ACCOUNT_ACTIVATION.md), [OpenAPI](api/openapi.yaml), [kiểm chứng](evidence/MEMBER_ACCOUNT_ACTIVATION.md).

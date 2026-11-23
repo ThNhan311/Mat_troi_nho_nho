@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: m03-initial-membership-working-tree
+  version: member-account-activation-working-tree
   description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation mặc định503; profile activation-rehearsal đã đạt HTTP/PostgreSQL/SMTP/UI trên DB test riêng với V8 ở location riêng, không production rollout. M-03 thêm counter receipt/initial Membership trên membership-rehearsal default-off; renewal/gateway chưa có.
 servers:
 - url: http://localhost:18081
@@ -10,6 +10,8 @@ servers:
   description: Dedicated guarded PT activation rehearsal only
 - url: http://localhost:18083
   description: Dedicated guarded M03 membership-rehearsal, default gate off
+- url: http://localhost:18084
+  description: Integrated guarded Member/PT/M03 rehearsal only, no canonical release
 paths:
   /api/v1/admin/members:
     get:
@@ -146,7 +148,7 @@ paths:
     post:
       operationId: completePtFirstActivationPassword
       summary: Tiêu thụ grant và đặt mật khẩu + ACTIVE nguyên tử — mặc định503, đã nghiệm thu rehearsal test
-      description: Password>=8codepoints và<=72byteUTF8 theo BCrypt. User->activation row lock, Clock sau khóa; không JWT, không MEMBER flow. Không replay POST khi timeout.
+      description: Password>=8codepoints và<=72byteUTF8 theo BCrypt. User->activation row lock, Clock sau khóa; không JWT, không tự kích hoạt Membership. MEMBER dùng endpoint/store riêng. Không replay POST khi timeout.
       security: []
       requestBody:
         required: true
@@ -1354,6 +1356,173 @@ paths:
             đang chờ đã thất bại
         '503':
           description: ERR_MEMBERSHIP_ACTIVATION_UNAVAILABLE
+  /api/v1/auth/member-activation/request-otp:
+    post:
+      operationId: requestMemberFirstActivationOtp
+      summary: MEMBER first activation — mặc định503, rehearsal test có thể202
+      description: Public, không JWT. Khi được bật chỉ MEMBER DISABLED có Admin pending audit; OTP5phút, resend>=60giây/max5lần giờ. Email không
+        đủ điều kiện vẫn202 chung, không gửi mail. Adapter hiện chỉ loopback mail test @example.invalid. Không tự replay write. Member profile/source
+        Admin bắt buộc; state/grant riêng role, không dùng challenge PT. Default503; chỉ profile account-integration-rehearsal có guard15441 mới
+        bật.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+      responses:
+        '202':
+          description: Chỉ khi feature/schema được cho phép; không xác nhận email tồn tại
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - message
+                - expiresInSeconds
+                - resendAfterSeconds
+                properties:
+                  message:
+                    type: string
+                  expiresInSeconds:
+                    type: integer
+                    enum:
+                    - 300
+                  resendAfterSeconds:
+                    type: integer
+                    enum:
+                    - 60
+        '400':
+          $ref: '#/components/responses/LifecycleValidation'
+        '429':
+          $ref: '#/components/responses/ActivationFailure'
+        '503':
+          $ref: '#/components/responses/ActivationFailure'
+  /api/v1/auth/member-activation/verify-otp:
+    post:
+      operationId: verifyMemberFirstActivationOtp
+      summary: MEMBER Tiêu thụ OTP, cấp grant đặt mật khẩu một lần — mặc định503, đã nghiệm thu rehearsal test
+      description: OTP hết hạn khi now>=expiry; tối đa5attempts. Grant32byte random, hashSHA256 trong DB, TTL300s, không JWT. Chưa hoàn thành kích
+        hoạt ở bước này. Member profile/source Admin bắt buộc; state/grant riêng role, không dùng challenge PT. Default503; chỉ profile account-integration-rehearsal
+        có guard15441 mới bật.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              - otp
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                otp:
+                  type: string
+                  pattern: ^[0-9]{6}$
+                  writeOnly: true
+      responses:
+        '200':
+          description: Grant chỉ memory, không log/persist ở client
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - verificationToken
+                - expiresInSeconds
+                properties:
+                  verificationToken:
+                    type: string
+                    minLength: 43
+                    maxLength: 43
+                  expiresInSeconds:
+                    type: integer
+                    enum:
+                    - 300
+        '400':
+          $ref: '#/components/responses/ActivationFailure'
+        '409':
+          $ref: '#/components/responses/ActivationFailure'
+        '429':
+          $ref: '#/components/responses/ActivationFailure'
+        '503':
+          $ref: '#/components/responses/ActivationFailure'
+  /api/v1/auth/member-activation/password:
+    post:
+      operationId: completeMemberFirstActivationPassword
+      summary: MEMBER Tiêu thụ grant và đặt mật khẩu + ACTIVE nguyên tử — mặc định503, đã nghiệm thu rehearsal test
+      description: Password>=8codepoints và<=72byteUTF8 theo BCrypt. User->activation row lock, Clock sau khóa; không JWT, không kích hoạt Membership/payment.
+        Không replay POST khi timeout. Member profile/source Admin bắt buộc; state/grant riêng role, không dùng challenge PT. Default503; chỉ profile
+        account-integration-rehearsal có guard15441 mới bật.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - verificationToken
+              - password
+              properties:
+                verificationToken:
+                  type: string
+                  minLength: 43
+                  maxLength: 43
+                  writeOnly: true
+                password:
+                  type: string
+                  minLength: 8
+                  writeOnly: true
+                  description: Tối đa72byteUTF8
+                  không silent truncation: null
+      responses:
+        '200':
+          description: Login email/password riêng sau kích hoạt, không accessToken
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - status
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - ACTIVE
+        '400':
+          $ref: '#/components/responses/ActivationFailure'
+        '409':
+          $ref: '#/components/responses/ActivationFailure'
+        '503':
+          $ref: '#/components/responses/ActivationFailure'
 components:
   responses:
     AccountConflict:

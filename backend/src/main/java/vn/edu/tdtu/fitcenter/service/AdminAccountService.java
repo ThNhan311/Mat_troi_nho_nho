@@ -43,7 +43,7 @@ public class AdminAccountService {
     public List<AccountResponse> list(String actorEmail,Role role) {
         actor(actorEmail);
         String table=switch(role){case MEMBER->"members";case PT->"personal_trainers";default->throw new IllegalArgumentException();};
-        return jdbc.query("SELECT u.id user_id,p.id profile_id,u.email,p.full_name,u.role,u.status,(u.status='DISABLED' AND EXISTS(SELECT 1 FROM audit_logs a WHERE a.entity_type='USER' AND a.entity_id=u.id AND a.action='ACCOUNT_CREATED_PENDING_ACTIVATION') AND NOT EXISTS(SELECT 1 FROM audit_logs a WHERE a.entity_type='USER' AND a.entity_id=u.id AND a.action='PT_ACCOUNT_ACTIVATED')) pending FROM users u JOIN "+table+" p ON p.user_id=u.id WHERE u.role=? ORDER BY p.full_name,u.id",
+        return jdbc.query("SELECT u.id user_id,p.id profile_id,u.email,p.full_name,u.role,u.status,(u.status='DISABLED' AND EXISTS(SELECT 1 FROM audit_logs a WHERE a.entity_type='USER' AND a.entity_id=u.id AND a.action='ACCOUNT_CREATED_PENDING_ACTIVATION') AND NOT EXISTS(SELECT 1 FROM audit_logs a WHERE a.entity_type='USER' AND a.entity_id=u.id AND a.action IN ('PT_ACCOUNT_ACTIVATED','MEMBER_ACCOUNT_ACTIVATED'))) pending FROM users u JOIN "+table+" p ON p.user_id=u.id WHERE u.role=? ORDER BY p.full_name,u.id",
                 (r,i)->new AccountResponse(r.getObject("user_id",UUID.class),r.getObject("profile_id",UUID.class),r.getString("email"),r.getString("full_name"),r.getString("role"),r.getString("status"),r.getBoolean("pending")),role.name());
     }
 }

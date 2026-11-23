@@ -1,0 +1,62 @@
+{
+  "cleanup": {
+    "at": "2026-11-23T14:08:57.234Z",
+    "databases": [
+      {
+        "name": "fitcenter_account_14968c118b05_empty_test",
+        "registered": 0,
+        "checks": 3,
+        "nonfixtureRowsPreserved": 0
+      },
+      {
+        "name": "fitcenter_account_14968c118b05_history_test",
+        "registered": 36,
+        "checks": 3,
+        "nonfixtureRowsPreserved": 0
+      },
+      {
+        "name": "fitcenter_account_5f7e8316c64b_empty_test",
+        "registered": 0,
+        "checks": 3,
+        "nonfixtureRowsPreserved": 0
+      },
+      {
+        "name": "fitcenter_account_5f7e8316c64b_history_test",
+        "registered": 53,
+        "checks": 3,
+        "nonfixtureRowsPreserved": 0
+      },
+      {
+        "name": "fitcenter_account_997eb06f5e25_empty_test",
+        "registered": 0,
+        "checks": 3,
+        "nonfixtureRowsPreserved": 0
+      },
+      {
+        "name": "fitcenter_account_997eb06f5e25_history_test",
+        "registered": 36,
+        "checks": 3,
+        "nonfixtureRowsPreserved": 0
+      }
+    ],
+    "failed": 0
+  },
+  "stop": {
+    "at": "2026-11-23T14:11:02.3890392Z",
+    "cleanupRepeated": true,
+    "volumeRetained": "fitcenter_account_20261123_data",
+    "mailInboxDisposed": true,
+    "containerStopped": true,
+    "taskPortsClosed": true
+  },
+  "repeated": "Both passes:6 databases,18 checks,0 failed. Do not sum duplicate checks.",
+  "recovery": "Ephemeral sandbox private files disappeared after environment update. Own container identity, role, zero sessions, synthetic namespaces verified; rotated only isolated test app credential, sealed exact pre-demo UUID recovery registries. No row/history changes during recovery. Credentials kept outside Git.",
+  "remoteReview": {
+    "at": "2026-11-23T14:16:25.5588041Z",
+    "workflowRuns": 0,
+    "deployments": 0,
+    "workflows": 0,
+    "databaseRef": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+    "webhooks": 0
+  }
+}

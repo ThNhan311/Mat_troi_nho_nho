@@ -12,6 +12,7 @@ param(
     [switch]$StartDatabase,
     [switch]$AccountFocused,
     [switch]$ExcludePtRehearsal,
+    [switch]$IntegratedAccountSuite,
     [switch]$FullSuite
 )
 
@@ -126,7 +127,8 @@ FROM pg_roles WHERE rolname=current_user;
     $runStartedUtc = [DateTime]::UtcNow
     $mavenArguments = @('-B','-ntp','test')
     if ($FullSuite -and $AccountFocused) { throw 'Choose full or account focused, not both.' }
-    if ($FullSuite -and $ExcludePtRehearsal) { $mavenArguments += '-Dtest=*Test,!PtActivationPostgresTest,!ActivationSchemaRehearsalTest' }
+    if ($FullSuite -and $IntegratedAccountSuite) { $mavenArguments += '-Dtest=*Test,!PtActivationPostgresTest,!ActivationSchemaRehearsalTest,!InitialMembershipPostgresTest' }
+    elseif ($FullSuite -and $ExcludePtRehearsal) { $mavenArguments += '-Dtest=*Test,!PtActivationPostgresTest,!ActivationSchemaRehearsalTest' }
     if (!$FullSuite) {
         if ($AccountFocused) { $mavenArguments += '-Dtest=HttpBaselineTest,AccountHttpTest,PtActivationServiceTest,TestSmtpActivationMailerTest' }
         else { $mavenArguments += '-Dtest=HttpBaselineTest' }

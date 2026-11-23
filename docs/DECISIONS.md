@@ -42,3 +42,7 @@ Người dùng giao chuẩn bị Admin ghi nhận thanh toán quầy và kích h
 ## M-03 đã phê duyệt và triển khai —23/11/2026
 
 Quyết định mới thay phần đề xuất chưa chốt ở trên: Clock VN/date inclusive, giá ACTIVE server (giá0), chứng từ global/idempotency, initial chưa có lịch sử, không kích hoạt User. [Contract/khóa/chuẩn hóa/schema và giới hạn](backend-handover/decisions/2026-11-23_M03_INITIAL_MEMBERSHIP.md). MEMBER email OTP/password được đồng ý là task riêng, chưa triển khai trong M-03. V9 location rehearsal riêng/default-off; không áp V7 hoặc đưa history1–6,9 thành release.
+
+## MEMBER account activation — đã giao triển khai23/11/2026
+
+Quyền mới thay giới hạn PT-only trong snapshot trước: Member Admin tạo email→OTP5phút→password→ACTIVE, không cần Membership và không tác động Membership/payment. Core dùng chung nhưng role/store/challenge/grant riêng; V10 chỉ rehearsal guard tích hợp15441, default-off. [Quyết định/contract/schema/khóa](backend-handover/decisions/2026-11-23_MEMBER_ACCOUNT_ACTIVATION.md). Không đồng nghĩa phát hành production hoặc gateway.

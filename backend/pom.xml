@@ -152,6 +152,12 @@
                 <includes><include>V9__membership_initial_activation.sql</include></includes>
                 <filtering>false</filtering>
             </resource>
+            <resource>
+                <directory>../database/member-activation-rehearsal</directory>
+                <targetPath>db/member-activation-rehearsal</targetPath>
+                <includes><include>V10__member_account_activation.sql</include></includes>
+                <filtering>false</filtering>
+            </resource>
 		</resources>
 
 		<plugins>

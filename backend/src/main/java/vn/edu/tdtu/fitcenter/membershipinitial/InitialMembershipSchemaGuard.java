@@ -11,8 +11,12 @@ public class InitialMembershipSchemaGuard implements InitializingBean {
  private final boolean enabled;private final Environment env;private final DataSource source;private final JdbcTemplate jdbc;
  public InitialMembershipSchemaGuard(@Value("${fitcenter.membership-initial.enabled:false}")boolean enabled,Environment env,DataSource source,JdbcTemplate jdbc){this.enabled=enabled;this.env=env;this.source=source;this.jdbc=jdbc;}
  public void afterPropertiesSet(){if(!enabled)return;
+  if(Arrays.asList(env.getActiveProfiles()).contains("account-integration-rehearsal")) {
+   vn.edu.tdtu.fitcenter.activation.AccountIntegrationRehearsalConfiguration.verify(source,env.getProperty("fitcenter.account-integration.guard-verified",Boolean.class,false));
+  } else {
   if(!Arrays.asList(env.getActiveProfiles()).contains("membership-rehearsal"))throw new IllegalStateException("Initial membership is rehearsal-only pending canonical release sequencing");
   InitialMembershipRehearsalConfiguration.verify(source,env.getProperty("fitcenter.membership-initial.guard-verified",Boolean.class,false));
+  }
   if(!Boolean.TRUE.equals(jdbc.queryForObject("SELECT to_regclass('public.membership_initial_activations') IS NOT NULL",Boolean.class)))throw new IllegalStateException("Missing membership rehearsal schema");
  }
 }
