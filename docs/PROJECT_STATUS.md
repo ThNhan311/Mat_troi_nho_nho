@@ -1,23 +1,23 @@
 # FitCenter — trạng thái tiếp tục
 
-Cập nhật24/11/2026, worktree Mat_troi_nho_nho-booking-integration; branch **feature/face-enrollment**, HEAD/base trước commit đóng **c3eb411cfbb6cfdfdfdc441d850d2eea456f7b46**. Git là thực tế; commit F02 tra history (file không tự chứa SHA của chính nó).
+Cập nhật24/11/2026, worktree Mat_troi_nho_nho-booking-integration; branch **feature/face-service-integration**, HEAD/base trước commit đóng **de82618c21d2aaeb2c3b1d39df4382b3928d93e7**. Git là thực tế; commit F03A xem history/final handover, file không chứa SHA của chính nó.
 
-## F02 đã kiểm chứng ở chế độ simulated, Face thật chưa hoàn thành
+## F03A — protocol/service và inference smoke đạt, Face thật chưa hoàn thành
 
-Admin ACTIVE: enrollment start/complete/status/re-enroll/pending revoke/profile revoke; consent/at-gym/member verification attestation, actor/time server; server mints template/profile→members.id. Một ACTIVE/member; chỉ READY finalize, failure giữ old; external journal/outbox/recovery tách DB transaction. Old profile/capture/request không check-in sau revoke/replacement. No User/Membership/payment/Booking mutation; default503, profile riêng có guard.
+Private Face Service lifecycle prepare/stage/status/finalize/abort, immutable Member/profile/predecessor/generation, encrypted durable store/reservation/tombstones; Backend HTTP transport post-commit finalize/recovery. Capture proof ký/request-bound/expiry/provenance, Core recheck current mapping/generation nhưng không admission nếu chưa đủ evidence. Source algorithms/state dependencies nhập nguyên pinfcabeba; không thay prototype/camera gốc.
 
-Thực chạy **1076Backend selected full/0failed/errors/skipped**,41freshsuites, JDK21/PG17.12; focused30 là subset. **Admin133tests**,23F02; analyze109info/0error/0warning với --no-fatal-infos, web build đạt. **Python49selected** protocol F01, không detector/model/camera. **UI10/directHTTP10/DB6checks** đạt; identity SIMULATED_TEST. Không Flutter Member/PT thay đổi. [Evidence/traceability](backend-handover/evidence/F02_FACE_ENROLLMENT.md), [JSON](backend-handover/evidence/F02_RESULTS.json), [hashes](backend-handover/evidence/F02_SOURCE_HASHES.json), [quyết định/khóa/contract](backend-handover/decisions/2026-11-24_F02_FACE_ENROLLMENT.md), [quickstart](backend-handover/23_FACE_ENROLLMENT_QUICKSTART.md), [OpenAPI](backend-handover/api/openapi.yaml).
+Thực chạy trên source cuối: **1106Backend selected full/43suites,0failed/errors/skipped**; focused63 là subset. **Python80selected=58repo+22pinned state/auth**,0failed/errors/skipped; protocol/formula tests synthetic, không biometric accuracy. Actual SCRFD/ArcFace weights buffalo_s đã nạp trên CPU: uniform-image detector, tensor512 forward và authenticated model HTTP NO_FACE; không dataset/calibration/PAD/camera. Không Dart/UI đổi nên không rerun Flutter hoặc dùng F02 UI cũ làm bằng chứng mới. [Evidence/limits](backend-handover/evidence/F03A_FACE_SERVICE.md), [suites/model JSON](backend-handover/evidence/F03A_RESULTS.json), [39hashes/provenance](backend-handover/evidence/F03A_SOURCE_HASHES.json), [contract/recovery](backend-handover/decisions/2026-11-24_F03A_FACE_SERVICE.md), [quickstart](backend-handover/24_FACE_SERVICE_QUICKSTART.md).
 
-## Source/schema/release
+## Gates và phần chưa triển khai
 
-Face source fcabeba đã có service/gallery/enroll, nhưng chưa staging/idempotent operation/generation/predecessor-aware duplicate phối hợpDB; không nối camera thật chỉ vì API enroll đã tồn tại. F02 adapter test external journal/default-off, không ảnh/vector/liveness/threshold mới;26untracked Face nguyên hash. [Khảo sát nguồn](backend-handover/evidence/F01_FACE_SOURCE_SURVEY.md).
+Backend remote chỉ protocol test trên V13 SIMULATED_TEST; actual model provenance bị503, không ghi nhầm inference thật là simulated. NOT_PERFORMED không PASSED; actual enrollment/recognition admission, PAD, camera/kiosk GUI, approved dataset/threshold và production retention/license/legacy mapping **chưa đạt**. Không gọi F03 hoàn tất chỉ vì protocol passed. Không thay Membership/payment/Booking hoặc User/activation.
 
-V13 additive rehearsal riêng, frozen1–6,8–13/12scripts. V1–V12 giữ nguyên; không applyV7. Empty/history preservation đạt. Shared DB inventory chưa biết, V7 Duy558fb03 còn DROP periods chưa backfill; cần đồng bộ/backfill/backup/thứ tự V8–V13 trước release. Không renumber/out-of-order/history edits/clean/repair; **releaseReady=false**, production gates giữ nguyên.
+Không migration mới: candidate1–6,8–13/default-off giữ nguyên; V7 Duy558fb03 quarantine vì chưa backfill và shared DB history unknown. Cần đồng bộ/order/backfill/inventory trước merge/release, không renumber/out-of-order/history edits/clean/repair. **releaseReady=false**.
 
-## Git/tài nguyên/tiếp theo
+## Git, tài nguyên và bước tiếp
 
-Review để commit/push riêng theo quyền, không merge/force; CI/CD inventory04:04UTC0workflow/run/deployment/webhook, không gọi CI passed. Bốn research22/11 untracked giữ ngoài commit, không reset/stash/ghi đè Face hoặc source ngoài task. Credential/config/raw logs/SDK/build/private journal/manifest ngoài Git. Cleanup44DB/92checks +repeat đạt, ngoài fixture không đổi; own6process/hai lượt demo và DB đã dừng, giữ schema/history/volume.
+Review exact task scope để commit/push nhánh riêng theo quyền; không merge/force. Bốn research22/11 untracked ngoài task giữ nguyên. Source pin13files và26Face untracked/cache/model gốc giữ bytes; private credentials/config/registry/raw logs/model/venv/build ngoài Git. Cleanup36DB/108checks +repeat đạt, đúng UUID/outside-row preservation; own service/JVM/DB đã dừng, giữ volumes/schema/history. CI/CD inventory08:30UTC0workflow/run/deployment/webhook, không gọi CI pass.
 
-F03: thống nhất service prepare/status/finalize/abort/remove có idempotency và generation, logical Member/predecessor mapping/duplicate; capture attestation/trust transport/kiosk source, calibration/model/license/FAR-FRR, liveness/PAD, production consent/version/retention/revoke audit. Không tuyên bố Face ID hoặc biometric E2E đã hoàn thành. [Quyết định tổng hợp](DECISIONS.md), [AGENTS](../AGENTS.md).
+Bước tiếp: cung cấp dataset có quyền sử dụng với calibration/evaluation identities/sessions/unknown cohorts tách biệt; đánh giá 1:N và PAD/attack data, quyết định threshold/liveness trước mở real admission/schema mode. Xác định kiosk source thực và nối trusted capture transport khi đủ evidence. Không tự thu người thật hoặc thay model. [Quyết định tổng hợp](DECISIONS.md), [AGENTS](../AGENTS.md).
 
-Mốc lịch sử: F01[c3eb411](backend-handover/evidence/F01_CHECKIN_CORE.md), renewal4af8bb8, I01d2774c9, MEMBER activation9503110, M035399c57, M0492328e0. Không dùng số test/UI lịch sử làm kết quả F02.
+Lịch sử: F02de82618 [enrollment evidence](backend-handover/evidence/F02_FACE_ENROLLMENT.md), F01c3eb411, renewal4af8bb8, I01d2774c9, MEMBER activation9503110, M035399c57, M0492328e0. Các test/UI lịch sử không phải lượt F03A.

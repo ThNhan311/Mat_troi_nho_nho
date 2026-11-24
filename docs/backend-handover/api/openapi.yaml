@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: face-enrollment-working-tree
+  version: face-service-integration-working-tree
   description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation mặc định503; profile activation-rehearsal đã đạt HTTP/PostgreSQL/SMTP/UI trên DB test riêng với V8 ở location riêng, không production rollout. M-03 thêm counter receipt/initial Membership trên membership-rehearsal default-off; M05/M06 thêm renewal/simulator default-off trên profile guard riêng; gateway thật chưa có.
 servers:
 - url: http://localhost:18081
@@ -14,6 +14,13 @@ servers:
   description: Integrated guarded Member/PT/M03 rehearsal only, no canonical release
 - url: http://127.0.0.1:18086
   description: F02 guarded test only, simulated external gallery
+x-face-service-v2:
+  contract: ../../../face/service_v2/openapi.json
+  scope: Private loopback rehearsal; no new public Backend endpoint
+  backendMode: SYNTHETIC_PROTOCOL transport only; V13 remains SIMULATED_TEST
+  realAdmission: disabled; NOT_PERFORMED never PASSED
+  recovery: Complete retries same operation after timeout; no blind new enrollment
+  errors: [ERR_FACE_SERVICE_UNAVAILABLE, ERR_FACE_SAMPLES_REQUIRED, ERR_FACE_ADAPTER_BINDING, ERR_FACE_ATTESTATION_INVALID, ERR_FACE_REAL_ADMISSION_NOT_ENABLED]
 paths:
   /api/v1/admin/members/{member}/face-enrollments:
     get:

@@ -82,7 +82,7 @@ public final class CheckinService {
                 member=(UUID)old.get("member_id");profile=(UUID)old.get("facial_profile_id");
                 if(member==null)return response(request,false,false,false,null,null,null,now(),(String)old.get("decision"),true);
             } else {
-                var identity=adapter.verify(request.captureRef());
+                var identity=adapter.verify(request.requestId(),request.captureRef());
                 if(!identity.outcome().equals("MATCHED")) {
                     var dto=response(request,false,false,false,null,null,null,now(),identity.outcome().equals("NO_MATCH")?"NO_MATCH":"UNKNOWN_IDENTITY",false);
                     save(kiosk,request,fingerprint,null,null,dto);return dto;

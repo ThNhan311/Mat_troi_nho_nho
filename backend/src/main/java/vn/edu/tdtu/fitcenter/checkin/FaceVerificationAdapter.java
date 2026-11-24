@@ -8,4 +8,5 @@ public interface FaceVerificationAdapter {
     boolean enabled();
     void requireEnabled();
     Identity verify(UUID captureRef);
+    default Identity verify(UUID requestId,UUID captureRef){return verify(captureRef);}
 }

@@ -212,3 +212,7 @@ Member tạo quote PENDING bằng POST `/api/v1/memberships/{id}/renewals` + Ide
 F-01 Core check-in/history: [contract](decisions/2026-11-24_F01_CHECKIN_CORE.md), [OpenAPI](api/openapi.yaml), [quickstart](22_CHECKIN_CORE_QUICKSTART.md), [evidence](evidence/F01_CHECKIN_CORE.md). Adapter identity chỉ simulated/test guarded default-off; không Face ID/liveness E2E.
 
 F02 Admin Face enrollment: [contract](decisions/2026-11-24_F02_FACE_ENROLLMENT.md), [OpenAPI](api/openapi.yaml). Default-off/simulated, không client template identity.
+
+## F03A — private Face Service/evaluation
+
+[Contract/giới hạn](decisions/2026-11-24_F03A_FACE_SERVICE.md), [quickstart](24_FACE_SERVICE_QUICKSTART.md), [evidence](evidence/F03A_FACE_SERVICE.md), [private service OpenAPI](../../face/service_v2/openapi.json). Không endpoint public mới, không đổi default gates/migrations; actual PAD/accuracy/camera chưa được kiểm chứng.

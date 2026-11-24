@@ -2,6 +2,7 @@ package vn.edu.tdtu.fitcenter.enrollment;
 import java.nio.file.*;import java.nio.channels.FileChannel;import java.util.*;import javax.sql.DataSource;
 import org.springframework.beans.factory.InitializingBean;import org.springframework.beans.factory.annotation.Value;import org.springframework.core.env.Environment;import org.springframework.stereotype.Component;import tools.jackson.databind.ObjectMapper;
 /** Test-only external journal, no images/vectors/model/liveness. Never an enrollment attestation in production. */
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="fitcenter.face-service.enabled",havingValue="false",matchIfMissing=true)
 @Component public final class EnrollmentTestAdapter implements EnrollmentAdapter,InitializingBean {
  private final boolean enabled;private final Environment env;private final DataSource ds;private final ObjectMapper json;private final String path;private Path config,journal,lock;
  public EnrollmentTestAdapter(@Value("${fitcenter.enrollment.enabled:false}")boolean enabled,@Value("${fitcenter.enrollment.test-config:}")String path,Environment env,DataSource ds,ObjectMapper json){this.enabled=enabled;this.path=path;this.env=env;this.ds=ds;this.json=json;}

@@ -1,0 +1,637 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "FitCenter private Face Service v2 rehearsal",
+    "version": "F03A",
+    "description": "No public/browser API. Loopback runner only, no CORS. No PAD: NOT_PERFORMED, admissionEnabled=false. Explicit threshold/margin remain uncalibrated. Request <=12MiB, each decoded image <=2MiB/4096px. No raw image retention. Backend release/real admission remain gated."
+  },
+  "paths": {
+    "/v2/health": {
+      "get": {
+        "summary": "Authenticated runtime/provenance; admissionEnabled=false",
+        "security": [
+          {
+            "ControlToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid server result; Cache-Control: no-store"
+          },
+          "400": {
+            "description": "INVALID_REQUEST / INVALID_UUID / INVALID_BINDING / INVALID_IMAGE / INSUFFICIENT_SAMPLES"
+          },
+          "401": {
+            "description": "UNAUTHORIZED"
+          },
+          "409": {
+            "description": "BINDING_CONFLICT / SAMPLE_CONFLICT / PREDECESSOR_CONFLICT / DUPLICATE_IDENTITY / TOMBSTONED / CAPTURE_REUSED / SAMPLE_NOT_READY"
+          },
+          "413": {
+            "description": "TOO_LARGE"
+          },
+          "503": {
+            "description": "BUSY: no implicit write replay"
+          }
+        }
+      }
+    },
+    "/v2/operations": {
+      "post": {
+        "summary": "Immutable operation/Member/profile/predecessor binding; prepare retry returns same state",
+        "security": [
+          {
+            "ControlToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid server result; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/State"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST / INVALID_UUID / INVALID_BINDING / INVALID_IMAGE / INSUFFICIENT_SAMPLES"
+          },
+          "401": {
+            "description": "UNAUTHORIZED"
+          },
+          "409": {
+            "description": "BINDING_CONFLICT / SAMPLE_CONFLICT / PREDECESSOR_CONFLICT / DUPLICATE_IDENTITY / TOMBSTONED / CAPTURE_REUSED / SAMPLE_NOT_READY"
+          },
+          "413": {
+            "description": "TOO_LARGE"
+          },
+          "503": {
+            "description": "BUSY: no implicit write replay"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Prepare"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/operations/{operation}": {
+      "get": {
+        "summary": "Read durable operation state",
+        "security": [
+          {
+            "ControlToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid server result; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/State"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST / INVALID_UUID / INVALID_BINDING / INVALID_IMAGE / INSUFFICIENT_SAMPLES"
+          },
+          "401": {
+            "description": "UNAUTHORIZED"
+          },
+          "409": {
+            "description": "BINDING_CONFLICT / SAMPLE_CONFLICT / PREDECESSOR_CONFLICT / DUPLICATE_IDENTITY / TOMBSTONED / CAPTURE_REUSED / SAMPLE_NOT_READY"
+          },
+          "413": {
+            "description": "TOO_LARGE"
+          },
+          "503": {
+            "description": "BUSY: no implicit write replay"
+          }
+        },
+        "parameters": [
+          {
+            "name": "operation",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/v2/operations/{operation}/samples": {
+      "post": {
+        "summary": "Trusted enrollment image staging; never recognition-visible",
+        "security": [
+          {
+            "ControlToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid server result; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/State"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST / INVALID_UUID / INVALID_BINDING / INVALID_IMAGE / INSUFFICIENT_SAMPLES"
+          },
+          "401": {
+            "description": "UNAUTHORIZED"
+          },
+          "409": {
+            "description": "BINDING_CONFLICT / SAMPLE_CONFLICT / PREDECESSOR_CONFLICT / DUPLICATE_IDENTITY / TOMBSTONED / CAPTURE_REUSED / SAMPLE_NOT_READY"
+          },
+          "413": {
+            "description": "TOO_LARGE"
+          },
+          "503": {
+            "description": "BUSY: no implicit write replay"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Samples"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "operation",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/v2/operations/{operation}/finalize": {
+      "post": {
+        "summary": "Backend post-commit publication; binding/generation recheck",
+        "security": [
+          {
+            "ControlToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid server result; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/State"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST / INVALID_UUID / INVALID_BINDING / INVALID_IMAGE / INSUFFICIENT_SAMPLES"
+          },
+          "401": {
+            "description": "UNAUTHORIZED"
+          },
+          "409": {
+            "description": "BINDING_CONFLICT / SAMPLE_CONFLICT / PREDECESSOR_CONFLICT / DUPLICATE_IDENTITY / TOMBSTONED / CAPTURE_REUSED / SAMPLE_NOT_READY"
+          },
+          "413": {
+            "description": "TOO_LARGE"
+          },
+          "503": {
+            "description": "BUSY: no implicit write replay"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Finalize"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "operation",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/v2/references/abort": {
+      "post": {
+        "summary": "Idempotent permanent reference tombstone, even before prepare",
+        "security": [
+          {
+            "ControlToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid server result; Cache-Control: no-store"
+          },
+          "400": {
+            "description": "INVALID_REQUEST / INVALID_UUID / INVALID_BINDING / INVALID_IMAGE / INSUFFICIENT_SAMPLES"
+          },
+          "401": {
+            "description": "UNAUTHORIZED"
+          },
+          "409": {
+            "description": "BINDING_CONFLICT / SAMPLE_CONFLICT / PREDECESSOR_CONFLICT / DUPLICATE_IDENTITY / TOMBSTONED / CAPTURE_REUSED / SAMPLE_NOT_READY"
+          },
+          "413": {
+            "description": "TOO_LARGE"
+          },
+          "503": {
+            "description": "BUSY: no implicit write replay"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Abort"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/captures": {
+      "post": {
+        "summary": "Trusted capture inference and signed result; never accepts claimed match/member/score",
+        "security": [
+          {
+            "CaptureToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid server result; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST / INVALID_UUID / INVALID_BINDING / INVALID_IMAGE / INSUFFICIENT_SAMPLES"
+          },
+          "401": {
+            "description": "UNAUTHORIZED"
+          },
+          "409": {
+            "description": "BINDING_CONFLICT / SAMPLE_CONFLICT / PREDECESSOR_CONFLICT / DUPLICATE_IDENTITY / TOMBSTONED / CAPTURE_REUSED / SAMPLE_NOT_READY"
+          },
+          "413": {
+            "description": "TOO_LARGE"
+          },
+          "503": {
+            "description": "BUSY: no implicit write replay"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Capture"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/captures/{request}/{capture}": {
+      "get": {
+        "summary": "Backend retrieves exact request/capture attestation",
+        "security": [
+          {
+            "ControlToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid server result; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_REQUEST / INVALID_UUID / INVALID_BINDING / INVALID_IMAGE / INSUFFICIENT_SAMPLES"
+          },
+          "401": {
+            "description": "UNAUTHORIZED"
+          },
+          "409": {
+            "description": "BINDING_CONFLICT / SAMPLE_CONFLICT / PREDECESSOR_CONFLICT / DUPLICATE_IDENTITY / TOMBSTONED / CAPTURE_REUSED / SAMPLE_NOT_READY"
+          },
+          "413": {
+            "description": "TOO_LARGE"
+          },
+          "503": {
+            "description": "BUSY: no implicit write replay"
+          }
+        },
+        "parameters": [
+          {
+            "name": "request",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "capture",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ControlToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Face-Token",
+        "description": "Backend only; separate from trusted capture key"
+      },
+      "CaptureToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Face-Token",
+        "description": "Trusted capture process only, never Flutter/browser"
+      }
+    },
+    "schemas": {
+      "Prepare": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operation": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "member": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "profile": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string",
+            "pattern": "^f02:[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$"
+          },
+          "predecessor": {
+            "type": "string",
+            "pattern": "^f02:[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$",
+            "nullable": true
+          }
+        },
+        "required": [
+          "operation",
+          "member",
+          "profile",
+          "reference",
+          "predecessor"
+        ]
+      },
+      "Finalize": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "member": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "profile": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string",
+            "pattern": "^f02:[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$"
+          },
+          "generation": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "member",
+          "profile",
+          "reference",
+          "generation"
+        ]
+      },
+      "Abort": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reference": {
+            "type": "string",
+            "pattern": "^f02:[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$"
+          }
+        },
+        "required": [
+          "reference"
+        ]
+      },
+      "Samples": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "frames": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 15,
+            "items": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        },
+        "required": [
+          "frames"
+        ]
+      },
+      "Capture": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "capture": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "frames": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5,
+            "items": {
+              "type": "string",
+              "format": "byte"
+            }
+          }
+        },
+        "required": [
+          "request",
+          "capture",
+          "frames"
+        ]
+      },
+      "Envelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "payload": {
+            "type": "string",
+            "description": "base64url JSON, no padding; sign exact ASCII payload; max8192 chars"
+          },
+          "signature": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "HMAC-SHA256, independent private signing key"
+          }
+        },
+        "required": [
+          "payload",
+          "signature"
+        ]
+      },
+      "State": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operation": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "member": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "profile": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string",
+            "pattern": "^f02:[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$"
+          },
+          "predecessor": {
+            "type": "string",
+            "pattern": "^f02:[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$",
+            "nullable": true
+          },
+          "generation": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PREPARED",
+              "STAGED",
+              "ACTIVE",
+              "REPLACED",
+              "ABORTED"
+            ]
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "SYNTHETIC_PROTOCOL",
+              "MODEL_INFERENCE_UNCALIBRATED"
+            ]
+          }
+        },
+        "required": [
+          "operation",
+          "member",
+          "profile",
+          "reference",
+          "predecessor",
+          "generation",
+          "status",
+          "provenance"
+        ]
+      }
+    }
+  },
+  "x-attestation": {
+    "algorithm": "HMAC-SHA256",
+    "signedBytes": "ASCII payload exactly as returned",
+    "fields": [
+      "request",
+      "capture",
+      "profile",
+      "reference",
+      "generation",
+      "outcome",
+      "issuedAt",
+      "expiresAt",
+      "model",
+      "provenance",
+      "liveness",
+      "admissionEnabled",
+      "score",
+      "margin"
+    ],
+    "ttlSeconds": 10,
+    "time": "UTC Unix integer seconds; one Clock read",
+    "replay": "same capture/request/image digest returns original envelope, expiry is not extended; different binding conflicts",
+    "admission": "Authenticity is necessary, not sufficient. Recheck ACTIVE DB owner/profile, external generation/state; NOT_PERFORMED never PASSED. Current Backend always refuses real admission."
+  }
+}

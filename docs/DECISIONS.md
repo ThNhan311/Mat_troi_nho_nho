@@ -62,3 +62,7 @@ User cho phép Core check-in + adapter test riêng nếu Face/liveness chưa đ�
 ## F02 — enrollment lifecycle đã giao24/11/2026
 
 Admin tại gym xác minh Member/consent; server-owned mapping, READY mới ACTIVE, re-enroll failure giữ old, revoke chặn Core ngay. [Contract/saga/V13/giới hạn](backend-handover/decisions/2026-11-24_F02_FACE_ENROLLMENT.md). Chỉ simulated adapter guard/default-off khi service thật chưa đủ staging/version/idempotency; không duyệt model/threshold/liveness hoặc thu biometric thật.
+
+## F03A — service transport/evaluation rehearsal24/11/2026
+
+Tái sử dụng Face pinfcabeba, buffalo_s riêng/CPU; operation binding/generation/staging/post-commit finalize/tombstone và signed capture proof. Backend remote chỉ protocol synthetic trên V13 hiện có; actual model/PAD/production threshold chưa admission. Không dữ liệu người thật mới hoặc migration/DB chung. [Contract/technical choices/recovery/giới hạn](backend-handover/decisions/2026-11-24_F03A_FACE_SERVICE.md), [chạy lại/evaluation dataset contract](backend-handover/24_FACE_SERVICE_QUICKSTART.md). Kết quả protocol và generated-input model smoke tách khỏi accuracy/PAD/camera.
