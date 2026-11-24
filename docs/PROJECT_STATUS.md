@@ -1,25 +1,27 @@
 # FitCenter — trạng thái tiếp tục
 
-Cập nhật24/11/2026, worktree Mat_troi_nho_nho-booking-integration; branch **feature/membership-renewal-simulator**, HEAD/base trước commit đóng **d2774c9b860e7d263b26edac1003502da8781790**. Xác minh Git khi tiếp tục; commit task tra history, file không tự chứa SHA của chính nó.
+Cập nhật24/11/2026, worktree Mat_troi_nho_nho-booking-integration; branch **feature/face-checkin-core**, HEAD/base trước commit đóng **4af8bb8a51908cc46643fba009659c3903c1dba3**. Git là thực tế; commit F01 tra history, file không tự chứa SHA của chính nó.
 
-## M-05/M-06 đã kiểm chứng trên test riêng
+## F-01 Core đã kiểm chứng, Face thật chưa hoàn thành
 
-Backend renewal PENDING/idempotency/snapshot và ADMIN simulator default-off, period CURRENT/NEXT/HISTORY, RECONCILIATION_REQUIRED khi tiền SUCCESS chưa thể cấp quyền. Member và Admin dùng màn/theme/navigation gốc; no blind replay, session epoch, owner/role kiểm phía server. Không gateway/tiền thật/refund/Face/Workout. Không đổi current plan sang next plan bằng ghi đè FK; Booking/D01 kiểm paid coverage không bắc cầu qua gap. M03/activation giữ nguyên semantics.
+Service-only check-in, opaque captureRef, Core tự resolve FacialProfile→members.id. Default gate tắt503; simulated adapter chỉ guarded face-checkin-rehearsal/private fixture/loopback. Kiểm ACTIVE account/profile/Membership/VN DATE/paid coverage; rolling30m, request idempotency/fingerprint, recheck deny/replay, concurrent kiosk và rollback. Owner history GET attendance/me dùng Member principal, không query owner từ client. Không đổi Membership/payment/Booking trong Core.
 
-Thực chạy23/11: scoped full **989 passed/0failed/0errors/0skipped**,36XMLsuites; focused71 là tập con. Flutter Member80/Admin110 passed, analyze0errors/0warnings (85infos mỗiapp),2Webbuilds đạt. PT Dart không đổi nên không chọn Flutter PT; Backend activation/PT/Booking/D01/M03/M04 có trong regression phù hợp. Ba PG profile cũ bị loại selector, integrated counterparts đã chạy; không gọi tất cả profiles đã test.
+Thực chạy **1043 passed/0failed/0errors/0skipped**,39XMLsuites scoped full JDK21/PG17.12; focused52 là tập con. Python49selected=27addon+22pinned Face state/auth tests. Không chọn3PGprofiles cũ (integrated counterparts chạy), không chọn Face detector/model/service/hardware suites, không đổi Dart nên không chạy Flutter. Core E2E **6adapter/14HTTP/7DB checks**,0failed/skipped: actual addon/worker/HTTP/PG nhưng **SIMULATED_TEST**, không UI/camera/recognition/liveness thật.
 
-E2E **29UI/18HTTP/10DB checks**,0failed/skipped; một backend/DB/mail sink, chỉ seed Admin. Member activate qua SMTP/UI thật, kế đến Member tạo PENDING→Admin UI SUCCESS→reload/login cùng UUID/CURRENT/NEXT; FAILED/CANCELLED/replay không cộng kỳ. UI early renewal dùng thời gian thật, boundary/expired dùng test Clock. [Evidence/traceability/hashes/ảnh](backend-handover/evidence/M05_M06_RENEWAL_SIMULATOR.md), [JSON](backend-handover/evidence/M05_M06_RESULTS.json), [quickstart](backend-handover/21_RENEWAL_SIMULATOR_QUICKSTART.md), [quyết định/contract](backend-handover/decisions/2026-11-23_M05_M06_RENEWAL_SIMULATOR.md), [OpenAPI](backend-handover/api/openapi.yaml).
+[Evidence/traceability](backend-handover/evidence/F01_CHECKIN_CORE.md), [JSON](backend-handover/evidence/F01_RESULTS.json), [hashes](backend-handover/evidence/F01_SOURCE_HASHES.json), [source Face thực tế](backend-handover/evidence/F01_FACE_SOURCE_SURVEY.md), [contract/khóa](backend-handover/decisions/2026-11-24_F01_CHECKIN_CORE.md), [quickstart](backend-handover/22_CHECKIN_CORE_QUICKSTART.md), [OpenAPI](backend-handover/api/openapi.yaml).
 
-## Schema, Git và tài nguyên
+## Source và schema
 
-V11 additive riêng; frozen candidate1–6,8–11, không sửa SQL đã áp/V7. Empty/history upgrade giữ payment periods, M03 receipt/snapshots và activation state. Default gates còn tắt; runner/profile renewal-integration-rehearsal guard loopback15441/role/namespace/locations. [Manifest ứng viên](../database/renewal-integration-candidate.json), [I01 release inventory](backend-handover/decisions/2026-11-23_I01_MIGRATION_CANDIDATE.md).
+Face sourcefcabeba tại origin/feature/face-1n-identification có detection/quality/state/embedding/1N/enrollment/service, chưa liveness/calibration. Kiosk origin/frontend0307242 còn mock; không coi README claim là source/runtime đã tích hợp. Addon hẹp kiểm protocol với export source pin private, không thay prototype hay mang toàn Face branch.26untracked cache/model files liên quan checkout gốc nguyên bytes; venv không pip update, bytecode/cache off.
 
-Thay đổi task đã review để commit/push feature riêng theo quyền; chưa merge/force. Bốn research22/11 untracked giữ ngoài commit; Face/survey tại checkout gốc089b5e2 nguyên vẹn. Không credential/private manifest/raw log/cache/SDK/build vào Git. Remote database ref558fb03; CI/CD inventory0workflow/run/deployment/webhook, không gọi CI pass.
+V12 additive request ledger location riêng, tận dụng Attendance V3; không sửa V1–V11 hoặc áp V7. Candidate1–6,8–12/11scripts, empty/history migration giữ old rows/CRC; default gates vẫn tắt. ReleaseReady=false; shared DB inventory chưa biết, V7 có thể đã áp nơi khác và bản558fb03 còn DROP periods chưa backfill. Cần đồng bộ mapping/backfill/backup/thứ tự V8–V12 trước canonical release, không out-of-order/history edit/clean/repair/renumber.
 
-Cleanup exactUUID22DB/54checks, lặp lại đạt; nonfixture rows/schema/history/volume giữ nguyên. Own backend/wrapper/2web/mail và DB đã dừng, task ports đóng, baseline/account volumes còn. Một lượt repeat từng bị stop sớm đã được mở lại và hoàn tất trước stop cuối. Không DB chung hoặc tài nguyên đồng đội bị đổi.
+## Git/tài nguyên và bước tiếp
 
-## Blocker release và bước tiếp theo
+Review để commit/push riêng theo quyền, không merge/force. Bốn research22/11 untracked giữ ngoài commit; checkout gốc/Face không reset/overwrite. Không credential/private manifest/raw log/build/SDK/export vào Git. Remote chỉorigin, CI/CD inventory0workflow/run/deployment/webhook; không gọi CI passed.
 
-**releaseReady=false**: chưa có shared DB inventory/checksum; V7 có thể đã áp nơi khác, bản database558fb03 DROP payment periods chưa backfill nên không chạy nguyên bản. Cần đồng bộ Duy mapping/backfill/backup/thứ tự artifact V7–V11, xử lý legacy provenance không rõ. Không out-of-order/history edits/clean/repair/đổi số migration để lách. Simulator chỉ dev/test, chưa gateway/refund/production mail/manual reconciliation workflow.
+Cleanup exactUUID20DB/44checks, lặp đạt xong mới stop; nonfixture rows/schema/history/volume giữ nguyên. Own backend/wrapper/DB dừng,18085/15441 đóng, volumes baseline/account còn, không DB chung hoặc tài nguyên đồng đội bị đổi.
 
-Bước tiếp: review nhánh renewal, thu inventory chỉ đọc từ chủ DB và chốt canonical migration trước rollout; không mở module khác khi chưa giao. [Quyết định tổng hợp](DECISIONS.md), [quy tắc repository](../AGENTS.md). I01 d2774c9, MEMBER activation9503110, M03 5399c57, M04 92328e0 là mốc lịch sử; không cộng số cũ vào lượt M05/M06.
+Core simulated đã đạt. Trước Face thật cần bằng chứng model/threshold/FAR-FRR, phương án liveness/PAD và capture/trust deployment; binding/enrollment/revoke atomic và đúng kiosk source. Chưa thu biometric người thật, chưa gallery sync/real camera UI. Không phát triển gateway/Workout hoặc module khác khi chưa giao. [Quyết định tổng hợp](DECISIONS.md), [AGENTS](../AGENTS.md).
+
+Mốc lịch sử: M05/M06 renewal4af8bb8 ([evidence](backend-handover/evidence/M05_M06_RENEWAL_SIMULATOR.md)), I01d2774c9, MEMBER activation9503110, M035399c57, M0492328e0. Không cộng989/80/110 hoặc UI của M05 vào F01.

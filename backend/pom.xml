@@ -164,6 +164,12 @@
                 <includes><include>V11__membership_renewal_simulator.sql</include></includes>
                 <filtering>false</filtering>
             </resource>
+            <resource>
+                <directory>../database/checkin-rehearsal</directory>
+                <targetPath>db/checkin-rehearsal</targetPath>
+                <includes><include>V12__checkin_request_ledger.sql</include></includes>
+                <filtering>false</filtering>
+            </resource>
 		</resources>
 
 		<plugins>

@@ -208,3 +208,5 @@ POST `/api/v1/auth/member-activation/request-otp`, `/verify-otp`, `/password`: p
 ## M-05/M-06 renewal — guarded rehearsal
 
 Member tạo quote PENDING bằng POST `/api/v1/memberships/{id}/renewals` + Idempotency-Key; đọc `/payments/me`, `/payments/{id}`, `/memberships/{id}/periods`. Admin đọc `/admin/payment-simulator/transactions`, events và POST results. Amount DTO mới là decimal string, result request là JSON number. Không tự cấp quyền từ UI; SUCCESS có thể cần đối soát. [Contract đầy đủ/error/lock/period semantics](decisions/2026-11-23_M05_M06_RENEWAL_SIMULATOR.md), [OpenAPI](api/openapi.yaml). API chỉ bật bằng guarded renewal profile, mặc định503; không gateway. Các nhận định renewal chưa có phía trên là baseline lịch sử.
+
+F-01 Core check-in/history: [contract](decisions/2026-11-24_F01_CHECKIN_CORE.md), [OpenAPI](api/openapi.yaml), [quickstart](22_CHECKIN_CORE_QUICKSTART.md), [evidence](evidence/F01_CHECKIN_CORE.md). Adapter identity chỉ simulated/test guarded default-off; không Face ID/liveness E2E.

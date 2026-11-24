@@ -17,3 +17,5 @@ Quick start: sau khi branch được công bố, làm theo [hướng dẫn thủ
 Đối chiếu commit với người bàn giao, đọc [setup thủ công](12_MANUAL_QUICKSTART.md), [API](05_API_DOCUMENTATION.md), [test](06_TESTING_GUIDE.md) và [blocker](07_BUSINESS_RULES_AND_BLOCKERS.md). Trước khi viết code, kiểm tra status/worktree, đọc source và migration liên quan, xác nhận task và quy tắc với nhóm, chuẩn bị DB test riêng. Automation được hoãn; các script nháp bị chặn không thuộc bộ công bố mặc định, xem [trạng thái](scripts/README.md). Người nhận cần tự xác nhận backend chạy được trên máy mình.
 
 M-05/M-06 renewal/simulator (guarded/default-off): [quickstart](21_RENEWAL_SIMULATOR_QUICKSTART.md), [contract](decisions/2026-11-23_M05_M06_RENEWAL_SIMULATOR.md), [evidence](evidence/M05_M06_RENEWAL_SIMULATOR.md). Không dùng số I01 làm kết quả lượt này.
+
+F-01 Core check-in/history: [contract](decisions/2026-11-24_F01_CHECKIN_CORE.md), [OpenAPI](api/openapi.yaml), [quickstart](22_CHECKIN_CORE_QUICKSTART.md), [evidence](evidence/F01_CHECKIN_CORE.md). Adapter identity chỉ simulated/test guarded default-off; không Face ID/liveness E2E.

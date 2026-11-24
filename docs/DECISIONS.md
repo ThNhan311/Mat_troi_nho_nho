@@ -54,3 +54,7 @@ Không thêm quy tắc nghiệp vụ hoặc sửa migration đã công bố. Fro
 ## M-05/M-06 — quyết định đã phê duyệt23/11/2026
 
 Gia hạn giữ UUID, ngày VN inclusive, early nối kỳ trả tiền/expired bắt đầu hôm nay, snapshot tại initiation, gói khác chỉ kỳ mới, SUSPENDED/CANCELLED cần đối soát nếu đã thu tiền. Hai SUCCESS độc lập append tuần tự, idempotency/event replay không nhân đôi. Simulator default-off, ADMIN ACTIVE/test-only. Các giới hạn “renewal chưa triển khai” ở snapshot trước được thay trong profile rehearsal này; chưa gateway/refund/production rollout. [Contract/quyết định/khóa/schema/release gates](backend-handover/decisions/2026-11-23_M05_M06_RENEWAL_SIMULATOR.md).
+
+## F-01 — Core check-in đã giao24/11/2026
+
+User cho phép Core check-in + adapter test riêng nếu Face/liveness chưa đủ bằng chứng. V3 Attendance, rolling30phút và eligibility hiện tại; request ID chống replay/khác payload; owner history qua principal. F01 không chọn model/threshold mới hoặc thu biometric thật. [Contract/khóa/V12/giới hạn](backend-handover/decisions/2026-11-24_F01_CHECKIN_CORE.md), [source Face thực tế](backend-handover/evidence/F01_FACE_SOURCE_SURVEY.md). Các giới hạn “không Face” trong snapshot cũ được thay chỉ trong phạm vi Core/test addon này; chưa production Face rollout.

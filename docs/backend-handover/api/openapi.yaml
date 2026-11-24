@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: membership-renewal-simulator-working-tree
+  version: face-checkin-core-working-tree
   description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation mặc định503; profile activation-rehearsal đã đạt HTTP/PostgreSQL/SMTP/UI trên DB test riêng với V8 ở location riêng, không production rollout. M-03 thêm counter receipt/initial Membership trên membership-rehearsal default-off; M05/M06 thêm renewal/simulator default-off trên profile guard riêng; gateway thật chưa có.
 servers:
 - url: http://localhost:18081
@@ -13,6 +13,118 @@ servers:
 - url: http://localhost:18084
   description: Integrated guarded Member/PT/M03 rehearsal only, no canonical release
 paths:
+  /api/v1/check-ins/face:
+    post:
+      operationId: checkinFromTrustedTestAdapter
+      summary: Registered service/kiosk credential only; simulated identity rehearsal
+      description: 'Default503. Guarded face-checkin-rehearsal JSON takes only opaque
+        captureRef/requestId, never client memberId. Real multipart camera contract
+        is deferred. HTTP200 does not imply access: read accessAllowed and reason. Within
+        rolling30min (<last+30m) admission can be duplicate without insertion; exactly30min
+        may insert. Replay never inserts and rechecks current eligibility; originally
+        denied request remains denied. simulatedIdentity always true.'
+      security:
+      - checkinKioskId: []
+        checkinKioskToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckinRehearsalRequest'
+      responses:
+        '200':
+          description: Core decision; CHECKED_IN, duplicate, replay or denial; not real
+            Face authentication
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckinCoreResult'
+        '400':
+          description: ERR_VALIDATION; strict UUID/JSON, no owner/status/score injection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: ERR_UNAUTHORIZED; normal Member/Admin/PT JWT cannot act as kiosk
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: ERR_CHECKIN_REQUEST_REUSED or ERR_CHECKIN_CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: ERR_CHECKIN_UNAVAILABLE; no default fake recognition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/attendance/me:
+    get:
+      operationId: readOwnedAttendance
+      summary: ACTIVE MEMBER reads own Attendance by principal members.id
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+        description: Inclusive instant, ISO8601 with offset
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+        description: Exclusive instant, must exceed from
+      responses:
+        '200':
+          description: Own rows descending checkedInAt/id; empty array valid. V3 source
+            FACE alone does not mean verified identity; check verificationMode.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - no-store
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceReadDto'
+        '400':
+          description: ERR_VALIDATION; invalid/missing range
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing/invalid/inactive account token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Wrong role or no ACTIVE Member profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/memberships/{id}/renewals:
     post:
       operationId: initiateMembershipRenewal
@@ -2041,11 +2153,127 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   securitySchemes:
+    checkinKioskId:
+      type: apiKey
+      in: header
+      name: X-Kiosk-Id
+      description: Registered private service identity, rehearsal only
+    checkinKioskToken:
+      type: apiKey
+      in: header
+      name: X-Kiosk-Token
+      description: Private service credential, never embedded in Web apps
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    CheckinRehearsalRequest:
+      type: object
+      required:
+      - requestId
+      - captureRef
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        captureRef:
+          type: string
+          format: uuid
+      additionalProperties: false
+    CheckinCoreResult:
+      type: object
+      required:
+      - requestId
+      - recognized
+      - accessAllowed
+      - attendanceCreated
+      - memberId
+      - attendanceId
+      - checkedAt
+      - checkedInAt
+      - reason
+      - replayed
+      - simulatedIdentity
+      - verificationMode
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        recognized:
+          type: boolean
+        accessAllowed:
+          type: boolean
+        attendanceCreated:
+          type: boolean
+        memberId:
+          type: string
+          format: uuid
+          nullable: true
+        attendanceId:
+          type: string
+          format: uuid
+          nullable: true
+        checkedAt:
+          type: string
+          format: date-time
+          description: Server UTC, microsecond precision
+        checkedInAt:
+          type: string
+          format: date-time
+          description: Server UTC, microsecond precision
+          nullable: true
+        reason:
+          type: string
+          enum:
+          - CHECKED_IN
+          - DUPLICATE_WINDOW
+          - REQUEST_REPLAY
+          - REQUEST_PREVIOUSLY_DENIED
+          - NO_MATCH
+          - UNKNOWN_IDENTITY
+          - FACE_PROFILE_INACTIVE
+          - ACCOUNT_INACTIVE
+          - MEMBERSHIP_INACTIVE
+          - PAID_COVERAGE_MISSING
+        replayed:
+          type: boolean
+        simulatedIdentity:
+          type: boolean
+          enum:
+          - true
+        verificationMode:
+          type: string
+          enum:
+          - SIMULATED_TEST
+    AttendanceReadDto:
+      type: object
+      required:
+      - id
+      - checkedInAt
+      - source
+      - kioskId
+      - verificationMode
+      properties:
+        id:
+          type: string
+          format: uuid
+        checkedInAt:
+          type: string
+          format: date-time
+          description: Server UTC, microsecond precision
+        source:
+          type: string
+          enum:
+          - FACE
+        kioskId:
+          type: string
+          nullable: true
+        verificationMode:
+          type: string
+          enum:
+          - SIMULATED_TEST
+          - UNVERIFIED_LEGACY
     RenewalCreate:
       type: object
       required:

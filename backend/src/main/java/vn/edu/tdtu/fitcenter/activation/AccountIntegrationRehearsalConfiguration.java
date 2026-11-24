@@ -9,7 +9,7 @@ import javax.sql.DataSource;
 
 /** Fails before Flyway can apply any DDL to a non-rehearsal target. */
 @Configuration
-@Profile({"account-integration-rehearsal","renewal-integration-rehearsal"})
+@Profile({"account-integration-rehearsal","renewal-integration-rehearsal","face-checkin-rehearsal"})
 public class AccountIntegrationRehearsalConfiguration {
     public static void verify(DataSource source, boolean verified) {
         if (!verified) throw new IllegalStateException("Run the guarded activation rehearsal runner");
@@ -33,9 +33,16 @@ public class AccountIntegrationRehearsalConfiguration {
             Set<String> locations = new HashSet<>();
             for (var l : flyway.getConfiguration().getLocations()) locations.add(l.getDescriptor());
             Set<String> expected=new HashSet<>(Set.of("classpath:db/migration", "classpath:db/activation-rehearsal", "classpath:db/membership-rehearsal", "classpath:db/member-activation-rehearsal"));
-            if(Arrays.asList(env.getActiveProfiles()).contains("renewal-integration-rehearsal")){
+            if(Arrays.asList(env.getActiveProfiles()).contains("renewal-integration-rehearsal") || Arrays.asList(env.getActiveProfiles()).contains("face-checkin-rehearsal")){
                 if(!env.getProperty("fitcenter.renewal.guard-verified",Boolean.class,false))throw new IllegalStateException("Renewal runner verification required");
                 expected.add("classpath:db/renewal-rehearsal");
+            }
+            if(Arrays.asList(env.getActiveProfiles()).contains("face-checkin-rehearsal")) {
+                if(env.getActiveProfiles().length!=1 || !env.getProperty("fitcenter.checkin.guard-verified",Boolean.class,false)
+                    || !env.getProperty("fitcenter.checkin.enabled",Boolean.class,false)
+                    || !env.getProperty("fitcenter.checkin.test-adapter.enabled",Boolean.class,false))
+                    throw new IllegalStateException("Explicit isolated F01 runner required");
+                expected.add("classpath:db/checkin-rehearsal");
             }
             if (flyway.getConfiguration().isOutOfOrder() || !locations.equals(expected))
                 throw new IllegalStateException("Unexpected Flyway rehearsal locations/order");
