@@ -52,19 +52,9 @@ Full: c?ng command th?m `-FullSuite`, truy?n baseline DB password ?? guard qua *
 
 ?? ki?m pinned state/auth, export ??ng tests/conftest t? Face pin ra private v? ch?y command ri?ng t?i private test directory v?i PYTHONPATH worktree; kh?ng g?p ???ng d?n C: v? D: l?m pytest scan root Windows. C?c module dependency ?? import nguy?n pin trong worktree. Kh?ng ch?y camera/detector UI khi ch?a ???c ph?p d? li?u.
 
-## Evaluation ? ch? khi c? dataset ???c ph?p
+## Evaluation — dùng workflow F03B đã khóa cấu hình
 
-Ch?a c? dataset biometric ???c cung c?p n?n c?c command b?n d??i l? h??ng d?n, **ch?a ch?y accuracy**. Manifest JSON private: `authorizedForEvaluation:true`, `datasetVersion`, `samples:[{id,role,subject,path,sha256}]`. role=`gallery|probe`; m?i subject l? pseudonymous ID (unknown c?ng c? ID ri?ng, kh?ng c? trong gallery). Kh?ng PII/?nh/vector trong Git; file relative n?m trong manifest directory; hash/ID kh?ng tr?ng. Calibration v? evaluation kh?ng tr?ng ng??i/hash; trong m?i split gallery v? probe c?ng ng??i nh?ng ?nh kh?c. Chu?n b? nhi?u session/?i?u ki?n/unknown cohort ph? h?p kiosk; quy?n s? d?ng/consent ph?i c? ngu?n th?t, flag kh?ng t? t?o consent.
-
-```powershell
-& $python -m face.service_v2.evaluate --phase calibration --manifest "$private/calibration/manifest.json" `
-  --model-root "$private/model-root" --threshold $candidateThreshold --margin $candidateMargin --output "$private/calibration-result.json"
-& $python -m face.service_v2.evaluate --phase evaluation --manifest "$private/evaluation/manifest.json" `
-  --calibration-manifest "$private/calibration/manifest.json" --model-root "$private/model-root" `
-  --threshold $chosenThreshold --margin $chosenMargin --output "$private/evaluation-result.json"
-```
-
-Operator ch?n candidate tr?n calibration, gi? evaluation ??c l?p; harness kh?ng t? duy?t threshold. B?o genuine/impostor identity-max scores, score FA/FR, 1:N FNIR/FPIR/rank1/wrong/ambiguous/unknown rejection v? latency. Kh?ng thay identification metrics b?ng pair accuracy; PAD v?n NOT_PERFORMED.
+Từ F03B, CLI `face.service_v2.evaluate --phase evaluation` từ chối chạy với threshold nhập trực tiếp. Dùng [camera/session/split/calibration/freeze/evaluation quickstart](25_FACE_CAMERA_EVALUATION_QUICKSTART.md). Hàm metrics 1:N F03A được tái sử dụng; evidence F03A là kết quả lịch sử tại commit của nó, không phải accuracy mới. Chưa có dataset được phép nên không có accuracy hoặc threshold production. Liveness vẫn NOT_PERFORMED, không admission.
 
 ## Cleanup
 

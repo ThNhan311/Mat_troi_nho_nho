@@ -68,6 +68,7 @@ def separate(evaluation, evaluation_hashes, calibration, calibration_hashes):
 
 def main():
     a=argparse.ArgumentParser();a.add_argument('--phase',choices=['calibration','evaluation'],required=True);a.add_argument('--manifest',type=Path,required=True);a.add_argument('--calibration-manifest',type=Path);a.add_argument('--model-root',type=Path,required=True);a.add_argument('--threshold',type=float,required=True);a.add_argument('--margin',type=float,required=True);a.add_argument('--output',type=Path,required=True);v=a.parse_args()
+    if v.phase=='evaluation':a.error('F03B: evaluation requires sealed sessions and frozen calibration; use python -m face.evaluation.study evaluate (no threshold override)')
     d,hashes,digest=manifest(v.manifest);calibration=None;calibration_version=None
     if v.phase=='evaluation':
         if not v.calibration_manifest:a.error('evaluation requires separate calibration manifest')

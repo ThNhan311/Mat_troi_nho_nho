@@ -1,0 +1,126 @@
+{
+  "baseCommit": "70ca11ce4eee068b1b25147e829b0d804e105a53",
+  "branch": "feature/face-camera-evaluation",
+  "sourceManifest": "F03B_SOURCE_HASHES.json",
+  "selectedSuites": [
+    {
+      "suite": "repo: 43 F03B + 31 F03A service/evaluator + 27 F01 addon",
+      "tests": 101,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 101,
+      "startedAt": "2026-11-24T23:39:30.804891+07:00",
+      "durationSeconds": 34.512,
+      "junitSha256": "0852ceea62b20b43c293b52c7a34c795cfbb13726596962fc2a171d0c2ba5766"
+    },
+    {
+      "suite": "pinned fcabeba: camera/selector/state/auth; exported to private directory",
+      "tests": 48,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "passed": 47,
+      "startedAt": "2026-11-24T23:37:18.311268+07:00",
+      "durationSeconds": 0.208,
+      "junitSha256": "3bf79551fb6b37782ab44deb7a8dc2a298e7834f997edd05ddd30848f9d8d751"
+    }
+  ],
+  "focusedNotAdded": true,
+  "manualSkip": {
+    "test": "test_camera.test_T13_physical_webcam_manual",
+    "reason": "Manual Windows webcam preview/unplug check requires operator and physical device; mocks tested in T13"
+  },
+  "cameraIoProbe": {
+    "cameraIndex": 0,
+    "framesRead": 3,
+    "savedImages": 0,
+    "faceInference": false,
+    "previewDisplayed": false,
+    "backend": "DSHOW",
+    "opencv": "4.11.0",
+    "frameShape": [
+      480,
+      640,
+      3
+    ],
+    "warning": "",
+    "released": true,
+    "elapsedMs": 1375.0
+  },
+  "captureRuntimeSmoke": {
+    "runtime": {
+      "pack": "buffalo_s",
+      "artifacts": {
+        "det_500m.onnx": {
+          "present": true,
+          "sha256": "5e4447f50245bbd7966bd6c0fa52938c61474a04ec7def48753668a9d8b4ea3a"
+        },
+        "w600k_mbf.onnx": {
+          "present": true,
+          "sha256": "9cc6e4a75f0e2bf0b1aed94578f144d15175f357bdc05e815e5c4a02b319eb4f"
+        }
+      },
+      "dependencies": {
+        "numpy": "2.2.6",
+        "onnxruntime": "1.31.1",
+        "insightface": "2.1",
+        "opencv-contrib-python": "4.11.0.86",
+        "fastapi": "0.162.0",
+        "uvicorn": "0.54.0",
+        "cryptography": "50.0.2"
+      },
+      "liveness": "NOT_PERFORMED",
+      "ready": true
+    },
+    "syntheticNonPersonInput": true,
+    "detectedBoxes": 0,
+    "quality": {
+      "ready": false,
+      "faceCount": 0,
+      "stable": false,
+      "hints": [
+        "NO_FACE"
+      ],
+      "blurVariance": null,
+      "brightness": null
+    },
+    "realPeopleInference": false,
+    "liveness": "NOT_PERFORMED",
+    "admissionEnabled": false
+  },
+  "realDataset": {
+    "authorizedDatasetProvided": false,
+    "realPersonImagesSaved": 0,
+    "realPersonEmbeddingsGenerated": 0,
+    "accuracyRun": false,
+    "genuineScores": null,
+    "impostorScores": null,
+    "identificationMetrics": null,
+    "biometricLatency": null,
+    "productionThresholdApproved": false
+  },
+  "notRun": [
+    "operator visual preview/mirror/unplug check",
+    "real-person consented capture and independent sessions",
+    "biometric calibration/evaluation or PAD",
+    "camera-to-backend admission/E2E",
+    "Backend/DB/Flutter regression (no changed executable Java/SQL/Dart)"
+  ],
+  "liveness": "NOT_PERFORMED",
+  "admissionEnabled": false,
+  "resources": {
+    "cameraReleased": true,
+    "startedBackendDbOrService": false,
+    "defaultGatesChanged": false,
+    "privateGeneratedUnitDataOutsideGit": true
+  },
+  "ciInventory": {
+    "checkedAt": "2026-11-24T16:43:19.5149256Z",
+    "workflows": 0,
+    "runs": 0,
+    "deployments": 0,
+    "webhooks": 0,
+    "notCIPass": true
+  }
+}

@@ -66,3 +66,7 @@ Admin tại gym xác minh Member/consent; server-owned mapping, READY mới ACTI
 ## F03A — service transport/evaluation rehearsal24/11/2026
 
 Tái sử dụng Face pinfcabeba, buffalo_s riêng/CPU; operation binding/generation/staging/post-commit finalize/tombstone và signed capture proof. Backend remote chỉ protocol synthetic trên V13 hiện có; actual model/PAD/production threshold chưa admission. Không dữ liệu người thật mới hoặc migration/DB chung. [Contract/technical choices/recovery/giới hạn](backend-handover/decisions/2026-11-24_F03A_FACE_SERVICE.md), [chạy lại/evaluation dataset contract](backend-handover/24_FACE_SERVICE_QUICKSTART.md). Kết quả protocol và generated-input model smoke tách khỏi accuracy/PAD/camera.
+
+## F03B — camera thủ công và evaluation, 24/11/2026
+
+Người dùng cho chuẩn bị camera và dataset được phép, không tự ghi người thật. Chỉ lưu từng still sau consent + thao tác chủ động; dữ liệu ngoài Git. Tái sử dụng model/weights F03A, khóa identity/session split và threshold chọn từ calibration trước evaluation; không tự duyệt threshold production/PAD/admission. [Quyết định kỹ thuật và giới hạn](backend-handover/decisions/2026-11-24_F03B_CAMERA_EVALUATION.md), [hướng dẫn operator](backend-handover/25_FACE_CAMERA_EVALUATION_QUICKSTART.md).
