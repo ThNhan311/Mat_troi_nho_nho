@@ -10,6 +10,8 @@ import java.time.*;
 
 @Component
 public class BookingEligibilityValidator {
+    private vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService periods;
+    @org.springframework.beans.factory.annotation.Autowired public void setPeriods(vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService periods){this.periods=periods;}
     private static final ZoneId BUSINESS_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     public void validateMembership(Membership membership, Instant start, Instant end, Instant now) {
@@ -21,6 +23,11 @@ public class BookingEligibilityValidator {
         Instant until = membership.getExpiryDate().plusDays(1).atStartOfDay(BUSINESS_ZONE).toInstant();
         if (now.isBefore(from) || !now.isBefore(until)) {
             throw conflict("ERR_MEMBERSHIP_INACTIVE", "Membership is not active on the current business date");
+        }
+        if(periods!=null&&periods.enabled()){
+            LocalDate today=LocalDate.ofInstant(now,BUSINESS_ZONE);
+            if(!periods.covered(membership.getId(),today,today))throw conflict("ERR_MEMBERSHIP_INACTIVE","No paid coverage today");
+            if(!periods.covered(membership.getId(),LocalDate.ofInstant(start,BUSINESS_ZONE),LocalDate.ofInstant(end.minusNanos(1),BUSINESS_ZONE)))throw conflict("ERR_MEMBERSHIP_NOT_COVERED","Paid periods must cover the entire session without gaps");
         }
         // DATE expiry is inclusive; a half-open session may end exactly at the next local midnight.
         if (start.isBefore(from) || end.isAfter(until)) {

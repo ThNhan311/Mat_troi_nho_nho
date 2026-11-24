@@ -1,3 +1,6 @@
+import 'renewal_page.dart';
+import '../services/renewal_service.dart';
+
 import 'package:flutter/material.dart';
 
 import '../services/membership_service.dart';
@@ -128,9 +131,30 @@ class _MembershipPageState extends State<MembershipPage> {
                 key: Key('membership-empty'),
               ),
             for (final row in memberships)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: card(context, row),
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: card(context, row),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context)
+                        .push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => RenewalPage(
+                              service: RenewalService(widget.service.api),
+                              membershipId: row.id,
+                            ),
+                          ),
+                        )
+                        .then((_) {
+                          if (mounted && widget.service.api.authenticated)
+                            load();
+                        }),
+                    child: const Text('Gia hạn / kỳ sử dụng'),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
             const SizedBox(height: 28),
             const SectionTitle('Gia hạn gói hội viên'),
@@ -142,7 +166,9 @@ class _MembershipPageState extends State<MembershipPage> {
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: const Text('Gia hạn và thanh toán: Chưa khả dụng.'),
+              child: const Text(
+                'Chọn Membership để xem kỳ sử dụng và tạo giao dịch gia hạn. Thanh toán mô phỏng, không thu tiền thật.',
+              ),
             ),
           ],
         ),

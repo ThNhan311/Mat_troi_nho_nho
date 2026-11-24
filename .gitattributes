@@ -9,3 +9,5 @@
 /database/activation-rehearsal/V8__pt_account_activation.sql text eol=lf
 /database/membership-rehearsal/V9__membership_initial_activation.sql text eol=crlf
 /database/member-activation-rehearsal/V10__member_account_activation.sql text eol=crlf
+
+/database/renewal-rehearsal/V11__membership_renewal_simulator.sql text eol=lf

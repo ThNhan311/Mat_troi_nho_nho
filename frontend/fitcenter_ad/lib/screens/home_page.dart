@@ -1,3 +1,5 @@
+import 'payment_simulator_page.dart';
+import '../services/payment_simulator_service.dart';
 import 'initial_activation_page.dart';
 import '../services/initial_activation_service.dart';
 import '../services/booking_policy_service.dart';
@@ -191,6 +193,19 @@ class AdminHomePage extends StatelessWidget {
                     ),
                   );
                 },
+              ),
+              _AdminMenuCard(
+                icon: Icons.payments_outlined,
+                title: 'Thanh toán mô phỏng',
+                subtitle:
+                    'Dev/test: xử lý kết quả gia hạn, không thu tiền thật',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => PaymentSimulatorPage(
+                      service: PaymentSimulatorService(service.api),
+                    ),
+                  ),
+                ),
               ),
               _AdminMenuCard(
                 icon: Icons.receipt_long_outlined,

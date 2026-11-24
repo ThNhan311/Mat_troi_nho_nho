@@ -204,3 +204,7 @@ POST `/api/v1/admin/members/{memberId}/activate-membership` (201 hoặc200 repla
 ## MEMBER account activation — rehearsal default-off
 
 POST `/api/v1/auth/member-activation/request-otp`, `/verify-otp`, `/password`: public202→200grant→200ACTIVE, không JWT. Chỉ roleMEMBER DISABLED có profile và nguồn Admin tạo; không cần Membership/không mutate payment. Role challenge/grant tách PT, cùng expiry/attempt/resend/lock/password contract. [Chi tiết](decisions/2026-11-23_MEMBER_ACCOUNT_ACTIVATION.md), [OpenAPI](api/openapi.yaml), [kiểm chứng](evidence/MEMBER_ACCOUNT_ACTIVATION.md).
+
+## M-05/M-06 renewal — guarded rehearsal
+
+Member tạo quote PENDING bằng POST `/api/v1/memberships/{id}/renewals` + Idempotency-Key; đọc `/payments/me`, `/payments/{id}`, `/memberships/{id}/periods`. Admin đọc `/admin/payment-simulator/transactions`, events và POST results. Amount DTO mới là decimal string, result request là JSON number. Không tự cấp quyền từ UI; SUCCESS có thể cần đối soát. [Contract đầy đủ/error/lock/period semantics](decisions/2026-11-23_M05_M06_RENEWAL_SIMULATOR.md), [OpenAPI](api/openapi.yaml). API chỉ bật bằng guarded renewal profile, mặc định503; không gateway. Các nhận định renewal chưa có phía trên là baseline lịch sử.

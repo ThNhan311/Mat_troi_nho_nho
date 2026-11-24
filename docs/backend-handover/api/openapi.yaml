@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: member-account-activation-working-tree
-  description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation mặc định503; profile activation-rehearsal đã đạt HTTP/PostgreSQL/SMTP/UI trên DB test riêng với V8 ở location riêng, không production rollout. M-03 thêm counter receipt/initial Membership trên membership-rehearsal default-off; renewal/gateway chưa có.
+  version: membership-renewal-simulator-working-tree
+  description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation mặc định503; profile activation-rehearsal đã đạt HTTP/PostgreSQL/SMTP/UI trên DB test riêng với V8 ở location riêng, không production rollout. M-03 thêm counter receipt/initial Membership trên membership-rehearsal default-off; M05/M06 thêm renewal/simulator default-off trên profile guard riêng; gateway thật chưa có.
 servers:
 - url: http://localhost:18081
   description: Default profile, activation503
@@ -13,6 +13,452 @@ servers:
 - url: http://localhost:18084
   description: Integrated guarded Member/PT/M03 rehearsal only, no canonical release
 paths:
+  /api/v1/memberships/{id}/renewals:
+    post:
+      operationId: initiateMembershipRenewal
+      summary: MEMBER ACTIVE creates PENDING renewal; no date mutation
+      description: Guarded renewal-integration-rehearsal only; default503. See M05/M06
+        decision for payment/period/reconciliation semantics.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Same key/payload replays same transaction with latest state;
+            snapshot never repriced
+          headers:
+            Cache-Control: &renewalpath001
+              schema:
+                type: string
+                enum:
+                - no-store
+            Idempotency-Replayed:
+              schema:
+                type: boolean
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenewalPaymentDto'
+        '400':
+          description: Strict input/UUID/scale validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing/invalid/inactive-account token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Wrong ACTIVE role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Missing or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Stable error.code; result mismatch/conflict traced without granting
+            entitlement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: ERR_RENEWAL_UNAVAILABLE; feature gate off
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '201':
+          description: Created once, snapshot amount/duration, PENDING
+          headers:
+            Cache-Control: *renewalpath001
+            Idempotency-Replayed:
+              schema:
+                type: boolean
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenewalPaymentDto'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: &renewalpath002
+          type: string
+          format: uuid
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema: *renewalpath002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenewalCreate'
+  /api/v1/memberships/{id}/periods:
+    get:
+      operationId: readOwnedPaidPeriods
+      summary: MEMBER ACTIVE reads CURRENT/NEXT/HISTORY by Vietnam date
+      description: Guarded renewal-integration-rehearsal only; default503. See M05/M06
+        decision for payment/period/reconciliation semantics.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Server snapshot; no client entitlement inference
+          headers: &renewalpath003
+            Cache-Control: *renewalpath001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipPeriodsDto'
+        '400':
+          description: Strict input/UUID/scale validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing/invalid/inactive-account token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Wrong ACTIVE role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Missing or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Stable error.code; result mismatch/conflict traced without granting
+            entitlement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: ERR_RENEWAL_UNAVAILABLE; feature gate off
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *renewalpath002
+  /api/v1/payments/me:
+    get:
+      operationId: readOwnRenewalPayments
+      summary: MEMBER ACTIVE reads renewal transactions only
+      description: Guarded renewal-integration-rehearsal only; default503. See M05/M06
+        decision for payment/period/reconciliation semantics.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Server snapshot; no client entitlement inference
+          headers: *renewalpath003
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RenewalPaymentDto'
+        '400':
+          description: Strict input/UUID/scale validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing/invalid/inactive-account token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Wrong ACTIVE role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Missing or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Stable error.code; result mismatch/conflict traced without granting
+            entitlement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: ERR_RENEWAL_UNAVAILABLE; feature gate off
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/payments/{id}:
+    get:
+      operationId: readOwnedRenewalPayment
+      summary: MEMBER ACTIVE reads one owned transaction
+      description: Guarded renewal-integration-rehearsal only; default503. See M05/M06
+        decision for payment/period/reconciliation semantics.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Server snapshot; no client entitlement inference
+          headers: *renewalpath003
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenewalPaymentDto'
+        '400':
+          description: Strict input/UUID/scale validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing/invalid/inactive-account token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Wrong ACTIVE role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Missing or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Stable error.code; result mismatch/conflict traced without granting
+            entitlement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: ERR_RENEWAL_UNAVAILABLE; feature gate off
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *renewalpath002
+  /api/v1/admin/payment-simulator/transactions:
+    get:
+      operationId: listSimulatorTransactions
+      summary: ADMIN ACTIVE simulator transactions; no real money
+      description: Guarded renewal-integration-rehearsal only; default503. See M05/M06
+        decision for payment/period/reconciliation semantics.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Server snapshot; no client entitlement inference
+          headers: *renewalpath003
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RenewalPaymentDto'
+        '400':
+          description: Strict input/UUID/scale validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing/invalid/inactive-account token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Wrong ACTIVE role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Missing or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Stable error.code; result mismatch/conflict traced without granting
+            entitlement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: ERR_RENEWAL_UNAVAILABLE; feature gate off
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/admin/payment-simulator/transactions/{id}/events:
+    get:
+      operationId: readSimulatorEventTraces
+      summary: ADMIN ACTIVE reads controlled result traces
+      description: Guarded renewal-integration-rehearsal only; default503. See M05/M06
+        decision for payment/period/reconciliation semantics.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Server snapshot; no client entitlement inference
+          headers: *renewalpath003
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulatorEventTrace'
+        '400':
+          description: Strict input/UUID/scale validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing/invalid/inactive-account token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Wrong ACTIVE role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Missing or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Stable error.code; result mismatch/conflict traced without granting
+            entitlement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: ERR_RENEWAL_UNAVAILABLE; feature gate off
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *renewalpath002
+  /api/v1/admin/payment-simulator/transactions/{id}/results:
+    post:
+      operationId: applySimulatorResult
+      summary: ADMIN ACTIVE simulates a verified result exactly once
+      description: Guarded renewal-integration-rehearsal only; default503. See M05/M06
+        decision for payment/period/reconciliation semantics.
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: SUCCESS may be RECONCILIATION_REQUIRED; only APPLIED grants one
+            paid period
+          headers:
+            Cache-Control: *renewalpath001
+            Idempotency-Replayed:
+              schema:
+                type: boolean
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulatorResultDto'
+        '400':
+          description: Strict input/UUID/scale validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Missing/invalid/inactive-account token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Wrong ACTIVE role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Missing or not owned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Stable error.code; result mismatch/conflict traced without granting
+            entitlement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: ERR_RENEWAL_UNAVAILABLE; feature gate off
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *renewalpath002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulatorResultCommand'
   /api/v1/admin/members:
     get:
       operationId: listAdminMembers
@@ -29,7 +475,7 @@ paths:
     post:
       operationId: createInactiveMemberAccount
       summary: ADMIN ACTIVE tạo User DISABLED + Member profile nguyên tử
-      description: Không kích hoạt membership hoặc triển khai Member first activation. Role/UUID server; không nhận password/status/owner. Không replay POST chưa rõ kết quả.
+      description: Không kích hoạt membership. MEMBER first activation là luồng email OTP riêng. Role/UUID server; không nhận password/status/owner. Không replay POST chưa rõ kết quả.
       security: [{bearerAuth: []}]
       requestBody:
         required: true
@@ -1600,6 +2046,234 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    RenewalCreate:
+      type: object
+      required:
+      - planId
+      properties:
+        planId: &renewalschema001
+          type: string
+          format: uuid
+      additionalProperties: false
+    SimulatorResultCommand:
+      type: object
+      required:
+      - eventId
+      - providerRef
+      - amount
+      - currency
+      - status
+      properties:
+        eventId: *renewalschema001
+        providerRef:
+          type: string
+          minLength: 1
+          maxLength: 100
+        amount:
+          type: number
+          minimum: 0
+          maximum: 9999999999.99
+          multipleOf: 0.01
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          description: Must match snapshot VND or a controlled409 is recorded
+        status:
+          type: string
+          enum:
+          - SUCCESS
+          - FAILED
+          - CANCELLED
+      additionalProperties: false
+    RenewalPaymentDto:
+      type: object
+      required:
+      - id
+      - requestId
+      - memberId
+      - membershipId
+      - planId
+      - planName
+      - amount
+      - durationDays
+      - currency
+      - provider
+      - providerRef
+      - status
+      - fulfillmentStatus
+      - reconciliationReason
+      - periodId
+      - periodStart
+      - periodEnd
+      - createdAt
+      - processedAt
+      properties:
+        id: *renewalschema001
+        requestId: *renewalschema001
+        memberId: *renewalschema001
+        membershipId: *renewalschema001
+        planId: *renewalschema001
+        planName:
+          type: string
+        amount:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,9})\.[0-9]{2}$
+          description: Exact decimal NUMERIC(12,2), not binary float
+        durationDays:
+          type: integer
+          format: int32
+          minimum: 1
+        currency:
+          type: string
+          enum:
+          - VND
+        provider:
+          type: string
+          enum:
+          - SIMULATOR
+        providerRef:
+          type: string
+        status:
+          type: string
+          enum:
+          - PENDING
+          - SUCCESS
+          - FAILED
+          - CANCELLED
+        fulfillmentStatus:
+          type: string
+          enum:
+          - NOT_APPLIED
+          - APPLIED
+          - RECONCILIATION_REQUIRED
+        reconciliationReason:
+          type: string
+          nullable: true
+        periodId:
+          type: string
+          format: uuid
+          nullable: true
+        periodStart:
+          type: string
+          format: date
+          nullable: true
+        periodEnd:
+          type: string
+          format: date
+          nullable: true
+        createdAt: &renewalschema003
+          type: string
+          format: date-time
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+    SimulatorResultDto:
+      allOf:
+      - $ref: '#/components/schemas/RenewalPaymentDto'
+      - type: object
+        required:
+        - eventId
+        - eventOutcome
+        properties:
+          eventId: *renewalschema001
+          eventOutcome:
+            type: string
+    PaidPeriodDto:
+      type: object
+      required:
+      - id
+      - planId
+      - planName
+      - source
+      - startDate
+      - endDate
+      - amount
+      - durationDays
+      - currency
+      - paymentId
+      - phase
+      properties:
+        id: *renewalschema001
+        planId: *renewalschema001
+        planName:
+          type: string
+          nullable: true
+        source:
+          type: string
+          enum:
+          - LEGACY_AGGREGATE
+          - INITIAL_COUNTER
+          - RENEWAL
+        startDate: &renewalschema002
+          type: string
+          format: date
+        endDate: *renewalschema002
+        amount:
+          type: string
+          pattern: ^(0|[1-9][0-9]{0,9})\.[0-9]{2}$
+          description: Exact decimal NUMERIC(12,2), not binary float
+          nullable: true
+        durationDays:
+          type: integer
+          format: int32
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+          enum:
+          - VND
+        paymentId:
+          type: string
+          format: uuid
+          nullable: true
+        phase:
+          type: string
+          enum:
+          - CURRENT
+          - NEXT
+          - HISTORY
+    MembershipPeriodsDto:
+      type: object
+      required:
+      - membershipId
+      - checkedAt
+      - periods
+      properties:
+        membershipId: *renewalschema001
+        checkedAt: *renewalschema003
+        periods:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaidPeriodDto'
+    SimulatorEventTrace:
+      type: object
+      required:
+      - id
+      - eventId
+      - reportedStatus
+      - outcome
+      - errorCode
+      - httpStatus
+      - actorUserId
+      - checkedAt
+      properties:
+        id: *renewalschema001
+        eventId: *renewalschema001
+        reportedStatus:
+          type: string
+        outcome:
+          type: string
+        errorCode:
+          type: string
+          nullable: true
+        httpStatus:
+          type: integer
+          enum:
+          - 200
+          - 409
+        actorUserId: *renewalschema001
+        checkedAt: *renewalschema003
     AccountCreate:
       type: object
       additionalProperties: false

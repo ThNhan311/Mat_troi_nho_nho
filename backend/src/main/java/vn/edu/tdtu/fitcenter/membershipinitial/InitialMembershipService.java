@@ -18,6 +18,8 @@ import static vn.edu.tdtu.fitcenter.membershipinitial.InitialActivationFailure.c
 @Service
 public class InitialMembershipService {
  private final JdbcTemplate jdbc;private final ObjectMapper json;private final Clock clock;private final boolean enabled;private final TransactionTemplate tx;
+ private vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService periods;
+ @org.springframework.beans.factory.annotation.Autowired public void setPeriods(vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService periods){this.periods=periods;}
  public record Result(int status,String json,boolean replayed){}
  public InitialMembershipService(JdbcTemplate jdbc,ObjectMapper json,Clock clock,PlatformTransactionManager manager,@Value("${fitcenter.membership-initial.enabled:false}") boolean enabled){this.jdbc=jdbc;this.json=json;this.clock=clock;this.enabled=enabled;tx=new TransactionTemplate(manager);tx.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);tx.setTimeout(10);}
  private void gate(){if(!enabled)throw new InitialActivationFailure(503,"ERR_MEMBERSHIP_ACTIVATION_UNAVAILABLE","Initial activation is not enabled in this environment");}
@@ -52,6 +54,7 @@ public class InitialMembershipService {
   jdbc.update("INSERT INTO payment_transactions(id,member_id,plan_id,membership_id,provider,provider_ref,amount,status,processed_at,period_start,period_end) VALUES(?,?,?,?,'COUNTER',?,?,'SUCCESS',?,?,?)",payment,member,r.planId(),membership,providerRef,price,OffsetDateTime.ofInstant(now,ZoneOffset.UTC),start,end);
   var receipt=new LinkedHashMap<String,Object>();receipt.put("receiptRef",r.receiptRef());receipt.put("note",r.note());receipt.put("confirmedByUserId",admin);receipt.put("confirmedAt",now.toString());
   var result=Map.of("activationId",activation,"requestId",key,"memberId",member,"membership",Map.of("id",membership,"planId",r.planId(),"planName",plan.get("name"),"startDate",start.toString(),"endDate",end.toString(),"status","ACTIVE"),"payment",Map.of("id",payment,"provider","COUNTER","providerRef",providerRef,"amount",price,"status","SUCCESS","processedAt",now.toString()),"receipt",receipt,"planSnapshot",Map.of("name",plan.get("name"),"durationDays",days,"listedPrice",price,"currency","VND"));
+  if(periods!=null)periods.initial(member,membership,r.planId(),(String)plan.get("name"),price,days,start,end,payment);
   String snapshot=json.writeValueAsString(result);
   jdbc.update("INSERT INTO membership_initial_activations(id,member_id,membership_id,payment_transaction_id,idempotency_key,request_fingerprint,receipt_ref,receipt_key,confirmed_by_user_id,confirmed_at,listed_price_snapshot,duration_days_snapshot,currency,note,response_snapshot) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'VND',?,?::jsonb)",activation,member,membership,payment,key,hash,r.receiptRef(),r.receiptKey(),admin,OffsetDateTime.ofInstant(now,ZoneOffset.UTC),price,days,r.note(),snapshot);
   jdbc.update("INSERT INTO audit_logs(actor_user_id,actor_type,action,entity_type,entity_id,details,correlation_id,created_at) VALUES(?,'USER','MEMBERSHIP_INITIAL_ACTIVATED','MEMBERSHIP',?,jsonb_build_object('activationId',?::text,'paymentId',?::text),?,?)",admin,membership,activation.toString(),payment.toString(),correlation,OffsetDateTime.ofInstant(now,ZoneOffset.UTC));

@@ -47,6 +47,10 @@ Quyết định mới thay phần đề xuất chưa chốt ở trên: Clock VN/
 
 Quyền mới thay giới hạn PT-only trong snapshot trước: Member Admin tạo email→OTP5phút→password→ACTIVE, không cần Membership và không tác động Membership/payment. Core dùng chung nhưng role/store/challenge/grant riêng; V10 chỉ rehearsal guard tích hợp15441, default-off. [Quyết định/contract/schema/khóa](backend-handover/decisions/2026-11-23_MEMBER_ACCOUNT_ACTIVATION.md). Không đồng nghĩa phát hành production hoặc gateway.
 
-## I-01 ? chu?n h?a ?ng vi?n t?ch h?p23/11/2026
+## I-01 — ứng viên tích hợp23/11/2026
 
-Kh?ng th?m quy t?c nghi?p v? ho?c s?a migration ?? c?ng b?. Frozen1?6,8,9,10 ch? rehearsal, V7quarantine; ch?a c? shared inventory n?n kh?ng k?t lu?n release-ready ho?c V7 ch?a ?p tr?n m?y kh?c. C?ng backend/profile/DB/mail cho API/UI Account?Membership?Booking; ch? seedAdmin cho E2E. Kh?ng d?ng clean/repair/out-of-order/renumber ?? v??t gap7. [Inventory/quy?t ??nh k? thu?t v? release gates](backend-handover/decisions/2026-11-23_I01_MIGRATION_CANDIDATE.md), [evidence](backend-handover/evidence/I01_CORE_INTEGRATION.md).
+Không thêm quy tắc nghiệp vụ hoặc sửa migration đã công bố. Frozen1–6,8–10 chỉ rehearsal; V7 quarantine, shared inventory chưa có nên không kết luận release-ready hoặc V7 chưa áp nơi khác. Cùng backend/profile/DB/mail cho Account→Membership→Booking, chỉ seed Admin cho E2E. Không clean/repair/out-of-order/renumber để vượt gap7. [Inventory/quyết định kỹ thuật/release gates](backend-handover/decisions/2026-11-23_I01_MIGRATION_CANDIDATE.md), [evidence](backend-handover/evidence/I01_CORE_INTEGRATION.md).
+
+## M-05/M-06 — quyết định đã phê duyệt23/11/2026
+
+Gia hạn giữ UUID, ngày VN inclusive, early nối kỳ trả tiền/expired bắt đầu hôm nay, snapshot tại initiation, gói khác chỉ kỳ mới, SUSPENDED/CANCELLED cần đối soát nếu đã thu tiền. Hai SUCCESS độc lập append tuần tự, idempotency/event replay không nhân đôi. Simulator default-off, ADMIN ACTIVE/test-only. Các giới hạn “renewal chưa triển khai” ở snapshot trước được thay trong profile rehearsal này; chưa gateway/refund/production rollout. [Contract/quyết định/khóa/schema/release gates](backend-handover/decisions/2026-11-23_M05_M06_RENEWAL_SIMULATOR.md).

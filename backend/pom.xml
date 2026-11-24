@@ -158,6 +158,12 @@
                 <includes><include>V10__member_account_activation.sql</include></includes>
                 <filtering>false</filtering>
             </resource>
+            <resource>
+                <directory>../database/renewal-rehearsal</directory>
+                <targetPath>db/renewal-rehearsal</targetPath>
+                <includes><include>V11__membership_renewal_simulator.sql</include></includes>
+                <filtering>false</filtering>
+            </resource>
 		</resources>
 
 		<plugins>

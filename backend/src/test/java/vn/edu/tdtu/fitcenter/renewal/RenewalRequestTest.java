@@ -1,0 +1,10 @@
+package vn.edu.tdtu.fitcenter.renewal;
+import org.junit.jupiter.api.*;import org.junit.jupiter.params.ParameterizedTest;import org.junit.jupiter.params.provider.*;import tools.jackson.databind.ObjectMapper;import static org.junit.jupiter.api.Assertions.*;
+class RenewalRequestTest {
+ private final ObjectMapper json=new ObjectMapper();
+ @ParameterizedTest @ValueSource(strings={"[]","{\"planId\":12}","{\"planId\":\"bad\"}","{\"planId\":null,\"amount\":0}","{\"planId\":null,\"planId\":null}","{\"memberId\":null}","{\"status\":\"SUCCESS\"}"})void cannotInjectCreateFields(String body){assertThrows(Exception.class,()->json.readValue(body,RenewalRequests.Create.class));}
+ @ParameterizedTest @ValueSource(strings={"{\"amount\":\"1.00\"}","{\"amount\":true}","{\"eventId\":\"bad\"}","{\"providerRef\":12}","{\"owner\":null}"})void strictEventTypes(String body){assertThrows(Exception.class,()->json.readValue(body,RenewalRequests.Event.class));}
+ @Test void decimalNotRounded(){assertEquals(new java.math.BigDecimal("0.001"),json.readValue("{\"amount\":0.001}",RenewalRequests.Event.class).amount());}
+ @Test void defaultGateRejectsWithoutTouchingDatabase(){var jdbc=org.mockito.Mockito.mock(org.springframework.jdbc.core.JdbcTemplate.class);var manager=org.mockito.Mockito.mock(org.springframework.transaction.PlatformTransactionManager.class);var service=new RenewalService(jdbc,json,java.time.Clock.systemUTC(),manager,new MembershipPeriodService(jdbc,false),false);assertEquals(503,assertThrows(RenewalFailure.class,()->service.mine("fixture@example.invalid")).status);org.mockito.Mockito.verifyNoInteractions(jdbc);}
+ @Test void cannotEnableSimulatorOnDefaultProfile(){var jdbc=org.mockito.Mockito.mock(org.springframework.jdbc.core.JdbcTemplate.class);var source=org.mockito.Mockito.mock(javax.sql.DataSource.class);var env=new org.springframework.mock.env.MockEnvironment();assertThrows(IllegalStateException.class,()->new RenewalSchemaGuard(true,env,source,jdbc).afterPropertiesSet());org.mockito.Mockito.verifyNoInteractions(jdbc,source);}
+}

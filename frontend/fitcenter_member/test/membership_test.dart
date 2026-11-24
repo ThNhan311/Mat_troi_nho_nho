@@ -151,7 +151,7 @@ void main() {
       await t.pumpAndSettle();
       expect(find.byKey(const ValueKey('membership-$id')), findsOneWidget);
       expect(find.text('23/11/2026'), findsNWidgets(2));
-      expect(find.textContaining('Chưa khả dụng'), findsOneWidget);
+      expect(find.text('Gia hạn / kỳ sử dụng'), findsOneWidget);
       expect(find.text('Gói cao cấp'), findsNothing);
       expect(find.text('Buổi đã tập'), findsNothing);
       expect(find.text('Lịch sử gia hạn'), findsNothing);

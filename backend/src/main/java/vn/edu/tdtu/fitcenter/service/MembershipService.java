@@ -34,8 +34,10 @@ public class MembershipService {
     private final MemberRepository memberRepository;
     private final UserRepository userRepository;
     private final Clock clock;
+    private vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService periods;
+    @org.springframework.beans.factory.annotation.Autowired public void setPeriods(vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService periods){this.periods=periods;}
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public List<MembershipResponse> getMyMemberships(String email) {
 
         // 1. Tim tai khoan dang dang nhap
@@ -74,10 +76,11 @@ public class MembershipService {
 
     private MembershipResponse toResponse(Membership membership) {
 
+        var current=periods!=null&&periods.enabled()?periods.summary(membership.getId(),LocalDate.now(clock.withZone(ZoneId.of("Asia/Ho_Chi_Minh")))):null;
         return new MembershipResponse(
                 membership.getId(),
-                membership.getPlan().getId(),
-                membership.getPlan().getName(),
+                current==null?membership.getPlan().getId():(java.util.UUID)current.get("plan_id"),
+                current==null||current.get("plan_name_snapshot")==null?membership.getPlan().getName():(String)current.get("plan_name_snapshot"),
                 membership.getStartDate(),
                 membership.getExpiryDate(),
                 effectiveStatus(membership)
@@ -93,6 +96,7 @@ public class MembershipService {
                 || membership.getStartDate().isAfter(today)) {
             return MembershipStatus.PENDING_ACTIVATION;
         }
+        if(periods!=null&&periods.enabled()&&!periods.covered(membership.getId(),today,today))return MembershipStatus.EXPIRED;
         return membership.getExpiryDate().isBefore(today)
                 ? MembershipStatus.EXPIRED : MembershipStatus.ACTIVE;
     }

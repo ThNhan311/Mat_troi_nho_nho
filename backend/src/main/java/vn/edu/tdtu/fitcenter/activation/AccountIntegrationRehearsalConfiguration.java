@@ -9,7 +9,7 @@ import javax.sql.DataSource;
 
 /** Fails before Flyway can apply any DDL to a non-rehearsal target. */
 @Configuration
-@Profile("account-integration-rehearsal")
+@Profile({"account-integration-rehearsal","renewal-integration-rehearsal"})
 public class AccountIntegrationRehearsalConfiguration {
     public static void verify(DataSource source, boolean verified) {
         if (!verified) throw new IllegalStateException("Run the guarded activation rehearsal runner");
@@ -32,7 +32,12 @@ public class AccountIntegrationRehearsalConfiguration {
             verify(flyway.getConfiguration().getDataSource(), env.getProperty("fitcenter.account-integration.guard-verified", Boolean.class, false));
             Set<String> locations = new HashSet<>();
             for (var l : flyway.getConfiguration().getLocations()) locations.add(l.getDescriptor());
-            if (flyway.getConfiguration().isOutOfOrder() || !locations.equals(Set.of("classpath:db/migration", "classpath:db/activation-rehearsal", "classpath:db/membership-rehearsal", "classpath:db/member-activation-rehearsal")))
+            Set<String> expected=new HashSet<>(Set.of("classpath:db/migration", "classpath:db/activation-rehearsal", "classpath:db/membership-rehearsal", "classpath:db/member-activation-rehearsal"));
+            if(Arrays.asList(env.getActiveProfiles()).contains("renewal-integration-rehearsal")){
+                if(!env.getProperty("fitcenter.renewal.guard-verified",Boolean.class,false))throw new IllegalStateException("Renewal runner verification required");
+                expected.add("classpath:db/renewal-rehearsal");
+            }
+            if (flyway.getConfiguration().isOutOfOrder() || !locations.equals(expected))
                 throw new IllegalStateException("Unexpected Flyway rehearsal locations/order");
             flyway.migrate();
         };

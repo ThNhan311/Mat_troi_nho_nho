@@ -75,7 +75,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/trainers", "/api/v1/trainers/**")
                         .hasRole("MEMBER")
                         .requestMatchers("/api/v1/membership", "/api/v1/membership/**",
-                                "/api/v1/memberships/**", "/api/v1/bookings/**",
+                                "/api/v1/memberships/**", "/api/v1/bookings/**", "/api/v1/payments/**",
                                 "/api/v1/attendance/me", "/api/v1/workout-plans/**",
                                 "/api/v1/workout-items/**").hasRole("MEMBER")
 

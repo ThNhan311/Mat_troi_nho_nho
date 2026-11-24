@@ -1,30 +1,25 @@
 # FitCenter — trạng thái tiếp tục
 
-Cập nhật23/11/2026 tại worktree Mat_troi_nho_nho-booking-integration, branch **feature/core-integration-rehearsal**, base/HEAD trước commit **950311082d4cc5b2c5b85b1a3f8cd644246cd932** (MEMBER activation). Xác minh Git khi tiếp tục; commit đóng I-01 tra history, không tự tham chiếu SHA của chính file này.
+Cập nhật24/11/2026, worktree Mat_troi_nho_nho-booking-integration; branch **feature/membership-renewal-simulator**, HEAD/base trước commit đóng **d2774c9b860e7d263b26edac1003502da8781790**. Xác minh Git khi tiếp tục; commit task tra history, file không tự chứa SHA của chính nó.
 
-## I-01 đã kiểm chứng rehearsal
+## M-05/M-06 đã kiểm chứng trên test riêng
 
-Frozen manifest/version/path/SHA-256/FlywayCRC32 và runner fail-closed cho **V1–V6,V8,V9,V10**, V7 database558fb03 quarantined. Không đổi SQL/version/schema sản phẩm, default gates hoặc source Java/Dart sản phẩm. Upgrade DB trống và dữ liệu lịch sử tổng hợp:1–6→8/9→10, snapshots giữ nguyên payment periods/status/null, PT state, M03 receipt/audit/idempotency/price-duration snapshots. Validate-only đưa V7late thất bại không chạyDDL. Shared inventory **chưa biết**, không giả định DB đồng đội chưa ápV7; **releaseReady=false**.
+Backend renewal PENDING/idempotency/snapshot và ADMIN simulator default-off, period CURRENT/NEXT/HISTORY, RECONCILIATION_REQUIRED khi tiền SUCCESS chưa thể cấp quyền. Member và Admin dùng màn/theme/navigation gốc; no blind replay, session epoch, owner/role kiểm phía server. Không gateway/tiền thật/refund/Face/Workout. Không đổi current plan sang next plan bằng ghi đè FK; Booking/D01 kiểm paid coverage không bắc cầu qua gap. M03/activation giữ nguyên semantics.
 
-Thực chạy scoped full **918 passed/0failed/0errors/0skipped**,33XMLsuites tươi. Focused163 là tập con. Không chọn3lớp PG profile cũ, đã có integrated counterparts; chi tiết selector trong evidence. Flutter Web build cả3app cùngAPI18084 đạt; không sửa Dart nên không rerun widget/analyze và không lấy kết quả lịch sử làm lượt mới.
+Thực chạy23/11: scoped full **989 passed/0failed/0errors/0skipped**,36XMLsuites; focused71 là tập con. Flutter Member80/Admin110 passed, analyze0errors/0warnings (85infos mỗiapp),2Webbuilds đạt. PT Dart không đổi nên không chọn Flutter PT; Backend activation/PT/Booking/D01/M03/M04 có trong regression phù hợp. Ba PG profile cũ bị loại selector, integrated counterparts đã chạy; không gọi tất cả profiles đã test.
 
-E2E mới **26UI/29HTTP/9DB checks**,0failed/skipped: cùngbackend18084/DB15441/mail sink. Chỉ seedAdmin; Admin UI tạo plan, HTTP tạo DISABLEDMember/PT A/B và M03 thuquầy +policy; Member/PT A kích hoạt OTP/password qua UI gốc, B quaHTTP+SMTP; Member M04→PT UI slot→Member UI CONFIRMED→cancel→AVAILABLE→hành động mới rebook/newUUID→reload/login; PT đọc cùngUUID/time. Ownership/role và payment/Membership snapshots giữ nguyên. Ba lỗi helper UI trước đã sửa/cleanup rồi chạy lại toàn bộ pair mới, không phải lỗi production code.
+E2E **29UI/18HTTP/10DB checks**,0failed/skipped; một backend/DB/mail sink, chỉ seed Admin. Member activate qua SMTP/UI thật, kế đến Member tạo PENDING→Admin UI SUCCESS→reload/login cùng UUID/CURRENT/NEXT; FAILED/CANCELLED/replay không cộng kỳ. UI early renewal dùng thời gian thật, boundary/expired dùng test Clock. [Evidence/traceability/hashes/ảnh](backend-handover/evidence/M05_M06_RENEWAL_SIMULATOR.md), [JSON](backend-handover/evidence/M05_M06_RESULTS.json), [quickstart](backend-handover/21_RENEWAL_SIMULATOR_QUICKSTART.md), [quyết định/contract](backend-handover/decisions/2026-11-23_M05_M06_RENEWAL_SIMULATOR.md), [OpenAPI](backend-handover/api/openapi.yaml).
 
-[Evidence/hashes/ảnh](backend-handover/evidence/I01_CORE_INTEGRATION.md), [quickstart tích hợp](backend-handover/20_CORE_INTEGRATION_QUICKSTART.md), [inventory/chuỗi ứng viên/release gates](backend-handover/decisions/2026-11-23_I01_MIGRATION_CANDIDATE.md).
+## Schema, Git và tài nguyên
 
-## Git và tài nguyên
+V11 additive riêng; frozen candidate1–6,8–11, không sửa SQL đã áp/V7. Empty/history upgrade giữ payment periods, M03 receipt/snapshots và activation state. Default gates còn tắt; runner/profile renewal-integration-rehearsal guard loopback15441/role/namespace/locations. [Manifest ứng viên](../database/renewal-integration-candidate.json), [I01 release inventory](backend-handover/decisions/2026-11-23_I01_MIGRATION_CANDIDATE.md).
 
-Review để commit/push nhánh riêng theo quyền người dùng, không merge/force. Thay đổi task chỉ runner/test/helper/manifest/docs/evidence; không migration áp dụng hoặc code sản phẩm. Bốn research22/11 untracked giữ ngoài commit; Face và survey untracked checkout gốc089b5e2 nguyên vẹn. Credentials/OTP/grant/token/private manifests/raw logs/tools/build ngoài Git. Remote23/11 không workflow/run/deployment/webhook; không gọi CI pass.
+Thay đổi task đã review để commit/push feature riêng theo quyền; chưa merge/force. Bốn research22/11 untracked giữ ngoài commit; Face/survey tại checkout gốc089b5e2 nguyên vẹn. Không credential/private manifest/raw log/cache/SDK/build vào Git. Remote database ref558fb03; CI/CD inventory0workflow/run/deployment/webhook, không gọi CI pass.
 
-Cleanup exactUUID trên10DB của5pair task,30checks, lặp lại đạt; ngoài fixture không đổi, giữ schema/history/volume. Đã dừng ownbackend/wrappers/3web/mail và DB test; task ports đóng, volume account/baseline còn. Không DB chung/production/Docker Desktop/tài nguyên ngoài task bị đổi.
+Cleanup exactUUID22DB/54checks, lặp lại đạt; nonfixture rows/schema/history/volume giữ nguyên. Own backend/wrapper/2web/mail và DB đã dừng, task ports đóng, baseline/account volumes còn. Một lượt repeat từng bị stop sớm đã được mở lại và hoàn tất trước stop cuối. Không DB chung hoặc tài nguyên đồng đội bị đổi.
 
-## Blocker phát hành và bước tiếp theo
+## Blocker release và bước tiếp theo
 
-Cần chủ DB cung cấp actual Flyway inventory/checksum (V7 có thể đã áp), backup/export periods bị DROP, thống nhất mapping initial COUNTER và thứ tự/location/artifact V7–V10. V7 hiện DROP payment periods chưa backfill và khác semantics M03; không chạy nguyên bản. Có phương án release có điều kiện trong decision, chưa là migration được phép apply. Không out-of-order/history edits/clean/repair hoặc đổi số published để lách.
+**releaseReady=false**: chưa có shared DB inventory/checksum; V7 có thể đã áp nơi khác, bản database558fb03 DROP payment periods chưa backfill nên không chạy nguyên bản. Cần đồng bộ Duy mapping/backfill/backup/thứ tự artifact V7–V11, xử lý legacy provenance không rõ. Không out-of-order/history edits/clean/repair/đổi số migration để lách. Simulator chỉ dev/test, chưa gateway/refund/production mail/manual reconciliation workflow.
 
-Bước tiếp: review nhánh I-01, thu inventory từ chủDB bằng SQL chỉ đọc được cung cấp, quyết định compatibility/backfill trước canonical release. Production email adapter vẫn chưa có; không tự mở gateway/renewal/Workout/Face. Complete/cancel boundaries có regression, không sửa Clock production để giả hoàn thành tương lai.
-
-## Mốc đã hoàn thành trước I-01
-
-MEMBER activation **9503110**, M-03 **5399c57**, M-04 **92328e0**, PT rehearsal **0c31947**, account core **66a7031**, M-01 **6fbf9fc**. [MEMBER activation evidence](backend-handover/evidence/MEMBER_ACCOUNT_ACTIVATION.md), [quyết định tổng hợp](DECISIONS.md), [quy tắc repository](../AGENTS.md). Số914/60/55 và E2E của Member task là lịch sử, không cộng vào I-01.
-B? sung review sau checkpoint core **093c593**: pin EOL SQL qua [.gitattributes](../.gitattributes),2checkout experiments (autocrlf true/false,9SQL m?i mode) ??t v? source hashes core v?n kh?p. Kh?ng s?a migration hay rerun full/UI khi executable kh?ng ??i. [Evidence checkout](backend-handover/evidence/I01_CHECKOUT_RESULTS.json).
+Bước tiếp: review nhánh renewal, thu inventory chỉ đọc từ chủ DB và chốt canonical migration trước rollout; không mở module khác khi chưa giao. [Quyết định tổng hợp](DECISIONS.md), [quy tắc repository](../AGENTS.md). I01 d2774c9, MEMBER activation9503110, M03 5399c57, M04 92328e0 là mốc lịch sử; không cộng số cũ vào lượt M05/M06.

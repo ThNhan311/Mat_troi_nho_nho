@@ -96,3 +96,5 @@ Flutter: ở Admin/PT chạy `flutter analyze`, `flutter test`, `flutter build w
 ## PT activation PostgreSQL rehearsal — quyền mới22/11
 
 [Quickstart riêng](16_PT_ACTIVATION_REHEARSAL_QUICKSTART.md) thay giới hạn chờ schema trong phạm vi DB test riêng. Runner activation-rehearsal.ps1 tạo cặp DB mới mỗi run; focused65/full801 thực chạy, không cộng dồn. Có pre-Flyway guard và test schema/HTTP/SMTP/concurrency/rollback thật; default runner cũ vẫnV1–V6. UI13/HTTP4/DBaudit4 là checks riêng. [Evidence cuối](evidence/PT_ACTIVATION_POSTGRES.md). Không áp V7, clean/repair/out-of-order hoặc chạy DB chung; các đoạn gate503 cũ là snapshot default/release, không phủ định rehearsal đã đạt.
+
+M-05/M-06 renewal/simulator (guarded/default-off): [quickstart](21_RENEWAL_SIMULATOR_QUICKSTART.md), [contract](decisions/2026-11-23_M05_M06_RENEWAL_SIMULATOR.md), [evidence](evidence/M05_M06_RENEWAL_SIMULATOR.md). Không dùng số I01 làm kết quả lượt này.
