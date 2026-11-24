@@ -100,3 +100,5 @@ Flutter: ở Admin/PT chạy `flutter analyze`, `flutter test`, `flutter build w
 M-05/M-06 renewal/simulator (guarded/default-off): [quickstart](21_RENEWAL_SIMULATOR_QUICKSTART.md), [contract](decisions/2026-11-23_M05_M06_RENEWAL_SIMULATOR.md), [evidence](evidence/M05_M06_RENEWAL_SIMULATOR.md). Không dùng số I01 làm kết quả lượt này.
 
 F-01 Core check-in/history: [contract](decisions/2026-11-24_F01_CHECKIN_CORE.md), [OpenAPI](api/openapi.yaml), [quickstart](22_CHECKIN_CORE_QUICKSTART.md), [evidence](evidence/F01_CHECKIN_CORE.md). Adapter identity chỉ simulated/test guarded default-off; không Face ID/liveness E2E.
+
+F02 [rerun](23_FACE_ENROLLMENT_QUICKSTART.md)/[evidence](evidence/F02_FACE_ENROLLMENT.md):1076selected Backend,133Admin,49Python;10UI/10directHTTP/6DB checks tách riêng. Không Face hardware/liveness suite.

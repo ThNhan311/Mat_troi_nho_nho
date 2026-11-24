@@ -58,3 +58,7 @@ Gia hạn giữ UUID, ngày VN inclusive, early nối kỳ trả tiền/expired 
 ## F-01 — Core check-in đã giao24/11/2026
 
 User cho phép Core check-in + adapter test riêng nếu Face/liveness chưa đủ bằng chứng. V3 Attendance, rolling30phút và eligibility hiện tại; request ID chống replay/khác payload; owner history qua principal. F01 không chọn model/threshold mới hoặc thu biometric thật. [Contract/khóa/V12/giới hạn](backend-handover/decisions/2026-11-24_F01_CHECKIN_CORE.md), [source Face thực tế](backend-handover/evidence/F01_FACE_SOURCE_SURVEY.md). Các giới hạn “không Face” trong snapshot cũ được thay chỉ trong phạm vi Core/test addon này; chưa production Face rollout.
+
+## F02 — enrollment lifecycle đã giao24/11/2026
+
+Admin tại gym xác minh Member/consent; server-owned mapping, READY mới ACTIVE, re-enroll failure giữ old, revoke chặn Core ngay. [Contract/saga/V13/giới hạn](backend-handover/decisions/2026-11-24_F02_FACE_ENROLLMENT.md). Chỉ simulated adapter guard/default-off khi service thật chưa đủ staging/version/idempotency; không duyệt model/threshold/liveness hoặc thu biometric thật.

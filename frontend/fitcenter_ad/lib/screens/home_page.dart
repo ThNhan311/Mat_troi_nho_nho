@@ -1,3 +1,5 @@
+import 'face_enrollment_page.dart';
+import '../services/face_enrollment_service.dart';
 import 'payment_simulator_page.dart';
 import '../services/payment_simulator_service.dart';
 import 'initial_activation_page.dart';
@@ -147,6 +149,18 @@ class AdminHomePage extends StatelessWidget {
                 },
               ),
 
+              _AdminMenuCard(
+                icon: Icons.face_outlined,
+                title: 'Đăng ký khuôn mặt',
+                subtitle: 'Xác minh hội viên, consent và quản lý hồ sơ',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => FaceEnrollmentPage(
+                      service: FaceEnrollmentService(service.api),
+                    ),
+                  ),
+                ),
+              ),
               _AdminMenuCard(
                 icon: Icons.card_membership_outlined,
                 title: 'Gói tập',

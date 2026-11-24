@@ -170,6 +170,8 @@
                 <includes><include>V12__checkin_request_ledger.sql</include></includes>
                 <filtering>false</filtering>
             </resource>
+            <resource><directory>../database/enrollment-rehearsal</directory><targetPath>db/enrollment-rehearsal</targetPath><includes><include>V13__face_enrollment_lifecycle.sql</include></includes><filtering>false</filtering></resource>
+
 		</resources>
 
 		<plugins>

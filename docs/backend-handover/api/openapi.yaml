@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: FitCenter API — bản nháp cần review
-  version: face-checkin-core-working-tree
+  version: face-enrollment-working-tree
   description: Baseline 1b1e323 có Booking/D01 và Web Member/PT/Admin Policy; M-01 thêm Admin tạo plan và đọc ACTIVE trên giao diện gốc. D01 snapshot không start marker, completion giữ R04. Admin account create/list thêm trên V1-V6; PT activation mặc định503; profile activation-rehearsal đã đạt HTTP/PostgreSQL/SMTP/UI trên DB test riêng với V8 ở location riêng, không production rollout. M-03 thêm counter receipt/initial Membership trên membership-rehearsal default-off; M05/M06 thêm renewal/simulator default-off trên profile guard riêng; gateway thật chưa có.
 servers:
 - url: http://localhost:18081
@@ -12,7 +12,256 @@ servers:
   description: Dedicated guarded M03 membership-rehearsal, default gate off
 - url: http://localhost:18084
   description: Integrated guarded Member/PT/M03 rehearsal only, no canonical release
+- url: http://127.0.0.1:18086
+  description: F02 guarded test only, simulated external gallery
 paths:
+  /api/v1/admin/members/{member}/face-enrollments:
+    get:
+      summary: Admin đọc hồ sơ và lịch sử enrollment theo Member UUID
+      responses:
+        '200':
+          description: Profiles và operations; no template/capture reference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaceEnrollmentState'
+        '400':
+          description: ERR_VALIDATION hoặc ERR_FACE_CONSENT_REQUIRED
+        '401':
+          description: ERR_UNAUTHORIZED
+        '403':
+          description: ERR_FORBIDDEN
+        '404':
+          description: ERR_NOT_FOUND
+        '409':
+          description: ERR_IDEMPOTENCY_KEY_REUSED / ERR_FACE_ENROLLMENT_PENDING / ERR_FACE_ENROLLMENT_CONFLICT / ERR_FACE_ENROLLMENT_NOT_PENDING
+        '503':
+          description: ERR_FACE_ENROLLMENT_UNAVAILABLE
+      tags:
+      - Face enrollment (guarded simulated test)
+      security:
+      - bearerAuth: []
+      description: ' Chỉ ADMIN ACTIVE; default503; no-store. Profile face-enrollment-rehearsal trên DB riêng; SIMULATED_TEST,
+        không camera/biometric/liveness.'
+    post:
+      summary: Bắt đầu enrollment/re-enrollment tại gym, chưa ACTIVE
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FaceEnrollmentStart'
+      responses:
+        '201':
+          description: Cùng key/payload trả cùng operation với trạng thái hiện tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaceEnrollment'
+        '400':
+          description: ERR_VALIDATION hoặc ERR_FACE_CONSENT_REQUIRED
+        '401':
+          description: ERR_UNAUTHORIZED
+        '403':
+          description: ERR_FORBIDDEN
+        '404':
+          description: ERR_NOT_FOUND
+        '409':
+          description: ERR_IDEMPOTENCY_KEY_REUSED / ERR_FACE_ENROLLMENT_PENDING / ERR_FACE_ENROLLMENT_CONFLICT / ERR_FACE_ENROLLMENT_NOT_PENDING
+        '503':
+          description: ERR_FACE_ENROLLMENT_UNAVAILABLE
+      tags:
+      - Face enrollment (guarded simulated test)
+      security:
+      - bearerAuth: []
+      description: ' Chỉ ADMIN ACTIVE; default503; no-store. Profile face-enrollment-rehearsal trên DB riêng; SIMULATED_TEST,
+        không camera/biometric/liveness.'
+    parameters:
+    - in: path
+      name: member
+      required: true
+      schema:
+        type: string
+        format: uuid
+  /api/v1/admin/members/{member}/face-enrollments/{operation}:
+    get:
+      summary: Đối chiếu một operation; sai Member trả404
+      responses:
+        '200':
+          description: Current operation state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaceEnrollment'
+        '400':
+          description: ERR_VALIDATION hoặc ERR_FACE_CONSENT_REQUIRED
+        '401':
+          description: ERR_UNAUTHORIZED
+        '403':
+          description: ERR_FORBIDDEN
+        '404':
+          description: ERR_NOT_FOUND
+        '409':
+          description: ERR_IDEMPOTENCY_KEY_REUSED / ERR_FACE_ENROLLMENT_PENDING / ERR_FACE_ENROLLMENT_CONFLICT / ERR_FACE_ENROLLMENT_NOT_PENDING
+        '503':
+          description: ERR_FACE_ENROLLMENT_UNAVAILABLE
+      tags:
+      - Face enrollment (guarded simulated test)
+      security:
+      - bearerAuth: []
+      description: ' Chỉ ADMIN ACTIVE; default503; no-store. Profile face-enrollment-rehearsal trên DB riêng; SIMULATED_TEST,
+        không camera/biometric/liveness.'
+    parameters:
+    - in: path
+      name: member
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - in: path
+      name: operation
+      required: true
+      schema:
+        type: string
+        format: uuid
+  /api/v1/admin/members/{member}/face-enrollments/{operation}/complete:
+    post:
+      summary: Finalize sau server adapter READY; không client attestation
+      description: HTTP200 có thể PENDING/ACTIVE/FAILED/REVOKED; phải đọc status. Retry cùng operation an toàn. External I/O
+        ngoài transaction; rollback giữ PENDING và stage để reconcile. Chỉ ADMIN ACTIVE; default503; no-store. Profile face-enrollment-rehearsal
+        trên DB riêng; SIMULATED_TEST, không camera/biometric/liveness.
+      responses:
+        '200':
+          description: Server lifecycle state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaceEnrollment'
+        '400':
+          description: ERR_VALIDATION hoặc ERR_FACE_CONSENT_REQUIRED
+        '401':
+          description: ERR_UNAUTHORIZED
+        '403':
+          description: ERR_FORBIDDEN
+        '404':
+          description: ERR_NOT_FOUND
+        '409':
+          description: ERR_IDEMPOTENCY_KEY_REUSED / ERR_FACE_ENROLLMENT_PENDING / ERR_FACE_ENROLLMENT_CONFLICT / ERR_FACE_ENROLLMENT_NOT_PENDING
+        '503':
+          description: ERR_FACE_ENROLLMENT_UNAVAILABLE
+      tags:
+      - Face enrollment (guarded simulated test)
+      security:
+      - bearerAuth: []
+    parameters:
+    - in: path
+      name: member
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - in: path
+      name: operation
+      required: true
+      schema:
+        type: string
+        format: uuid
+  /api/v1/admin/members/{member}/face-enrollments/{operation}/revoke:
+    post:
+      summary: Hủy enrollment PENDING, giữ profile cũ; operation ID là idempotency
+      responses:
+        '200':
+          description: REVOKED, metadata không đổi khi replay
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaceEnrollment'
+        '400':
+          description: ERR_VALIDATION hoặc ERR_FACE_CONSENT_REQUIRED
+        '401':
+          description: ERR_UNAUTHORIZED
+        '403':
+          description: ERR_FORBIDDEN
+        '404':
+          description: ERR_NOT_FOUND
+        '409':
+          description: ERR_IDEMPOTENCY_KEY_REUSED / ERR_FACE_ENROLLMENT_PENDING / ERR_FACE_ENROLLMENT_CONFLICT / ERR_FACE_ENROLLMENT_NOT_PENDING
+        '503':
+          description: ERR_FACE_ENROLLMENT_UNAVAILABLE
+      tags:
+      - Face enrollment (guarded simulated test)
+      security:
+      - bearerAuth: []
+      description: ' Chỉ ADMIN ACTIVE; default503; no-store. Profile face-enrollment-rehearsal trên DB riêng; SIMULATED_TEST,
+        không camera/biometric/liveness.'
+    parameters:
+    - in: path
+      name: member
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - in: path
+      name: operation
+      required: true
+      schema:
+        type: string
+        format: uuid
+  /api/v1/admin/members/{member}/face-enrollments/profiles/{profile}/revoke:
+    post:
+      summary: Thu hồi profile ngay tại DB; external removal dùng outbox
+      parameters:
+      - in: header
+        name: Idempotency-Key
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Profile REVOKED; cleanup có thể còn pending/manual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FaceEnrollmentState'
+        '400':
+          description: ERR_VALIDATION hoặc ERR_FACE_CONSENT_REQUIRED
+        '401':
+          description: ERR_UNAUTHORIZED
+        '403':
+          description: ERR_FORBIDDEN
+        '404':
+          description: ERR_NOT_FOUND
+        '409':
+          description: ERR_IDEMPOTENCY_KEY_REUSED / ERR_FACE_ENROLLMENT_PENDING / ERR_FACE_ENROLLMENT_CONFLICT / ERR_FACE_ENROLLMENT_NOT_PENDING
+        '503':
+          description: ERR_FACE_ENROLLMENT_UNAVAILABLE
+      tags:
+      - Face enrollment (guarded simulated test)
+      security:
+      - bearerAuth: []
+      description: ' Chỉ ADMIN ACTIVE; default503; no-store. Profile face-enrollment-rehearsal trên DB riêng; SIMULATED_TEST,
+        không camera/biometric/liveness.'
+    parameters:
+    - in: path
+      name: member
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - in: path
+      name: profile
+      required: true
+      schema:
+        type: string
+        format: uuid
   /api/v1/check-ins/face:
     post:
       operationId: checkinFromTrustedTestAdapter
@@ -2168,6 +2417,140 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    FaceEnrollmentStart:
+      type: object
+      additionalProperties: false
+      required:
+      - consentAccepted
+      - memberVerified
+      - atGym
+      - consentVersion
+      properties:
+        consentAccepted:
+          type: boolean
+          enum:
+          - true
+        memberVerified:
+          type: boolean
+          enum:
+          - true
+        atGym:
+          type: boolean
+          enum:
+          - true
+        consentVersion:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: Nonblank version recorded by Admin; UI uses face-consent-v1. No personal identity/biometric text.
+    FaceEnrollment:
+      type: object
+      required:
+      - id
+      - requestId
+      - memberId
+      - proposedProfileId
+      - status
+      - consentVersion
+      - consentAt
+      - startedBy
+      - startedAt
+      - verificationMode
+      - cleanupPending
+      properties:
+        id:
+          type: string
+          format: uuid
+        requestId:
+          type: string
+          format: uuid
+        memberId:
+          type: string
+          format: uuid
+        proposedProfileId:
+          type: string
+          format: uuid
+        startedBy:
+          type: string
+          format: uuid
+        profileId:
+          type: string
+          format: uuid
+          nullable: true
+        finalizedBy:
+          type: string
+          format: uuid
+          nullable: true
+        consentAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        finalizedAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum:
+          - PENDING
+          - ACTIVE
+          - FAILED
+          - REVOKED
+        verificationMode:
+          type: string
+          enum:
+          - SIMULATED_TEST
+        consentVersion:
+          type: string
+        failureCode:
+          type: string
+          nullable: true
+        cleanupPending:
+          type: boolean
+          description: Includes MANUAL_REQUIRED legacy references; not a distributed-transaction success flag.
+    FaceProfileView:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - REVOKED
+        enrolledAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+          nullable: true
+        verificationMode:
+          type: string
+          enum:
+          - SIMULATED_TEST
+          - UNVERIFIED_LEGACY
+    FaceEnrollmentState:
+      type: object
+      required:
+      - memberId
+      - profiles
+      - enrollments
+      properties:
+        memberId:
+          type: string
+          format: uuid
+        profiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/FaceProfileView'
+        enrollments:
+          type: array
+          items:
+            $ref: '#/components/schemas/FaceEnrollment'
     CheckinRehearsalRequest:
       type: object
       required:

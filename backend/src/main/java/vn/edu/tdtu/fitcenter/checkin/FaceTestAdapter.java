@@ -34,7 +34,7 @@ public final class FaceTestAdapter implements FaceVerificationAdapter, Initializ
     }
     public void afterPropertiesSet() {
         if(!enabled) { if(simulated)throw new IllegalStateException("Test adapter requires the check-in gate");return; }
-        if(!simulated||!Arrays.equals(env.getActiveProfiles(),new String[]{"face-checkin-rehearsal"})
+        if(!simulated||!(Arrays.equals(env.getActiveProfiles(),new String[]{"face-checkin-rehearsal"})||Arrays.equals(env.getActiveProfiles(),new String[]{"face-enrollment-rehearsal"}))
                 ||!env.getProperty("fitcenter.checkin.guard-verified",Boolean.class,false))
             throw new IllegalStateException("F01 requires its guarded rehearsal profile; no default fake recognition");
         vn.edu.tdtu.fitcenter.activation.AccountIntegrationRehearsalConfiguration.verify(dataSource,

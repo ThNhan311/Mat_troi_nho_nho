@@ -12,3 +12,5 @@
 
 /database/renewal-rehearsal/V11__membership_renewal_simulator.sql text eol=lf
 /database/checkin-rehearsal/V12__checkin_request_ledger.sql text eol=lf
+
+/database/enrollment-rehearsal/V13__face_enrollment_lifecycle.sql text eol=lf
