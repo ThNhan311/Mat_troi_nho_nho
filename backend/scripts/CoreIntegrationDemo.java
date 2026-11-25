@@ -8,7 +8,8 @@ public class CoreIntegrationDemo {
  public static void main(String[] args)throws Exception{
   Path dir=Path.of(args[0]).toAbsolutePath().normalize();if(!dir.startsWith(Path.of(System.getenv("LOCALAPPDATA"),"Temp").toAbsolutePath().normalize())||!args[1].matches("[a-f0-9]{12}"))throw new IllegalArgumentException("Private guarded run required");
   Path file=dir.resolve("demo-fixture.properties");if(Files.exists(file))throw new IllegalStateException("Do not overwrite fixture authority");
-  boolean current=args.length==3 && args[2].equals("--current");
+  boolean fresh=args.length==3 && args[2].equals("--fresh-core");
+  boolean current=fresh || (args.length==3 && args[2].equals("--current"));
   if(args.length>2&&!current)throw new IllegalArgumentException("Unknown demo mode");
   if(current&&(Files.exists(dir.resolve("checkin-demo-config.json"))||Files.exists(dir.resolve("enrollment-demo-config.json"))))throw new IllegalStateException("Never overwrite test adapter config");
   PGSimpleDataSource history=null;
@@ -28,7 +29,7 @@ public class CoreIntegrationDemo {
    }catch(Exception e){db.rollback();throw e;}
   }
   f.setProperty("seeded","true");try(var o=Files.newOutputStream(file)){f.store(o,"PRIVATE I-01 Admin seed authority; never publish");}
-  if(current){
+  if(current&&!fresh){
    Files.writeString(dir.resolve("checkin-demo-config.json"),"{\"mode\":\"SIMULATED_TEST\",\"kiosks\":[{\"id\":\"core-no-captures\",\"token\":\""+secret()+"\"}],\"captures\":[]}",StandardOpenOption.CREATE_NEW);
    Files.writeString(dir.resolve("enrollment-demo-config.json"),"{\"mode\":\"SIMULATED_TEST\",\"outcomes\":{}}",StandardOpenOption.CREATE_NEW);
   }

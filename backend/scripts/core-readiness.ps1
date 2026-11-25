@@ -14,7 +14,7 @@ $repo=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $private=Assert-PrivateRehearsalDirectory $PrivateDirectory
 $baseline=Join-Path $private 'baseline'
 # Current manifest is exact V1-V6,V8-V13; unknown SQL is always a failure.
-& node (Join-Path $PSScriptRoot 'enrollment-migration-inventory.mjs');if($LASTEXITCODE){throw 'Current frozen candidate failed verification'}
+& node (Join-Path $PSScriptRoot 'core-demo-inventory.mjs');if($LASTEXITCODE){throw 'Current frozen candidate failed verification'}
 $java=Join-Path $JavaHome 'bin/java.exe';$ErrorActionPreference='Continue';$version=(& $java -version 2>&1|Out-String);$versionCode=$LASTEXITCODE;$ErrorActionPreference='Stop'
 if($versionCode -or $version -notmatch 'version "21\.'){throw 'JDK21 required'}
 $runner=Join-Path $PSScriptRoot 'enrollment-integration-rehearsal.ps1'
@@ -80,12 +80,12 @@ try{
   $encrypted=Get-Content -Raw -LiteralPath (Join-Path $private 'app.dpapi');[IO.File]::WriteAllText((Join-Path $demo 'app.dpapi'),$encrypted,[Text.UTF8Encoding]::new($false))
   $env:DB_PASSWORD=[Net.NetworkCredential]::new('',($encrypted|ConvertTo-SecureString)).Password
   $cp=(Join-Path $repo 'backend/target/classes')+';'+[IO.File]::ReadAllText((Join-Path $private 'classpath.txt')).Trim()
-  $ErrorActionPreference='Continue'; & $java '-Duser.timezone=UTC' -cp $cp (Join-Path $PSScriptRoot 'CoreIntegrationDemo.java') $demo $run.nonce --current *> (Join-Path $private ('demo-'+$Scenario+'-prepare-private.log'));$code=$LASTEXITCODE;$ErrorActionPreference='Stop';if($code){throw 'Demo preparation failed; reconcile exact run, do not reseed/reset'}
+  $ErrorActionPreference='Continue'; & $java '-Duser.timezone=UTC' -cp $cp (Join-Path $PSScriptRoot 'CoreIntegrationDemo.java') $demo $run.nonce --fresh-core *> (Join-Path $private ('demo-'+$Scenario+'-prepare-private.log'));$code=$LASTEXITCODE;$ErrorActionPreference='Stop';if($code){throw 'Demo preparation failed; reconcile exact run, do not reseed/reset'}
   Write-Host "Prepared $Scenario Admin-only scope under private authority; all business objects must use API/UI";return
  }
  if($Action -eq 'ServeBackend'){
   $null=Get-VerifiedPortableResource $demo $ExpectedContainerId 'Account'
-  & $runner -Action ServeBackend -JavaHome $JavaHome -PrivateDirectory $demo -ExpectedContainerId $ExpectedContainerId
+  & $runner -Action ServeBackend -JavaHome $JavaHome -PrivateDirectory $demo -ExpectedContainerId $ExpectedContainerId -CoreDemo
   return
  }
  if($Action -eq 'Cleanup'){

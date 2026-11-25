@@ -5,6 +5,7 @@ param(
  [Parameter(Mandatory=$true)][string]$PrivateDirectory,
  [ValidatePattern('^[a-f0-9]{64}$')][string]$ExpectedContainerId,
  [string]$BaselinePrivateDirectory,
+ [switch]$CoreDemo,
  [switch]$FullSuite
 )
 $ErrorActionPreference='Stop'
@@ -81,7 +82,8 @@ try{
     if($actual -ne (Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash){throw 'Packaged SQL/source mismatch'}
    }
   }finally{$archive.Dispose()}
-  $env:DB_URL=$env:ENROLLMENT_HISTORY_DB_URL;$env:ENROLLMENT_TEST_CONFIG=Join-Path $private 'enrollment-demo-config.json';$env:CHECKIN_TEST_CONFIG=Join-Path $private 'checkin-demo-config.json';$env:DB_USERNAME='fitcenter_account_app';$env:DB_PASSWORD=$app;$env:SPRING_PROFILES_ACTIVE='face-enrollment-rehearsal';$env:ACCOUNT_TEST_SMTP_PORT='11035';$env:JWT_SECRET=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Secret)));$env:SERVER_ADDRESS='127.0.0.1';$env:SERVER_PORT='18086';$env:CORS_ALLOWED_ORIGINS='http://localhost:3000,http://localhost:3001,http://localhost:3002'
+  $env:DB_URL=$env:ENROLLMENT_HISTORY_DB_URL;$env:ENROLLMENT_TEST_CONFIG=Join-Path $private 'enrollment-demo-config.json';$env:CHECKIN_TEST_CONFIG=Join-Path $private 'checkin-demo-config.json';$env:DB_USERNAME='fitcenter_account_app';$env:DB_PASSWORD=$app;$env:SPRING_PROFILES_ACTIVE=if($CoreDemo){'core-demo'}else{'face-enrollment-rehearsal'};$env:ACCOUNT_TEST_SMTP_PORT='11035';$env:JWT_SECRET=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Secret)));$env:SERVER_ADDRESS='127.0.0.1';$env:SERVER_PORT='18086';$env:CORS_ALLOWED_ORIGINS='http://localhost:3000,http://localhost:3001,http://localhost:3002'
+  if($CoreDemo){$env:ENROLLMENT_TEST_CONFIG=$null;$env:CHECKIN_TEST_CONFIG=$null}
   & $java '-Duser.timezone=UTC' -jar (Join-Path $repo 'backend/target/fitcenter-0.0.1-SNAPSHOT.jar');if($LASTEXITCODE){throw 'Rehearsal Backend failed'};return
  }
  if($Action -eq 'Test'){

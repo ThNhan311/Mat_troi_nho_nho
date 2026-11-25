@@ -9,7 +9,7 @@ import javax.sql.DataSource;
 
 /** Fails before Flyway can apply any DDL to a non-rehearsal target. */
 @Configuration
-@Profile({"account-integration-rehearsal","renewal-integration-rehearsal","face-checkin-rehearsal","face-enrollment-rehearsal"})
+@Profile({"core-demo","account-integration-rehearsal","renewal-integration-rehearsal","face-checkin-rehearsal","face-enrollment-rehearsal"})
 public class AccountIntegrationRehearsalConfiguration {
     public static void verify(DataSource source, boolean verified) {
         if (!verified) throw new IllegalStateException("Run the guarded activation rehearsal runner");
@@ -26,14 +26,24 @@ public class AccountIntegrationRehearsalConfiguration {
             throw new IllegalStateException("Rehearsal datasource verification failed; SQLSTATE=" + ex.getSQLState());
         }
     }
+    static void verifyCoreDemoOptions(Environment env) {
+        if (env.getActiveProfiles().length != 1
+                || !env.getProperty("fitcenter.account-integration.guard-verified",Boolean.class,false)
+                || !env.getProperty("fitcenter.renewal.guard-verified",Boolean.class,false))
+            throw new IllegalStateException("Single guarded Core demo profile required");
+        for (String property : List.of("fitcenter.face-service.enabled", "fitcenter.checkin.enabled", "fitcenter.checkin.test-adapter.enabled", "fitcenter.enrollment.enabled"))
+            if (env.getProperty(property,Boolean.class,false))
+                throw new IllegalStateException("Face must remain disabled in Core demo");
+    }
     @Bean
     FlywayMigrationStrategy accountIntegrationMigration(Environment env) {
         return flyway -> {
+            if(Arrays.asList(env.getActiveProfiles()).contains("core-demo")) verifyCoreDemoOptions(env);
             verify(flyway.getConfiguration().getDataSource(), env.getProperty("fitcenter.account-integration.guard-verified", Boolean.class, false));
             Set<String> locations = new HashSet<>();
             for (var l : flyway.getConfiguration().getLocations()) locations.add(l.getDescriptor());
             Set<String> expected=new HashSet<>(Set.of("classpath:db/migration", "classpath:db/activation-rehearsal", "classpath:db/membership-rehearsal", "classpath:db/member-activation-rehearsal"));
-            if(Arrays.asList(env.getActiveProfiles()).contains("renewal-integration-rehearsal") || (Arrays.asList(env.getActiveProfiles()).contains("face-checkin-rehearsal") || Arrays.asList(env.getActiveProfiles()).contains("face-enrollment-rehearsal"))){
+            if(Arrays.asList(env.getActiveProfiles()).contains("core-demo") || Arrays.asList(env.getActiveProfiles()).contains("renewal-integration-rehearsal") || (Arrays.asList(env.getActiveProfiles()).contains("face-checkin-rehearsal") || Arrays.asList(env.getActiveProfiles()).contains("face-enrollment-rehearsal"))){
                 if(!env.getProperty("fitcenter.renewal.guard-verified",Boolean.class,false))throw new IllegalStateException("Renewal runner verification required");
                 expected.add("classpath:db/renewal-rehearsal");
             }
@@ -46,6 +56,10 @@ public class AccountIntegrationRehearsalConfiguration {
             }
             if(Arrays.asList(env.getActiveProfiles()).contains("face-enrollment-rehearsal")){
                 if(!env.getProperty("fitcenter.enrollment.guard-verified",Boolean.class,false)||!env.getProperty("fitcenter.enrollment.enabled",Boolean.class,false))throw new IllegalStateException("Explicit F02 guard required");
+                expected.add("classpath:db/enrollment-rehearsal");
+            }
+            if(Arrays.asList(env.getActiveProfiles()).contains("core-demo")) {
+                expected.add("classpath:db/checkin-rehearsal");
                 expected.add("classpath:db/enrollment-rehearsal");
             }
             if (flyway.getConfiguration().isOutOfOrder() || !locations.equals(expected))
