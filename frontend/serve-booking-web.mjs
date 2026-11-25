@@ -1,3 +1,4 @@
+import {verifyLocalWebBuild} from './web-build-preflight.mjs';
 import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { dirname, resolve, sep, extname } from 'node:path';
@@ -8,6 +9,7 @@ const role = process.argv[2];
 if (!['member', 'pt', 'ad'].includes(role)) throw new Error('Choose member, pt or ad');
 const port = role === 'member' ? 3000 : role === 'pt' ? 3001 : 3002;
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'fitcenter_' + role, 'build/web');
+await verifyLocalWebBuild(root);
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.json': 'application/json',
   '.wasm': 'application/wasm', '.png': 'image/png', '.svg': 'image/svg+xml', '.css': 'text/css', '.ttf': 'font/ttf' };
 http.createServer(async (request, response) => {

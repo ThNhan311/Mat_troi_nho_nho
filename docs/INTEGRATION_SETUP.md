@@ -52,6 +52,14 @@ Focused Face transport/enrollment là subset của selected full, không cộng.
 
 Các inventories lịch sử I01/Renewal/F01 vẫn fail-closed khi candidate khác: checkout lần lượt d2774c9/4af8bb8/c3eb411 để tái lập evidence cũ, hoặc dùng entrypoint hiện hành. Không bỏ assertion để làm pass. Current exact inventory là [F02 candidate](../database/enrollment-integration-candidate.json), scripts cũ không phải current release plan.
 
+## Kiểm Web runtime assets
+
+Build thành công chưa đủ nếu cache Web SDK bị thiếu CanvasKit JavaScript. Static server hiện kiểm cả JS/Wasm và local-renderer config trước listen, không serve trang trắng hoặc tự fallback CDN. Nếu thiếu: dùng đúng Flutter SDK đã pin, chạy `flutter precache --web --force` từ nguồn SDK chính thức hoặc khôi phục artifact từ bundle cùng phiên bản đã kiểm SHA, rồi build lại. Không nâng SDK/dependency hoặc copy build của worktree cũ.
+
+```powershell
+node --test frontend/web-build-preflight.test.mjs
+```
+
 ## Demo ba Web app, một Backend/DB/mail
 
 Build cả ba app với cùng API base và giữ lock:
