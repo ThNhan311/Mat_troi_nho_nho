@@ -1,3 +1,24 @@
+# Current Core candidate: fresh và upgrade tách biệt
+
+Quyết định người dùng25/11 thay giới hạn chờ Database owner trong snapshot DB01 bên dưới: `membership_paid_periods` là nguồn kỳ cấp quyền duy nhất. M03 COUNTER/receipt/snapshots được giữ. Không chờ Duy để chuẩn bị và kiểm thử ứng viên riêng; vẫn không thay DB chung/production.
+
+| Đích | Đường hiện hành |
+|---|---|
+| Fresh demo/dev | [Portable setup](INTEGRATION_SETUP.md), V1–V6,V8–V13 exact; **không V7, callback hoặc V14**. V14 chỉ cần hợp nhất legacy physical periods/receipt reservations, fresh đã canonical nên không cần. |
+| DB chưa V7, có V1–V6/history có nguồn | Inventory/backup, giữ payment dates; bỏ V7 khỏi pending locations, áp V8–V13 phù hợp dependency. Không lấp version7. V14 chỉ khi có legacy period/receipt sources cần nhập. |
+| DB đã V7 đúng checksum | Giữ V7 source/checksum để resolve lịch sử, **không chạy lại**. Compatibility DB01 phải phục hồi payment dates có nguồn **trước V9/V11**, rồi V14. Không đoán snapshots/ngày/giá từ catalog hiện tại. |
+| DB không rõ authority/history, refund/missing provenance/conflict | Chỉ báo cáo, không migrate/nhận quyền sở hữu. Cần đích, inventory, backup và nguồn dữ liệu trước khi thực hiện. |
+
+V7 nguồn pin558fb03/SHA256668fdd672fdcff04e89525b3cadec3bc957f186f38fe0065dc4417a6f1b29b41/Flyway-349926232 giữ tại Git ref đã công bố; V1–V14 đã công bố nguyên bytes. Không renumber/out-of-order/history edits/repair/clean. V14 chỉ nằm proposal location, không được đóng gói default/fresh. Dữ liệu V7 archive/read-only view không nhận ghi độc lập; writers mới chỉ canonical paid periods. `targetUpgradeVerified=false` khi chưa có DB cũ thực tế, **không chặn fresh demo**. [Inventory chỉ đọc](DB_INVENTORY.md), [DB01 scenario evidence lịch sử](backend-handover/evidence/DB01_MIGRATION_COMPATIBILITY.md).
+
+M04 finding đã sửa trong candidate: summary thiếu snapshot lấy live name đúng period plan UUID; history thiếu snapshot vẫn null, không bịa tên/giá lịch sử. [API](backend-handover/05_API_DOCUMENTATION.md).
+
+---
+
+## Snapshot thiết kế và rehearsal DB01 đã đóng (lịch sử)
+
+Phần dưới ghi chính xác thí nghiệm DB01 trước quyết định mới. Scenario “fresh protected V7” chỉ là kiểm thử compatibility private với backup trước DROP; **không phải fresh setup hiện hành hoặc chỉ dẫn áp V7 mới**. Câu cũ “gap7 chặn release/chờ owner duyệt slot” được thay bởi phân loại ở trên. Bằng chứng cũ không bị biến thành lượt kiểm thử mới.
+
 # DB-01 — Compatibility candidate V7 / Backend Membership
 
 **Candidate đã thử trên DB riêng; chưa được dùng cho DB chung hoặc production. `releaseReady=false`.** [Evidence](backend-handover/evidence/DB01_MIGRATION_COMPATIBILITY.md), [source manifest](backend-handover/proposals/db01/candidate-manifest.json), [R01 phát hiện](backend-handover/evidence/R01_MAIN_INTEGRATION_READINESS.md), [portable setup](INTEGRATION_SETUP.md).

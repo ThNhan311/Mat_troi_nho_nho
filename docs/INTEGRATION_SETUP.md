@@ -1,6 +1,6 @@
 # Portable Core setup và demo tích hợp — Windows
 
-[Repository overview](../README.md), [trạng thái](PROJECT_STATUS.md), [quyết định](DECISIONS.md). Đây là **guarded rehearsal trên DB test riêng**, không production install. Chuỗi V1–V6,V8–V13 frozen, không V7; `releaseReady=false` cho đến khi inventory/order/backfill DB được thống nhất. [R01 snapshot](backend-handover/evidence/R01_MAIN_INTEGRATION_READINESS.md) ghi các lỗi trước R02.
+[Repository overview](../README.md), [trạng thái](PROJECT_STATUS.md), [quyết định](DECISIONS.md). Đây là **fresh demo/dev Web Core trên DB test riêng**, không production deployment. Chuỗi V1–V6,V8–V13 được ghim nguyên bytes; số version không liên tục hợp lệ. V7 legacy, V14 và compatibility callback **không** thuộc fresh path. [Fresh manifest](../database/core-demo-candidate.json) pin exact [SQL inventory](../database/enrollment-integration-candidate.json); cờ releaseReady=false trong inventory lịch sử không phải kết luận fresh demo thất bại. `targetUpgradeVerified=false`: chưa có DB cũ thực tế được nâng cấp. [Upgrade riêng](DB01_UPGRADE.md). [R01 snapshot](backend-handover/evidence/R01_MAIN_INTEGRATION_READINESS.md) ghi các lỗi trước R02.
 
 ## Công cụ và cấu hình máy đích
 
@@ -76,10 +76,10 @@ foreach ($app in @('member','pt','ad')) {
 }
 ```
 
-Mỗi scenario dùng một pair DB mới và Admin-only fixture riêng. Core: plan/accounts/M03/policy/OTP/slot/booking/cancel/rebook qua API/UI; Renewal: các plan/accounts/M03/OTP/PENDING/simulator/period read-back qua API/UI. Không seed Member ACTIVE để giả account activation. Dùng Clock thật, không giả hoàn thành buổi tương lai.
+Lượt nghiệm thu hiện hành dùng **một pair mới, một Backend, một DB history và một mail sink**: chỉ seed Admin; plan/accounts/M03/policy/OTP hai role/slot/booking/cancel/rebook rồi renewal PENDING/simulator SUCCESS/current-next/FAILED/CANCELLED/replay/ownership cùng scope. Mọi đối tượng nghiệp vụ tạo qua API/UI. Harness Renewal riêng chỉ để tái lập lịch sử, không thay kết quả combined. Không seed Member ACTIVE để giả account activation. Dùng Clock thật, không giả hoàn thành buổi tương lai.
 
 ```powershell
-$scenario = 'Core' # Lượt riêng tiếp theo dùng Renewal.
+$scenario = 'Core' # Luồng combined hiện hành, cùng DB tới hết renewal.
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $runner -Action PrepareDemo -JavaHome $jdk -PrivateDirectory $private -ExpectedContainerId $id -Scenario $scenario
 $demo = Join-Path $private ('demo-'+$scenario.ToLowerInvariant())
 # Terminal riêng: backend và sink phải dùng cùng demo scope.
@@ -95,12 +95,10 @@ Các dòng server chạy ở **terminal riêng** hoặc background helper Hidden
 Cho harness, nạp PGPASSWORD vào **process** từ DPAPI của demo bằng `ConvertTo-SecureString`/`Net.NetworkCredential`, không in giá trị. Sau đó:
 
 ```powershell
-node frontend/verify-core-integration.mjs $demo $playwright --current
-# Scenario Renewal trên pair khác: stop đúng Backend/mail Core trước khi đổi scope.
-node frontend/verify-renewal-integration.mjs $demo $playwright --current
+node frontend/verify-core-integration.mjs $demo $playwright --combined
 ```
 
-Không chạy hai harness trên cùng pair hoặc replay write sau lỗi. Nếu timeout, đối chiếu intent/UUID ledger trước cleanup; không dò plan theo tên vì name không unique. Member/PT/Admin auth token memory; reload/login đọc lại server. Face test config có kiosk tổng hợp riêng theo guard nhưng không có capture/profile binding: không admission thật. Default Face vẫn off; F03B dataset/calibration/evaluation đang hoãn. Simulator ghi “Thanh toán mô phỏng”, không thu tiền thật. Các module chưa có API hiện Chưa khả dụng; chỉ Web được kiểm chứng.
+Không chạy lại harness trên scope đã có intent ledger hoặc replay write sau lỗi. Nếu timeout, đối chiếu intent/UUID ledger trước cleanup; không dò plan theo tên vì name không unique. Member/PT/Admin auth token memory; reload/login đọc lại server. Profile **core-demo** không tạo kiosk/capture/enrollment config; check-in, enrollment và remote Face Service đều false. Không cần Face service/model chạy. Face admission thật off; F03B dataset/calibration/evaluation đang hoãn. Simulator ghi “Thanh toán mô phỏng”, không thu tiền thật. Các module chưa có API hiện Chưa khả dụng; chỉ Web được kiểm chứng.
 
 ## Cleanup
 
@@ -117,10 +115,12 @@ Chỉ UUID có ledger, không truncate/broad delete/drop/clean/repair. Giữ nam
 
 ## Fresh install và upgrade
 
-Fresh rehearsal dùng **resource/pair mới** theo trên, không tái sử dụng shared DB. Đây không phải đường production fresh-install; canonical release mới chưa được chốt. Default chỉ V1–V6 vẫn dùng account test có sẵn, không tự bật Account/Membership write mới.
+Fresh demo/dev dùng **resource/pair mới**, profile core-demo và exact12SQL theo trên. V1–V6 giữ default legacy path; V8–V13 được opt-in bằng runner guarded. Không apply V7, V14 hoặc callback DB01 trên DB fresh; không tạo V7 rỗng để lấp số. Schema V12/V13 hiện diện không bật Face. Account OTP/mail sink, M03 và renewal/Admin simulator được bật rõ ràng trong core-demo, không trong default profile.
 
-Với DB hiện hữu, người quản lý DB chạy [inventory chỉ đọc](../database/tools/read-only-inventory.sql) qua tài khoản read-only; hướng dẫn ở [DB inventory](DB_INVENTORY.md). Task này không kết nối DB chung. Phải biết version/script/checksum/status, schema/period/receipt/snapshot/activation state và backup trước kế hoạch upgrade. Không giả định V7 chưa áp trên máy đồng đội. Không áp V7 DROP chưa backfill, không sửa V1–V13/renumber/history/out-of-order/repair để né gap7. Nếu V7 đã áp, dữ liệu bị drop cần nguồn backup/reconciliation thật; không dựng lại từ giá plan hôm nay. **releaseReady=false** cho đến khi inventory/backfill/order được đồng bộ và kiểm chứng riêng.
+DB hiện hữu là **đường khác**: [inventory read-only](DB_INVENTORY.md), [phân loại và upgrade DB01](DB01_UPGRADE.md). Chỉ inventory tài nguyên có full authority/manifest và đích được xác định. DB chưa V7 không được thêm V7 destructive. DB đã V7 cần compatibility có nguồn trước V9/V11, rồi V14 upgrade-only. Missing provenance/refund/conflict phải dừng và báo; không dựng lịch sử từ plan hôm nay. Không sửa applied bytes/history, clean/repair/out-of-order/renumber. Chưa có đích DB cũ thực tế: targetUpgradeVerified=false; không chặn nghiệm thu fresh demo hoặc đồng nghĩa mọi DB đều tương thích.
 
 ## Kết quả và giới hạn đã kiểm chứng
 
 [R02 evidence](backend-handover/evidence/R02_PORTABLE_SETUP.md) ghi source commit, suites thực chạy, UI/HTTP/DB, cache dùng, lỗi đã sửa và cleanup. Không dùng counts lịch sử làm lượt vừa chạy; máy mới phải chạy guard và selected tests theo scope của mình.
+
+Current candidate evidence: [Core main candidate](backend-handover/evidence/CORE_MAIN_CANDIDATE.md). Báo cáo R02 bên trên là lịch sử; counts mới chỉ có trong evidence ứng viên cuối.

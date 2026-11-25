@@ -82,3 +82,9 @@ Người dùng cho sửa portable bootstrap/runner và tài liệu, không merge
 ## DB01 — compatibility candidate và nguồn kỳ, 25/11/2026
 
 Theo task người dùng: giải quyết xung đột V7 trên DB test, chưa DB chung/main. **Đề xuất kỹ thuật đã rehearsal:** canonical `membership_paid_periods`, V7 source archive immutable/read-only view, compatibility callback trước pending migrations/V9/V11; V1–V13 nguyên bytes, V14 candidate ngoài default chưa là slot release. Không invent COUNTER/quote/date/receipt, không refund policy mới; missing source/conflict/refund cần reconcile trước import. Initial M03/Renewal locking/business rules giữ nguyên. [Hai đường/giới hạn/inventory](DB01_UPGRADE.md), [evidence](backend-handover/evidence/DB01_MIGRATION_COMPATIBILITY.md). Không coi đề xuất đã test là phê duyệt rollout DB chung hoặc sửa M04/consumer contract.
+
+## Core main candidate — quyết định đã chốt25/11/2026
+
+Người dùng toàn quyền: membership_paid_periods là nguồn kỳ cấp quyền duy nhất; M03 COUNTER/receipt/snapshots giữ nguyên. Fresh demo/dev V1–V6,V8–V13, không V7 rỗng/destructive, không V14/callback legacy không cần thiết. Version gap hợp lệ; không đổi bytes/checksum/version đã công bố, history/out-of-order/repair/clean. DB cũ đã V7 dùng compatibility có nguồn trước dependency rồi V14; missing provenance/refund/conflict báo rõ. Không có đích DB cũ thực tế thì targetUpgradeVerified=false, không chặn fresh demo. [Setup](INTEGRATION_SETUP.md), [upgrade](DB01_UPGRADE.md).
+
+Core-demo là profile private guarded riêng; OTP/mail sink, quầy, renewal/Admin simulator bật rõ; Face check-in/enrollment/remote service tắt. Face accuracy/PAD/camera-to-admission người thật tiếp tục hoãn. M04 summary dùng đúng period plan UUID/live catalog name khi snapshot thiếu; history không dựng snapshot. Được commit/push ứng viên và draft PR main sau review/tests; chưa merge/deploy hoặc sửa DB chung. Các snapshot chờ Duy/gap7 release blockers ở trên không còn áp dụng cho fresh demo.

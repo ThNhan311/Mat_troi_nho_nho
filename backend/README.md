@@ -5,7 +5,7 @@ Dùng **JDK21**, Maven Wrapper và PostgreSQL17.12 test riêng. Entrypoint cho n
 Không cần container, ID hay credentials của máy bàn giao. Bootstrap tạo image-pinned container/volume riêng, app role không đặc quyền, secrets DPAPI mới trên máy đích và manifests ngoài Git. Không copy private authority từ worktree cũ.
 
 - Default: canonical [V1–V6](../database/migrations/), `ddl-auto=validate`, activation/initial-membership/renewal/Face gates không bật như release.
-- Guarded rehearsal hiện hành: frozen V1–V6,V8–V13, loopback15437/15441, SMTP sink chỉ example.invalid, simulator không tiền thật, Face test adapter không phải nhận diện thật. V7 vẫn quarantine, releaseReady=false.
+- Fresh demo/dev hiện hành: core-demo guarded, frozen V1–V6,V8–V13, loopback15437/15441, SMTP sink chỉ example.invalid, simulator ADMIN không tiền thật. Face/check-in/enrollment/remote service tắt; không cần test adapter để chạy Core. Không V7/V14/callback legacy trên fresh; gap7 hợp lệ. targetUpgradeVerified=false cho DB cũ thực tế chưa xác định. Các profile Face rehearsal riêng chỉ phục vụ protocol tests, không nhận diện/admission thật.
 - Các quickstart từng task là lịch sử và đã ghi commit pin. Dùng portable entrypoint cho checkout hiện hành; không lấy kết quả65/668/1106 tests trong tài liệu cũ làm lượt vừa chạy.
 - Cấu hình mẫu: [.env.example](.env.example), chỉ tên biến/giá trị non-secret. Spring không tự load file này. Credentials do runner đưa vào process, không command line/log/Git.
 

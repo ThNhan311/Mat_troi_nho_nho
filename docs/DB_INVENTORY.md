@@ -14,10 +14,10 @@ Cần đối chiếu: version/script/checksum/success, các bảng/cột/constra
 
 Phân nhánh kế hoạch:
 
-- DB trống: chỉ chạy một chuỗi canonical release đã thống nhất. Rehearsal V1–V6,V8–V13 của R02 không tự trở thành release chain.
+- DB trống private demo/dev: dùng exact V1–V6,V8–V13 theo setup hiện hành; không V7/callback/V14. Đây không là xác nhận production deployment.
 - DB V1–V6: cần kế hoạch backfill bảo toàn periods/receipts/snapshots và version/order trước bật Account/Membership write.
 - DB đã áp V7 hoặc V8+: giữ nguyên script/checksum/history đã áp; đối chiếu backup và forward corrective migration được phối hợp. Không rewrite/renumber V7–V13 hoặc bật out-of-order để ghép các history khác nhau.
 
-Thiếu inventory thì **releaseReady=false**. V7 trên ref Database558fb03 DROP2payment period columns trước backfill và khác model M03/V11, không được áp chỉ để làm demo chạy. Portable rehearsal chỉ dùng test resources mới có guard; không tái sử dụng DB này.
+Thiếu inventory của DB cũ thì **targetUpgradeVerified=false** cho target đó; không chặn nghiệm thu fresh demo. Các cờ releaseReady=false ở báo cáo lịch sử nói về rollout DB đích chưa xác định. V7 trên ref Database558fb03 DROP2payment period columns trước backfill và khác model M03/V11, không được áp chỉ để làm demo chạy. Portable rehearsal chỉ dùng test resources mới có guard; không tái sử dụng DB này.
 
 DB01 bổ sung [inventory bắt buộc expected database/role và so hai model](../database/tools/db01-read-only-inventory.sql), cùng [hướng dẫn từng target và hai đường upgrade](DB01_UPGRADE.md). Chưa có target DB chung được xác định; không chạy SQL/upgrade theo phỏng đoán.
