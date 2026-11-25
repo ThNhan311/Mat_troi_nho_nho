@@ -52,6 +52,8 @@ class MembershipServiceTest {
     @Mock
     private MembershipRepository membershipRepository;
 
+    @Mock private vn.edu.tdtu.fitcenter.repository.MembershipPlanRepository planRepository;
+
     @InjectMocks
     private MembershipService membershipService;
 
@@ -256,8 +258,45 @@ class MembershipServiceTest {
 
     @Test void expirationUsesVietnamBusinessDateAcrossUtcMidnight() {
         clock = Clock.fixed(Instant.parse("2026-11-05T18:00:00Z"), ZoneOffset.UTC);
-        membershipService = new MembershipService(membershipRepository, memberRepository, userRepository, clock);
+        membershipService = new MembershipService(membershipRepository, memberRepository, userRepository, clock, planRepository);
         assertEquals(MembershipStatus.EXPIRED, responseFor(MembershipStatus.ACTIVE,
                 LocalDate.of(2026, 10, 1), LocalDate.of(2026, 11, 5)).status());
+    }
+
+    private Membership canonicalMembership(vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService periods) {
+        mockActiveMember();
+        membershipService.setPeriods(periods);
+        when(periods.enabled()).thenReturn(true);
+        var m=Membership.builder().id(UUID.randomUUID()).member(testMember)
+            .plan(MembershipPlan.builder().id(UUID.randomUUID()).name("Aggregate original").build())
+            .status(MembershipStatus.ACTIVE).startDate(LocalDate.of(2026,10,1))
+            .expiryDate(LocalDate.of(2026,12,31)).build();
+        when(membershipRepository.findByMember_Id(testMember.getId())).thenReturn(List.of(m));
+        return m;
+    }
+    @Test void missingLegacySnapshotUsesCatalogNameOfPeriodPlanNotAggregatePlan() {
+        var periods=mock(vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService.class);
+        var m=canonicalMembership(periods);var id=UUID.randomUUID();
+        when(periods.covered(eq(m.getId()),any(),any())).thenReturn(true);
+        when(periods.summary(eq(m.getId()),any())).thenReturn(java.util.Map.of("plan_id",id));
+        when(planRepository.findById(id)).thenReturn(Optional.of(MembershipPlan.builder().id(id).name("Current catalog").build()));
+        var response=membershipService.getMyMemberships("member@test.com").get(0);
+        assertEquals(id,response.planId());assertEquals("Current catalog",response.planName());
+        verify(planRepository,never()).findById(m.getPlan().getId());
+    }
+    @Test void realSnapshotNameIsRetainedWithoutCatalogLookup() {
+        var periods=mock(vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService.class);
+        var m=canonicalMembership(periods);var id=UUID.randomUUID();
+        when(periods.covered(eq(m.getId()),any(),any())).thenReturn(true);
+        when(periods.summary(eq(m.getId()),any())).thenReturn(java.util.Map.of("plan_id",id,"plan_name_snapshot","Historical quote"));
+        var response=membershipService.getMyMemberships("member@test.com").get(0);
+        assertEquals(id,response.planId());assertEquals("Historical quote",response.planName());verifyNoInteractions(planRepository);
+    }
+    @Test void paidCoverageGapDoesNotGrantActiveStatus() {
+        var periods=mock(vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService.class);
+        var m=canonicalMembership(periods);
+        when(periods.summary(eq(m.getId()),any())).thenReturn(java.util.Map.of("plan_id",m.getPlan().getId(),"plan_name_snapshot","Known period"));
+        when(periods.covered(eq(m.getId()),any(),any())).thenReturn(false);
+        assertEquals(MembershipStatus.EXPIRED,membershipService.getMyMemberships("member@test.com").get(0).status());
     }
 }

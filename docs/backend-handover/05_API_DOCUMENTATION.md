@@ -216,3 +216,7 @@ F02 Admin Face enrollment: [contract](decisions/2026-11-24_F02_FACE_ENROLLMENT.m
 ## F03A — private Face Service/evaluation
 
 [Contract/giới hạn](decisions/2026-11-24_F03A_FACE_SERVICE.md), [quickstart](24_FACE_SERVICE_QUICKSTART.md), [evidence](evidence/F03A_FACE_SERVICE.md), [private service OpenAPI](../../face/service_v2/openapi.json). Không endpoint public mới, không đổi default gates/migrations; actual PAD/accuracy/camera chưa được kiểm chứng.
+
+### M04 current-plan identity (Core candidate)
+
+`GET /api/v1/memberships/me` pairs `planId` and `planName` from the same paid-period plan. A recorded name snapshot is retained. If a legacy period has no name snapshot, the summary uses the current catalog name of that exact plan UUID; this is not a reconstructed historical name. Period/history endpoints retain null unknown name/price/duration/currency snapshots. Current/NEXT/HISTORY phases and owner isolation are unchanged.

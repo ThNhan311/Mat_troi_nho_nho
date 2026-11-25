@@ -19,6 +19,7 @@ import vn.edu.tdtu.fitcenter.domain.enums.MembershipStatus;
 import vn.edu.tdtu.fitcenter.dto.membership.MembershipResponse;
 import vn.edu.tdtu.fitcenter.repository.MemberRepository;
 import vn.edu.tdtu.fitcenter.repository.MembershipRepository;
+import vn.edu.tdtu.fitcenter.repository.MembershipPlanRepository;
 import vn.edu.tdtu.fitcenter.repository.UserRepository;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class MembershipService {
     private final MemberRepository memberRepository;
     private final UserRepository userRepository;
     private final Clock clock;
+    private final MembershipPlanRepository planRepository;
     private vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService periods;
     @org.springframework.beans.factory.annotation.Autowired public void setPeriods(vn.edu.tdtu.fitcenter.renewal.MembershipPeriodService periods){this.periods=periods;}
 
@@ -80,11 +82,22 @@ public class MembershipService {
         return new MembershipResponse(
                 membership.getId(),
                 current==null?membership.getPlan().getId():(java.util.UUID)current.get("plan_id"),
-                current==null||current.get("plan_name_snapshot")==null?membership.getPlan().getName():(String)current.get("plan_name_snapshot"),
+                currentPlanName(membership, current),
                 membership.getStartDate(),
                 membership.getExpiryDate(),
                 effectiveStatus(membership)
         );
+    }
+
+    // A missing legacy snapshot is not a historical name. Resolve the live catalog
+    // using the SAME UUID returned to M04; never pair another plan's name with it.
+    private String currentPlanName(Membership membership, java.util.Map<String,Object> current) {
+        if (current == null) return membership.getPlan().getName();
+        if (current.get("plan_name_snapshot") != null) return (String) current.get("plan_name_snapshot");
+        var planId = (java.util.UUID) current.get("plan_id");
+        return planRepository.findById(planId)
+                .orElseThrow(() -> new IllegalStateException("Paid period plan is missing"))
+                .getName();
     }
 
     private MembershipStatus effectiveStatus(Membership membership) {

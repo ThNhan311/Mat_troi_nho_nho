@@ -41,6 +41,20 @@ class RenewalPostgresTest {
   var rows=json.readTree(call("GET","/memberships/"+m+"/periods",(String)null,a.token(),null).body()).get("periods");assertEquals(2,rows.size());assertEquals("CURRENT",rows.get(0).get("phase").asText());assertEquals("NEXT",rows.get(1).get("phase").asText());
   clock.value.set(Instant.parse("2028-03-01T17:00:00Z"));var summary=json.readTree(call("GET","/memberships/me",(String)null,a.token(),null).body());assertEquals(p.get("id"),summary.get(0).get("planId").asText());assertEquals(old.get("plan_id"),raw(m).get("plan_id"));
  }
+ @Test void legacyMissingSnapshotUsesSameCurrentPlanAndKeepsUnknownHistoryNull()throws Exception{
+  var a=actor();UUID m=membership(a,2);var original=raw(m);var next=plan(3,"0");
+  // Synthetic legacy import with genuinely unknown quote snapshots, not a corrupted renewal.
+  jdbc.update("INSERT INTO membership_paid_periods(member_id,membership_id,plan_id,source,start_date,end_date) VALUES(?,?,?,'LEGACY_AGGREGATE','2028-03-02','2028-03-04')",a.member(),m,UUID.fromString((String)next.get("id")));
+  jdbc.update("UPDATE memberships SET expiry_date='2028-03-04' WHERE id=?",m);
+  clock.value.set(Instant.parse("2028-03-01T17:00:00Z"));
+  var response=call("GET","/memberships/me",(String)null,a.token(),null);status(response,200);var summary=json.readTree(response.body()).get(0);
+  assertEquals(next.get("id"),summary.get("planId").asText());assertEquals(next.get("name"),summary.get("planName").asText());assertNotEquals(original.get("plan_id").toString(),summary.get("planId").asText());
+  var historyResponse=call("GET","/memberships/"+m+"/periods",(String)null,a.token(),null);status(historyResponse,200);var rows=json.readTree(historyResponse.body()).get("periods");
+  assertEquals("HISTORY",rows.get(0).get("phase").asText());assertEquals("CURRENT",rows.get(1).get("phase").asText());
+  for(String field:List.of("planName","amount","durationDays","currency"))assertTrue(rows.get(1).get(field).isNull());
+  var other=actor();error(call("GET","/memberships/"+m+"/periods",(String)null,other.token(),null),404,"ERR_NOT_FOUND");
+  assertEquals(original.get("plan_id"),raw(m).get("plan_id"));assertEquals(2,jdbc.queryForObject("SELECT count(*) FROM membership_paid_periods WHERE membership_id=?",Integer.class,m));
+ }
  @Test void expiredRenewalKeepsIdStartsTodayAndDoesNotBridgeUnpaidGap()throws Exception{
   var a=actor();UUID m=membership(a,1);clock.value.set(Instant.parse("2028-03-02T17:00:00Z"));jdbc.update("UPDATE memberships SET status='EXPIRED' WHERE id=?",m);var q=quote(a,m,plan(2,"0"));var r=settle(q,"SUCCESS",UUID.randomUUID());status(r,200);assertEquals("2028-03-03",body(r).get("periodStart"));assertEquals("2028-03-04",body(r).get("periodEnd"));assertEquals(m.toString(),body(r).get("membershipId"));assertEquals(LocalDate.of(2028,3,3),((java.sql.Date)raw(m).get("start_date")).toLocalDate());assertFalse(new MembershipPeriodService(jdbc,true).covered(m,LocalDate.of(2028,2,29),LocalDate.of(2028,3,3)));
  }
