@@ -1616,5 +1616,18 @@
     "newCiRuns": 0,
     "ciPassClaimed": false,
     "finalLocalLinks": 1006
+  },
+  "publication": {
+    "draftPr": "https://github.com/ThNhan311/Mat_troi_nho_nho/pull/8",
+    "candidateCommit": "1e27cf3a5a835dab1dfb270616b76e84695e96d5",
+    "baseMain": "5c8693bfaeb4c0e85f4c7bcb21c5fd487dad3516",
+    "localRemoteMatched": true,
+    "draft": true,
+    "merged": false,
+    "mergeableAtCheck": true,
+    "workflowRuns": 0,
+    "commitStatuses": 0,
+    "notCIPass": true,
+    "publicationOnlyDocsAfterCandidate": true
   }
 }
