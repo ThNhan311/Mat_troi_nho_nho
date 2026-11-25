@@ -1,0 +1,2 @@
+before-upgrade.sql text eol=lf
+migration/*.sql text eol=lf
