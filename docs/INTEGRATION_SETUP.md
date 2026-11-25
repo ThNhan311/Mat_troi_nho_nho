@@ -120,3 +120,7 @@ Chỉ UUID có ledger, không truncate/broad delete/drop/clean/repair. Giữ nam
 Fresh rehearsal dùng **resource/pair mới** theo trên, không tái sử dụng shared DB. Đây không phải đường production fresh-install; canonical release mới chưa được chốt. Default chỉ V1–V6 vẫn dùng account test có sẵn, không tự bật Account/Membership write mới.
 
 Với DB hiện hữu, người quản lý DB chạy [inventory chỉ đọc](../database/tools/read-only-inventory.sql) qua tài khoản read-only; hướng dẫn ở [DB inventory](DB_INVENTORY.md). Task này không kết nối DB chung. Phải biết version/script/checksum/status, schema/period/receipt/snapshot/activation state và backup trước kế hoạch upgrade. Không giả định V7 chưa áp trên máy đồng đội. Không áp V7 DROP chưa backfill, không sửa V1–V13/renumber/history/out-of-order/repair để né gap7. Nếu V7 đã áp, dữ liệu bị drop cần nguồn backup/reconciliation thật; không dựng lại từ giá plan hôm nay. **releaseReady=false** cho đến khi inventory/backfill/order được đồng bộ và kiểm chứng riêng.
+
+## Kết quả và giới hạn đã kiểm chứng
+
+[R02 evidence](backend-handover/evidence/R02_PORTABLE_SETUP.md) ghi source commit, suites thực chạy, UI/HTTP/DB, cache dùng, lỗi đã sửa và cleanup. Không dùng counts lịch sử làm lượt vừa chạy; máy mới phải chạy guard và selected tests theo scope của mình.

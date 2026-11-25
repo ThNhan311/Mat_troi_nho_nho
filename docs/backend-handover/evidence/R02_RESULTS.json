@@ -1,0 +1,636 @@
+{
+  "task": "R02 portable setup and integration docs",
+  "recordedAt": "2026-11-25T04:45:21.435537+00:00",
+  "branch": "integration/core-main-readiness",
+  "testedCandidateCommit": "44d579863d6c703fc062d83c8a6b4d6655cd1b55",
+  "r01Commit": "a2051b9b758698aae3946e62261c4f2cdc2566bf",
+  "releaseReady": false,
+  "freshRehearsalReady": true,
+  "fullBackend": {
+    "sourceCommit": "ce54e002a5047c423f33b9da4327de2c53283cf2",
+    "suites": [
+      {
+        "name": "vn.edu.tdtu.fitcenter.activation.ActivationRehearsalGuardTest",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.activation.MemberActivationGuardTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.activation.MemberActivationServiceTest",
+        "tests": 23,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.activation.PtActivationServiceTest",
+        "tests": 23,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.activation.TestSmtpActivationMailerTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.checkin.CheckinUnitTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.controller.BookingControllerTest",
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.controller.MembershipControllerTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.controller.PersonalTrainerControllerTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.controller.PtAvailabilityControllerTest",
+        "tests": 29,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.controller.PtBookingControllerTest",
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.DatabaseAlignmentTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.enrollment.EnrollmentUnitTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.enrollment.FaceServiceUnitTest",
+        "tests": 17,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.AccountHttpTest",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.CheckinDefaultHttpTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.CheckinPostgresTest",
+        "tests": 40,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.CoreMigrationCandidatePostgresTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.EnrollmentPostgresTest",
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.FaceServicePostgresTest",
+        "tests": 13,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.HttpBaselineTest",
+        "tests": 433,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.IntegratedInitialMembershipPostgresTest",
+        "tests": 54,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.IntegratedPtActivationPostgresTest",
+        "tests": 23,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.MemberAccountActivationPostgresTest",
+        "tests": 24,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.MemberActivationSchemaPostgresTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.RenewalPostgresTest",
+        "tests": 46,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.membershipinitial.InitialMembershipGuardTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.renewal.RenewalDatesTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.renewal.RenewalRequestTest",
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.repository.BookingRepositoryQueryTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.security.JwtAuthenticationFilterTest",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.security.JwtServiceTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.AuthServiceTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.AvailabilityServiceTest",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.BookingEligibilityValidatorTest",
+        "tests": 22,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.BookingLifecycleValidatorTest",
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.BookingPolicyServiceTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.BookingPolicyWriteServiceTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.BookingQueryServiceTest",
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.MembershipPlanCreateServiceTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.MembershipServiceTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.PtBookingQueryServiceTest",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.ServiceEligibilityValidatorTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "totals": {
+      "tests": 1106,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "focusedNotAdded": true
+  },
+  "backendSuiteSelection": "*Test excluding PtActivationPostgresTest, ActivationSchemaRehearsalTest, InitialMembershipPostgresTest (separate historical rehearsal locations). Integrated replacement coverage selected.",
+  "focusedBackend": {
+    "passed": 63,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "notAddedToFull": true
+  },
+  "runnerChecks": {
+    "powershellGuardParser": {
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeResourceGuard": {
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    "nodeWebRuntimePreflight": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    "unknownSqlRejected": true
+  },
+  "flutter": {
+    "member": {
+      "visibleTests": 80,
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0,
+      "suiteSuccess": true,
+      "analyzeExit": 0,
+      "webBuildExit": 0
+    },
+    "pt": {
+      "visibleTests": 55,
+      "passed": 55,
+      "failed": 0,
+      "skipped": 0,
+      "suiteSuccess": true,
+      "analyzeExit": 0,
+      "webBuildExit": 0
+    },
+    "ad": {
+      "visibleTests": 133,
+      "passed": 133,
+      "failed": 0,
+      "skipped": 0,
+      "suiteSuccess": true,
+      "analyzeExit": 0,
+      "webBuildExit": 0
+    }
+  },
+  "flutterScope": "analyze --no-fatal-infos, machine client/widget tests, web build; informational lints retained. No Dart/dependency/constraint changes. Rebuilt all apps after same-SDK assets restored.",
+  "e2e": {
+    "core": {
+      "sourceCommit": "44d579863d6c703fc062d83c8a6b4d6655cd1b55",
+      "uiChecks": 26,
+      "httpChecks": 29,
+      "dbChecks": 9,
+      "failed": 0,
+      "skipped": 0,
+      "finishedAt": "2026-11-25T04:37:53.407Z",
+      "scenario": "Only Admin seeded; plan, accounts, counter Membership, policy, activation, availability and bookings created through real API/UI. Real server Clock.",
+      "ui": [
+        "ad original login",
+        "Admin original UI creates real plan201",
+        "member OTP requested202/no-store",
+        "member one-use grant, no JWT",
+        "member ACTIVE after password",
+        "member login after actual activation",
+        "M04 UI same Membership UUID and dates",
+        "M04 renders UUID",
+        "pt OTP requested202/no-store",
+        "pt one-use grant, no JWT",
+        "pt ACTIVE after password",
+        "pt login after actual activation",
+        "PT original UI creates owned real slot",
+        "Vietnam time independent of browser timezone",
+        "member original login",
+        "booking-create server UUID/owner/CONFIRMED",
+        "Member original history same Booking UUID",
+        "Member UI cancels persisted booking",
+        "explicit-new-booking server UUID/owner/CONFIRMED",
+        "Explicit new action produces new Booking UUID",
+        "Reload drops Member memory session",
+        "Member reload/login",
+        "Reload M04 same Membership",
+        "Reload Member same rebooking UUID",
+        "pt original login",
+        "PT original sessions show both committed history and new booking"
+      ],
+      "http": [
+        "PUT /admin/booking-policy 200",
+        "POST /admin/members 201",
+        "POST /admin/personal-trainers 201",
+        "POST /admin/members 201",
+        "POST /admin/personal-trainers 201",
+        "POST /admin/members/c8199702-df54-41b7-81f5-066648f69f6f/activate-membership 201",
+        "POST /auth/login 401",
+        "POST /auth/login 401",
+        "member actual loopback SMTP delivery",
+        "pt actual loopback SMTP delivery",
+        "POST /auth/member-activation/request-otp 202",
+        "POST /auth/member-activation/verify-otp 200",
+        "POST /auth/member-activation/password 200",
+        "POST /auth/login 200",
+        "POST /auth/pt-activation/request-otp 202",
+        "POST /auth/pt-activation/verify-otp 200",
+        "POST /auth/pt-activation/password 200",
+        "POST /auth/login 200",
+        "GET /trainers 200",
+        "GET /pt/bookings?from=2026-11-24T04%3A37%3A36.157Z&to=2026-12-09T04%3A37%3A36.157Z 200",
+        "GET /bookings/me?from=2026-11-24T04%3A37%3A36.157Z&to=2026-12-09T04%3A37%3A36.157Z 200",
+        "GET /pt/bookings?from=2026-11-24T04%3A37%3A36.157Z&to=2026-12-09T04%3A37%3A36.157Z 200",
+        "POST /bookings/70f8aa85-1967-4377-95f0-d324282a612d/cancel 404",
+        "GET /pt/bookings?from=2026-11-24T04%3A37%3A36.157Z&to=2026-12-09T04%3A37%3A36.157Z 403",
+        "GET /bookings/me?from=2026-11-24T04%3A37%3A36.157Z&to=2026-12-09T04%3A37%3A36.157Z 401",
+        "GET /trainers/ca771a96-a3f1-4d9c-b659-a2e106f01b2a/slots?from=2026-11-24T04%3A37%3A36.157Z&to=2026-12-09T04%3A37%3A36.157Z 200",
+        "GET /trainers/ca771a96-a3f1-4d9c-b659-a2e106f01b2a/slots?from=2026-11-24T04%3A37%3A36.157Z&to=2026-12-09T04%3A37%3A36.157Z 200",
+        "GET /trainers 200",
+        "POST /bookings/70f8aa85-1967-4377-95f0-d324282a612d/cancel 409"
+      ],
+      "db": [
+        "Dedicated E2E database starts with Admin only, no seeded business objects",
+        "M03 creates real counter payment/receipt/snapshots but leaves Member DISABLED",
+        "Both account activations preserve Membership/payment/receipt/snapshots exactly",
+        "Member and PT read the same committed Booking UUID/time",
+        "Owner/role/anonymous checks do not mutate Booking",
+        "PostgreSQL exact Booking UUID/owner/time; slot BOOKED",
+        "Cancel atomically keeps history and reopens future slot",
+        "Repeated old cancel cannot alter rebooked slot or new Booking",
+        "Booking create/cancel/rebook did not change payment/receipt or Membership snapshots"
+      ],
+      "syntheticReadback": {
+        "memberId": "c8199702-df54-41b7-81f5-066648f69f6f",
+        "ptId": "ca771a96-a3f1-4d9c-b659-a2e106f01b2a",
+        "membershipId": "03e828d4-f412-4656-ad87-47deb876d58b",
+        "slotId": "edc7d5f0-19e4-4359-9d57-33a1e48707d9",
+        "cancelledBookingId": "70f8aa85-1967-4377-95f0-d324282a612d",
+        "confirmedRebookingId": "2ee117c3-3b54-4c92-bf13-40266c12f2bc",
+        "startAt": "2026-11-27T07:00:00Z",
+        "endAt": "2026-11-27T08:30:00Z"
+      }
+    },
+    "renewal": {
+      "sourceCommit": "44d579863d6c703fc062d83c8a6b4d6655cd1b55",
+      "uiChecks": 29,
+      "httpChecks": 18,
+      "dbChecks": 10,
+      "failed": 0,
+      "skipped": 0,
+      "finishedAt": "2026-11-25T04:39:32.312Z",
+      "scenario": "Only Admin seeded. Plans, Member, initial counter Membership and renewal quotes/results use actual API/UI. Member activates through actual SMTP/UI. Real server Clock; early renewal CURRENT/NEXT, no future completion.",
+      "ui": [
+        "ad original login",
+        "member OTP requested202/no-store",
+        "member one-use grant, no JWT",
+        "member ACTIVE after password",
+        "member login after actual activation",
+        "Member activation and login use original UI and real loopback mail sink",
+        "Original Member Membership read-back",
+        "create-success-quote server PENDING with exact snapshot",
+        "Member renders true payment UUID",
+        "ad original login",
+        "Admin original navigation simulator SUCCESS",
+        "Server success grants exactly one period",
+        "member original login",
+        "Member reload/login shows server CURRENT/NEXT and SUCCESS",
+        "create-FAILED server PENDING with exact snapshot",
+        "Member renders true payment UUID",
+        "ad original login",
+        "Admin original navigation simulator FAILED",
+        "member original login",
+        "Member reload reflects actual FAILED",
+        "create-CANCELLED server PENDING with exact snapshot",
+        "Member renders true payment UUID",
+        "ad original login",
+        "Admin original navigation simulator CANCELLED",
+        "member original login",
+        "Member reload reflects actual CANCELLED",
+        "Reload clears in-memory Member session",
+        "member original login",
+        "Final login reads committed result from server"
+      ],
+      "http": [
+        "POST /admin/membership-plans 201",
+        "POST /admin/membership-plans 201",
+        "POST /admin/members 201",
+        "POST /admin/members/a2a65c5c-119a-4774-9bc0-9e73958e7427/activate-membership 201",
+        "member actual loopback SMTP delivery",
+        "GET /memberships/9e791f8d-92bf-4d21-b2ee-70fe1f5ace50/periods 200",
+        "GET /payments/me 200",
+        "GET /payments/me 200",
+        "POST /admin/payment-simulator/transactions/cd0193c1-bec1-4123-a560-43f01a9b8252/results 200",
+        "POST /admin/payment-simulator/transactions/cd0193c1-bec1-4123-a560-43f01a9b8252/results 409",
+        "POST /admin/members 201",
+        "POST /auth/member-activation/request-otp 202",
+        "POST /auth/member-activation/verify-otp 200",
+        "POST /auth/member-activation/password 200",
+        "POST /auth/login 200",
+        "GET /payments/cd0193c1-bec1-4123-a560-43f01a9b8252 404",
+        "GET /memberships/9e791f8d-92bf-4d21-b2ee-70fe1f5ace50/periods 404",
+        "POST /admin/payment-simulator/transactions/cd0193c1-bec1-4123-a560-43f01a9b8252/results 403"
+      ],
+      "db": [
+        "Fresh dedicated database contains synthetic Admin only",
+        "M03 counter activation writes one real initial period, account stays DISABLED",
+        "PENDING changes neither expiry nor paid periods",
+        "PostgreSQL same Membership UUID; original plan FK retained and paid future period uses renewal plan",
+        "FAILED does not change dates or periods",
+        "CANCELLED does not change dates or periods",
+        "Exact result replay grants no second period or audit",
+        "Late conflicting failure is traced without downgrading SUCCESS",
+        "Ownership and role cannot grant or expose other Member payments",
+        "M03 receipt/payment preserved and no Booking mutation"
+      ],
+      "readbackScope": "Zero-price renewal; DB validates original plan FK and distinct CURRENT/NEXT paid period, replay and ownership."
+    }
+  },
+  "inventoryReadOnlyChecks": [
+    {
+      "kind": "Baseline",
+      "versions": "1,2,3,4,5,6",
+      "readOnly": true,
+      "tables": 17,
+      "dataUnchanged": true,
+      "failed": 0
+    },
+    {
+      "kind": "Core",
+      "versions": "1,2,3,4,5,6,8,9,10,11,12,13",
+      "readOnly": true,
+      "tables": 28,
+      "dataUnchanged": true,
+      "failed": 0
+    }
+  ],
+  "cleanup": {
+    "demo-core": {
+      "databases": 2,
+      "checks": 6,
+      "failed": 0,
+      "nonfixtureRowsPreserved": 0
+    },
+    "demo-renewal": {
+      "databases": 2,
+      "checks": 6,
+      "failed": 0,
+      "nonfixtureRowsPreserved": 0
+    },
+    "registered-test-runs": {
+      "databases": 20,
+      "checks": 60,
+      "failed": 0,
+      "nonfixtureRowsPreserved": 3
+    }
+  },
+  "cleanupRepeated": true,
+  "ownedResourcesStopped": true,
+  "volumesRetained": true,
+  "taskPortsReleased": [
+    18086,
+    3000,
+    3001,
+    3002,
+    11035,
+    11036,
+    15437,
+    15441
+  ],
+  "unrelatedWorkloadsChanged": false,
+  "cacheUse": [
+    "Docker PostgreSQL image digest",
+    "Maven dependency cache",
+    "Flutter SDK and verified original archive",
+    "Pub cache",
+    "existing Playwright and Chrome",
+    "isolated Python protocol runtime"
+  ],
+  "coldInstall": false,
+  "runtime": {
+    "jdk": "Temurin 21.0.13+9",
+    "postgres": "17.12 Debian 17.12-1.pgdg13+1",
+    "flutter": "3.50.1 / Dart 3.14",
+    "chrome": "158.0.8127.88",
+    "playwright": "1.56.1"
+  },
+  "failuresFixed": [
+    "Core synthetic test config lacked kiosk required by existing guard; add isolated kiosk without capture/profile binding.",
+    "Incomplete Flutter SDK Web JS cache caused CanvasKit 404 despite successful build; restore missing JS from verified same-SDK archive, rebuild all apps, add fail-closed asset preflight.",
+    "Private readiness orchestration unwrapped WebException to detect expected unauthenticated 401; runner business guards unchanged."
+  ],
+  "sdkRecovery": {
+    "archiveSha256": "33c1e3d4dd08f1136ddb9c7976cfd2b0ab20296f1565b78ba176a4cbb4e140eb",
+    "sameSdk": true,
+    "missingWebJsVerified": 20,
+    "overwroteExistingArtifacts": false
+  },
+  "ci": {
+    "mainSha": "5c8693bfaeb4c0e85f4c7bcb21c5fd487dad3516",
+    "mainWorkflowRuns": 0,
+    "mainCommitStatuses": 0,
+    "source": "GitHub connector read-only, 2026-11-25; no claim of CI pass. Repository-wide API unavailable; R01 workflow/deployment/webhook inventory remains historical."
+  },
+  "limitations": [
+    "No shared database inventory or canonical migration order/backfill agreement. V7 not applied; V1-V6,V8-V13 unchanged.",
+    "No cold tool/dependency installation, native/mobile or public deployment tested.",
+    "Core and renewal UI scenarios are selected integration flows; not exhaustive UI coverage of every feature.",
+    "Python model/accuracy/camera/PAD evaluation not run in R02; Face gates unchanged and real dataset collection paused.",
+    "No merge, shared DB connection, default gate activation or production mail/gateway."
+  ]
+}

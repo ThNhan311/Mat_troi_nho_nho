@@ -17,3 +17,5 @@ Default Backend chỉ dùng canonical V1–V6. Account/Membership write mới v�
 Simulator là thanh toán mô phỏng dev/test, không tiền thật/gateway/refund. Face Core/enrollment/service chỉ có simulated protocol và generated-input inference evidence; **Face thật chưa nghiệm thu**. F03B tooling ready, thu ảnh/dataset/calibration/evaluation người thật đang hoãn, liveness NOT_PERFORMED/admission thật off. Workout, thông báo, profile editing, full Admin reporting và native/mobile không thuộc lát cắt Web đã nghiệm thu; UI chưa có API hiện Chưa khả dụng.
 
 Không đưa `.env`, authority/credential/consent, dataset/ảnh/embedding, SDK/cache/build hoặc raw logs vào Git. Không dùng clean/repair/out-of-order, không sửa migration đã công bố, không thay DB chung. [AGENTS](AGENTS.md) dành cho agent tiếp tục; [R01 readiness](docs/backend-handover/evidence/R01_MAIN_INTEGRATION_READINESS.md) là snapshot trước sửa R02.
+
+R02 đã kiểm chứng portable rehearsal từ checkout sạch có dùng cache: [kết quả, suites và giới hạn](docs/backend-handover/evidence/R02_PORTABLE_SETUP.md). Đây không phải cold install hoặc xác nhận production release.
