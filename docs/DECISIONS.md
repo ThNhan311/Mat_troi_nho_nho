@@ -70,3 +70,7 @@ Tái sử dụng Face pinfcabeba, buffalo_s riêng/CPU; operation binding/genera
 ## F03B — camera thủ công và evaluation, 24/11/2026
 
 Người dùng cho chuẩn bị camera và dataset được phép, không tự ghi người thật. Chỉ lưu từng still sau consent + thao tác chủ động; dữ liệu ngoài Git. Tái sử dụng model/weights F03A, khóa identity/session split và threshold chọn từ calibration trước evaluation; không tự duyệt threshold production/PAD/admission. [Quyết định kỹ thuật và giới hạn](backend-handover/decisions/2026-11-24_F03B_CAMERA_EVALUATION.md), [hướng dẫn operator](backend-handover/25_FACE_CAMERA_EVALUATION_QUICKSTART.md).
+
+## F03B tạm hoãn thu ảnh/accuracy —25/11/2026
+
+Người dùng tạm hoãn thu ảnh và đánh giá người thật: **tooling ready; dataset/calibration/evaluation chưa chạy**. Operator đã báo camera preview ổn; không tự chuyển xác nhận camera thành consent. Không tạo study/mẫu/accuracy, không đổi threshold/liveness/admission. R01 chỉ khảo sát tích hợp main, không merge hoặc áp migration/DB chung. [R01 readiness và giới hạn](backend-handover/evidence/R01_MAIN_INTEGRATION_READINESS.md).

@@ -1,0 +1,446 @@
+{
+  "task": "R-01 integration readiness survey",
+  "reviewedAt": "2026-11-24T17:30:40.336753+00:00",
+  "sourceCommit": "f45d55a77d7338cdfbe5ad9aeb4df2f18cea0c3d",
+  "branch": "feature/face-camera-evaluation",
+  "remote": "https://github.com/ThNhan311/Mat_troi_nho_nho.git",
+  "refs": {
+    "origin/main": "5c8693bfaeb4c0e85f4c7bcb21c5fd487dad3516",
+    "origin/backend": "aee1b53bb85076a9e8e74981ee49d4ffbc36f04e",
+    "origin/frontend": "0307242a34ceb76a289f7ed1f43653e5a1862948",
+    "origin/feature/database-schema": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+    "origin/feature/face-1n-identification": "fcabeba765d6e597cbc5fbed76fafc08f9604e03",
+    "origin/feature/face-camera-evaluation": "f45d55a77d7338cdfbe5ad9aeb4df2f18cea0c3d"
+  },
+  "git": {
+    "head": "f45d55a77d7338cdfbe5ad9aeb4df2f18cea0c3d",
+    "branch": "feature/face-camera-evaluation",
+    "main": "5c8693bfaeb4c0e85f4c7bcb21c5fd487dad3516",
+    "mainIsAncestor": true,
+    "aheadBehindMain": [
+      "45",
+      "0"
+    ],
+    "taskAnchors": [
+      {
+        "task": "Task A",
+        "commit": "073e131b718bdce780f338b69dd4c039b14644f9",
+        "inFinalHead": true
+      },
+      {
+        "task": "R01 policy read",
+        "commit": "9ae0a50593a921ae6c629c93bd9f36f0b373ace9",
+        "inFinalHead": true
+      },
+      {
+        "task": "R02 availability",
+        "commit": "4d137d703ab522e6f977d0e297f5a939a1011bcc",
+        "inFinalHead": true
+      },
+      {
+        "task": "R03 booking create",
+        "commit": "394a21f96c7c7458cc109c9f56a174beb1ccf62b",
+        "inFinalHead": true
+      },
+      {
+        "task": "R04 lifecycle",
+        "commit": "8cb95e23a9fbf357ce452bdb1bdeecaa4db824c0",
+        "inFinalHead": true
+      },
+      {
+        "task": "Policy PUT",
+        "commit": "63fe3945715888c7cbc9ad436c65d0e7f16273de",
+        "inFinalHead": true
+      },
+      {
+        "task": "D01",
+        "commit": "089b5e27bda9cc4c543d5d239d3f51377b5e80af",
+        "inFinalHead": true
+      },
+      {
+        "task": "Web first slice",
+        "commit": "9fe34b99324ab53748c495145c1c0d2c8a4abd12",
+        "inFinalHead": true
+      },
+      {
+        "task": "Web lifecycle",
+        "commit": "cb749ae20ad97ab923577bd36d4ba1703375deda",
+        "inFinalHead": true
+      },
+      {
+        "task": "Original UI",
+        "commit": "425a0a86b498f88d96d3e49cde3aa9a76dd20ab7",
+        "inFinalHead": true
+      },
+      {
+        "task": "Admin Policy",
+        "commit": "1b1e323ff8ac0f947b3145b6544bac81339931ba",
+        "inFinalHead": true
+      },
+      {
+        "task": "M01",
+        "commit": "6fbf9fc5bf86690a7e1d792738f6120a9038db63",
+        "inFinalHead": true
+      },
+      {
+        "task": "Admin accounts/PT gate",
+        "commit": "66a70311517ccd0bf287eff45b476f1ce5138a16",
+        "inFinalHead": true
+      },
+      {
+        "task": "PT DB rehearsal",
+        "commit": "0c31947b60bacbb7d7516556a7f2b44193ec86a8",
+        "inFinalHead": true
+      },
+      {
+        "task": "M04",
+        "commit": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+        "inFinalHead": true
+      },
+      {
+        "task": "M03",
+        "commit": "5399c5707288669997e898740daa36c57d04d632",
+        "inFinalHead": true
+      },
+      {
+        "task": "Member activation",
+        "commit": "950311082d4cc5b2c5b85b1a3f8cd644246cd932",
+        "inFinalHead": true
+      },
+      {
+        "task": "I01 E2E",
+        "commit": "093c5937699235f560bf1efb03edf58e4f01e36a",
+        "inFinalHead": true
+      },
+      {
+        "task": "I01 EOL correction",
+        "commit": "d2774c9b860e7d263b26edac1003502da8781790",
+        "inFinalHead": true
+      },
+      {
+        "task": "M05/M06",
+        "commit": "4af8bb8a51908cc46643fba009659c3903c1dba3",
+        "inFinalHead": true
+      },
+      {
+        "task": "F01",
+        "commit": "c3eb411cfbb6cfdfdfdc441d850d2eea456f7b46",
+        "inFinalHead": true
+      },
+      {
+        "task": "F02",
+        "commit": "de82618c21d2aaeb2c3b1d39df4382b3928d93e7",
+        "inFinalHead": true
+      },
+      {
+        "task": "F03A",
+        "commit": "70ca11ce4eee068b1b25147e829b0d804e105a53",
+        "inFinalHead": true
+      },
+      {
+        "task": "F03B",
+        "commit": "f45d55a77d7338cdfbe5ad9aeb4df2f18cea0c3d",
+        "inFinalHead": true
+      }
+    ],
+    "stablePatchDuplicates": [],
+    "migrationInventory": [
+      {
+        "version": 1,
+        "path": "database/migrations/V1__core_users_members.sql",
+        "workingTreeSha256": "df40d5114a8c88f48977e708f4baaf4c36a5f16289432c20a3224c40ada25870",
+        "flywayChecksum": 1458726014,
+        "scope": "canonical",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 2,
+        "path": "database/migrations/V2__membership_payment.sql",
+        "workingTreeSha256": "dffe32d5fc343e6e877234afa79408f3cebd7cbd1828891c31e993f1047cd615",
+        "flywayChecksum": 989506803,
+        "scope": "canonical",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 3,
+        "path": "database/migrations/V3__checkin.sql",
+        "workingTreeSha256": "17a711675169667fa50af87b34dc1e5406c0610fe44cb2f9cefaf35a7b7322e1",
+        "flywayChecksum": -515824181,
+        "scope": "canonical",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 4,
+        "path": "database/migrations/V4__pt_booking.sql",
+        "workingTreeSha256": "79844557f18bc878247a70997013f037f7eebbb0fc5f59502665bf1227c3dc3e",
+        "flywayChecksum": 568475058,
+        "scope": "canonical",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 5,
+        "path": "database/migrations/V5__workout_notification.sql",
+        "workingTreeSha256": "ad8d568c9cc57351b977d3bfb71b56f68193f1c14a407d7763c72e9b6f17ae39",
+        "flywayChecksum": 1125685481,
+        "scope": "canonical",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 6,
+        "path": "database/migrations/V6__audit_log.sql",
+        "workingTreeSha256": "486497e40e779250ab592646df46996e42ee7d771dfdc8332c8591cb70e6a28c",
+        "flywayChecksum": -1514799074,
+        "scope": "canonical",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 7,
+        "path": "database/database/migrations/V7__membership_periods.sql",
+        "sourceRef": "origin/feature/database-schema",
+        "sourceCommit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+        "gitBlobSha256": "668fdd672fdcff04e89525b3cadec3bc957f186f38fe0065dc4417a6f1b29b41",
+        "scope": "QUARANTINED; not in final canonical locations; shared applied status UNKNOWN",
+        "flywayChecksum": -349926232,
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 8,
+        "path": "database/activation-rehearsal/V8__pt_account_activation.sql",
+        "workingTreeSha256": "7f38b7f83662d4895dcce71ae50accc64321786f5fe7af5ea044bdd4fa619902",
+        "flywayChecksum": -750065425,
+        "scope": "rehearsal/default-off",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 9,
+        "path": "database/membership-rehearsal/V9__membership_initial_activation.sql",
+        "workingTreeSha256": "98783c7fcbfba450c46d9d625d74f5b8bca85cce897bd7887222c2e1bbee2648",
+        "flywayChecksum": 2048807649,
+        "scope": "rehearsal/default-off",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 10,
+        "path": "database/member-activation-rehearsal/V10__member_account_activation.sql",
+        "workingTreeSha256": "cf6d6918134409f552576b14644b9847fa127a5a81b4e1964da260bd6ad19f29",
+        "flywayChecksum": 1490426486,
+        "scope": "rehearsal/default-off",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 11,
+        "path": "database/renewal-rehearsal/V11__membership_renewal_simulator.sql",
+        "workingTreeSha256": "88f0e48fb077c777fb3d17f9872397fa6e8e10686bf0c4067ca7a0e6f0de0e61",
+        "flywayChecksum": 2066778787,
+        "scope": "rehearsal/default-off",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 12,
+        "path": "database/checkin-rehearsal/V12__checkin_request_ledger.sql",
+        "workingTreeSha256": "2d889683ee254ee312fea46b0930a2bd73461ee531633a7ec31c28c2e4e276ae",
+        "flywayChecksum": 1844552835,
+        "scope": "rehearsal/default-off",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      },
+      {
+        "version": 13,
+        "path": "database/enrollment-rehearsal/V13__face_enrollment_lifecycle.sql",
+        "workingTreeSha256": "71ac5940a5d4a64b8e53659b38c6aa7bf9004356ff03172aa32b7d44de4121e6",
+        "flywayChecksum": 247602960,
+        "scope": "rehearsal/default-off",
+        "appliedStatusThisTask": "NOT_QUERIED; no DB connected"
+      }
+    ],
+    "canonicalMatchesDatabaseRef": 6
+  },
+  "inventoryChecks": [
+    {
+      "script": "backend/scripts/core-migration-inventory.mjs",
+      "exitCode": 1,
+      "stdout": "",
+      "reason": "Exact candidate file-set assertion failed"
+    },
+    {
+      "script": "backend/scripts/renewal-migration-inventory.mjs",
+      "exitCode": 1,
+      "stdout": "",
+      "reason": "Exact candidate file-set assertion failed"
+    },
+    {
+      "script": "backend/scripts/checkin-migration-inventory.mjs",
+      "exitCode": 1,
+      "stdout": "",
+      "reason": "Exact candidate file-set assertion failed"
+    },
+    {
+      "script": "backend/scripts/enrollment-migration-inventory.mjs",
+      "exitCode": 0,
+      "stdout": "Enrollment candidate verified: V1-V6,V8-V13; V7 quarantined, releaseReady=false",
+      "reason": "Frozen candidate verified; no SQL executed"
+    }
+  ],
+  "cleanCheckout": {
+    "sourceCommit": "f45d55a77d7338cdfbe5ad9aeb4df2f18cea0c3d",
+    "cloneFrom": "https://github.com/ThNhan311/Mat_troi_nho_nho.git",
+    "detached": true,
+    "initialTrackedStatusClean": true,
+    "finalTrackedStatusClean": false,
+    "finalNormalizedContentMatchesHead": true,
+    "generatedNativeEolOnlyPaths": [
+      "frontend/fitcenter_ad/linux/flutter/generated_plugin_registrant.cc",
+      "frontend/fitcenter_ad/linux/flutter/generated_plugin_registrant.h",
+      "frontend/fitcenter_ad/linux/flutter/generated_plugins.cmake",
+      "frontend/fitcenter_ad/macos/Flutter/GeneratedPluginRegistrant.swift",
+      "frontend/fitcenter_ad/windows/flutter/generated_plugin_registrant.cc",
+      "frontend/fitcenter_ad/windows/flutter/generated_plugin_registrant.h",
+      "frontend/fitcenter_ad/windows/flutter/generated_plugins.cmake",
+      "frontend/fitcenter_member/linux/flutter/generated_plugin_registrant.cc",
+      "frontend/fitcenter_member/linux/flutter/generated_plugin_registrant.h",
+      "frontend/fitcenter_member/linux/flutter/generated_plugins.cmake",
+      "frontend/fitcenter_member/macos/Flutter/GeneratedPluginRegistrant.swift",
+      "frontend/fitcenter_member/windows/flutter/generated_plugin_registrant.cc",
+      "frontend/fitcenter_member/windows/flutter/generated_plugin_registrant.h",
+      "frontend/fitcenter_member/windows/flutter/generated_plugins.cmake",
+      "frontend/fitcenter_pt/linux/flutter/generated_plugin_registrant.cc",
+      "frontend/fitcenter_pt/linux/flutter/generated_plugin_registrant.h",
+      "frontend/fitcenter_pt/linux/flutter/generated_plugins.cmake",
+      "frontend/fitcenter_pt/macos/Flutter/GeneratedPluginRegistrant.swift",
+      "frontend/fitcenter_pt/windows/flutter/generated_plugin_registrant.cc",
+      "frontend/fitcenter_pt/windows/flutter/generated_plugin_registrant.h",
+      "frontend/fitcenter_pt/windows/flutter/generated_plugins.cmake"
+    ],
+    "jdk": "Temurin 21.0.13+9",
+    "maven": {
+      "command": "mvnw.cmd -o -B -ntp -DskipTests process-resources",
+      "exitCode": 0,
+      "sqlResources": 12,
+      "canonicalCount": 6,
+      "rehearsalCount": 6,
+      "resourceShaMatchesSource": true,
+      "compiledOrRanTests": false
+    },
+    "flutter": {
+      "version": "3.50.1",
+      "dart": "3.14.0",
+      "command": "flutter pub get --offline --enforce-lockfile",
+      "apps": {
+        "member": {
+          "exitCode": 0,
+          "lockChanged": false
+        },
+        "pt": {
+          "exitCode": 0,
+          "lockChanged": false
+        },
+        "ad": {
+          "exitCode": 0,
+          "lockChanged": false
+        }
+      }
+    },
+    "limits": [
+      "Existing Maven/Pub/SDK caches reused; not a cold new-machine bootstrap",
+      "No application start, DB migration, full/unit tests or UI/E2E rerun",
+      "21 native generated files show EOL-only status churn; no content/lock changes"
+    ],
+    "resourcesStarted": []
+  },
+  "documentation": {
+    "missing": [],
+    "untrackedDependencies": [
+      {
+        "file": "docs/DECISIONS.md",
+        "target": "docs/backend-handover/research/2026-11-22_CORE_MEMBERSHIP_PAYMENT_SURVEY.md"
+      },
+      {
+        "file": "docs/DECISIONS.md",
+        "target": "docs/backend-handover/research/2026-11-22_DATABASE_V7_REVIEW.md"
+      },
+      {
+        "file": "docs/backend-handover/decisions/2026-11-22_ACCOUNT_PT_ACTIVATION.md",
+        "target": "docs/backend-handover/research/2026-11-22_CORE_MEMBERSHIP_PAYMENT_SURVEY.md"
+      },
+      {
+        "file": "docs/backend-handover/decisions/2026-11-22_ACCOUNT_PT_ACTIVATION.md",
+        "target": "docs/backend-handover/research/2026-11-22_DATABASE_V7_REVIEW.md"
+      },
+      {
+        "file": "docs/backend-handover/decisions/2026-11-22_M01_PLAN_CREATE.md",
+        "target": "docs/backend-handover/research/2026-11-22_CORE_MEMBERSHIP_PAYMENT_SURVEY.md"
+      },
+      {
+        "file": "docs/backend-handover/decisions/2026-11-22_M01_PLAN_CREATE.md",
+        "target": "docs/backend-handover/research/2026-11-22_DATABASE_V7_REVIEW.md"
+      },
+      {
+        "file": "docs/backend-handover/decisions/2026-11-22_M01_PLAN_CREATE.md",
+        "target": "docs/backend-handover/research/2026-11-22_FIRST_SLICE_PLAN_CREATE.md"
+      },
+      {
+        "file": "docs/backend-handover/decisions/2026-11-22_M01_PLAN_CREATE.md",
+        "target": "docs/backend-handover/research/2026-11-22_SURVEY_SOURCES.json"
+      },
+      {
+        "file": "docs/backend-handover/proposals/2026-11-23_M03_COUNTER_ACTIVATION.md",
+        "target": "docs/backend-handover/research/2026-11-22_CORE_MEMBERSHIP_PAYMENT_SURVEY.md"
+      },
+      {
+        "file": "docs/backend-handover/proposals/2026-11-23_M03_COUNTER_ACTIVATION.md",
+        "target": "docs/backend-handover/research/2026-11-22_DATABASE_V7_REVIEW.md"
+      }
+    ]
+  },
+  "securityReview": {
+    "scope": "latest tracked UTF-8 text only; private-key/GitHub-token/JWT/literal-env-secret patterns; not an exhaustive history/binary audit",
+    "patternMatches": [],
+    "trackedCacheBuildModelCredentialArtifactsFound": 0,
+    "outsideFaceHashesPreserved": 26,
+    "outsideResearchFilesPreserved": 4
+  },
+  "ci": {
+    "checkedAt": "2026-11-24T17:25:03.3050131Z",
+    "workflows": 0,
+    "runs": 0,
+    "deployments": 0,
+    "webhooks": 0,
+    "notCIPass": true
+  },
+  "f03b": {
+    "status": "TOOLING_READY",
+    "operatorCameraPreviewReportedOk": true,
+    "previewProcessOrWindowFoundAtReview": false,
+    "realPersonImagesSaved": 0,
+    "calibrationRun": false,
+    "evaluationRun": false,
+    "accuracy": null,
+    "thresholdChanged": false,
+    "liveness": "NOT_PERFORMED",
+    "admissionEnabled": false,
+    "capturePausedByUser": true,
+    "realDatasetStudyCreated": false
+  },
+  "tests": {
+    "newUnitOrFullSuitesRun": false,
+    "historicalBackendSourceUnchangedSince": "70ca11ce4eee068b1b25147e829b0d804e105a53",
+    "historicalF03BExecutableHashesMatch": 11,
+    "newChecksOnly": [
+      "Git refs/ancestry/stable-patch comparison",
+      "4 read-only inventory commands:1pass/3fail",
+      "Fresh clone offline Maven resource processing",
+      "3 fresh clone offline pub lock resolutions",
+      "SQL resource hash comparison12/12",
+      "tracked documentation/secret/artifact scan"
+    ]
+  },
+  "readiness": {
+    "gitFastForwardPossibleAtSnapshot": true,
+    "coreMergeRecommendedNow": false,
+    "releaseReady": false,
+    "sharedDatabaseContacted": false,
+    "migrationsExecuted": false,
+    "integrationBranchProposed": "integration/core-main-readiness",
+    "integrationBranchCreated": false,
+    "commitPushMergePerformed": false
+  }
+}

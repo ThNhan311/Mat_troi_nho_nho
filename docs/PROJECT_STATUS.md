@@ -1,21 +1,26 @@
 # FitCenter — trạng thái tiếp tục
 
-Cập nhật24/11/2026 tại worktree Mat_troi_nho_nho-booking-integration; branch **feature/face-camera-evaluation**, HEAD/base trước commit đóng **70ca11ce4eee068b1b25147e829b0d804e105a53**. Git là thực tế; SHA commit chứa file này xem history, không tự ghi SHA của chính nó.
+Cập nhật25/11/2026. Worktree `Mat_troi_nho_nho-booking-integration`; branch **feature/face-camera-evaluation**, HEAD/remote **f45d55a77d7338cdfbe5ad9aeb4df2f18cea0c3d**. Task hiện tại **R-01 khảo sát khả năng tích hợp main**, chỉ docs/report, chưa commit/push/merge. Git là thực tế.
 
-## F03B — công cụ camera/evaluation đã chuẩn bị; dữ liệu thật chưa đánh giá
+## F03B tạm hoãn thu mẫu theo yêu cầu người dùng
 
-Đã thêm capture local preview mirror/ảnh raw, consent tương tác và R+Space cho từng ảnh; ROI/quality/stability dùng source Face hiện có. Dataset/source/consent refs/session ẩn danh ngoài Git. Plan trước thu, known/unknown và independent gallery/probe sessions; seal→calibrate→freeze→evaluate, không override threshold hoặc tune trên evaluation. Tái sử dụng buffalo_s detector/embedder và metrics F03A; không model/weights mới hoặc synthetic protocol mở rộng. [Operator quickstart](backend-handover/25_FACE_CAMERA_EVALUATION_QUICKSTART.md), [contract](backend-handover/decisions/2026-11-24_F03B_CAMERA_EVALUATION.md).
+**Tooling ready; dataset/calibration/evaluation người thật chưa chạy**, accuracy=null.25/11 operator xác nhận preview camera ổn; không còn process/cửa sổ preview lúc rà soát, không mở lại camera. Chưa tạo study/consent/ảnh/embedding người thật. Không đổi threshold, `liveness=NOT_PERFORMED`, admission=false; không nghiệm thu Face ID/PAD/production threshold. [Operator quickstart](backend-handover/25_FACE_CAMERA_EVALUATION_QUICKSTART.md), [evidence F03B lịch sử](backend-handover/evidence/F03B_CAMERA_EVALUATION.md). Python101repo +47pinned/1manualskip là lịch sử tạif45d55a, không vừa chạy ở R01.
 
-Thực chạy trên source cuối: **101 repo Python tests passed,0failed/errors/skipped** (43F03B+31service/evaluator+27F01addon); pinned Face camera/selector/state/auth **47passed,0failed/errors,1manual webcam skip**. Focused là subset, không cộng. Camera thực DirectShow index0 đọc3frame640×480,0ảnh lưu/không inference/không preview, released. Actual pinned model/capture detector trên generated black frame trả NO_FACE. Không dữ liệu người thật/biometric accuracy/PAD/visual webcam UI; không dùng số synthetic làm accuracy. [Evidence/limits](backend-handover/evidence/F03B_CAMERA_EVALUATION.md), [results](backend-handover/evidence/F03B_RESULTS.json), [11source hashes](backend-handover/evidence/F03B_SOURCE_HASHES.json).
+## R-01 — Git tích hợp được, Core chưa release-ready
 
-## Git và phạm vi chưa commit tại lúc cập nhật
+Fetch+đối chiếu remote: main5c8693b ancestor, **45ahead/0behind**;24mốc task đều có,0stablepatchduplicate. Không cần cherry-pick lại hoặc merge toàn nhánh Frontend/Database/Face. V1–V6 khớp Database558fb03; V7 vẫn destructive/quarantine, shared applied history chưa biết. Code-only merge/default-off khác với nghiệm thu Core đầy đủ. [Báo cáo/checklist/blockers/test plan](backend-handover/evidence/R01_MAIN_INTEGRATION_READINESS.md), [Git/migration/checks JSON](backend-handover/evidence/R01_MAIN_INTEGRATION_RESULTS.json).
 
-11source/test files:8mới evaluation,2camera/detector import nguyên pinfcabeba,1F03A CLI evaluation được guard; cùng docs/quickstart/decisions/evidence/status cho F03B. Exact file list xem Git status/diff, chuẩn bị review/commit/push nhánh riêng theo quyền đã giao. Không merge/force. 4research22/11 untracked ngoài task giữ nguyên,26Face untracked/cache/model gốc hash không đổi. Không Java/Dart/SQL/default gates/migrations thay đổi; private reports/runtime/model/fixtures ngoài Git, không stage.
+Blocker theo ưu tiên:
 
-## Gates, tài nguyên và bước tiếp
+- **P0 Core schema rollout:** V7 DROP period columns chưa backfill, xung đột M03/V11; V8–V13 chỉ location rehearsal/gap7, không canonical release. Chưa inventory DB chung. Không rewrite/renumber/out-of-order/history edits/clean/repair.
+- **P1 setup:** read-only inventories I01/Renewal/F01 fail vì migrations task sau; chỉ F02 candidate hiện hành đạt. Runner Provision/full còn phụ thuộc baseline container/image/ID máy cũ.
+- **P1 docs/gate:** Backend README vẫn alignment/cũ;10links trỏ4researchuntracked, thiếu trên clean clone; chưa có acceptance gate cho candidate tích hợp sau sửa. GitHub0workflow/run/deployment/webhook, không CI pass.
+- Face thật/PAD/accuracy, gateway/refund, native/mobile/Workout/full Admin nằm ngoài nghiệm thu này; Face giữ default-off. Mock legacy không reachable từ3entry hiện hành; Admin simulator/Face menu vẫn reachable nhưng Backend gate và nhãn test phải giữ.
 
-`liveness=NOT_PERFORMED`, admission=false, productionThresholdApproved=false. Chưa preview/unplug trực quan, chưa capture gallery/probe người thật hoặc authorized dataset, chưa calibration/evaluation/PAD/camera admission. Người vận hành cần tự chuẩn bị consent/retention/split và thực hiện từng bước camera; không tự bật ghi hình. Không gọi F03 hoàn tất. Completion/Booking/Membership/payment/activation không thay đổi.
+## Checks mới và phạm vi chưa commit
 
-Không Backend/DB/service khởi động bởi F03B, camera IOprobe đã release, unit GUI là mocks. Không DB/volume/resource chung bị đổi. GitHub CI inventory24/11 `16:43:19Z`:0workflow/run/deployment/webhook, không gọi CI pass. Candidate migration1–6,8–13/default-off giữ nguyên, V7 Duy558fb03 vẫn quarantine/shared history chưa biết; **releaseReady=false**.
+Fresh clone f45d55a riêng: JDK21/Maven offline `process-resources` exit0,12SQLresources hash đúng/default6+rehearsal6;3Flutterpubget offline/enforce-lockfile đạt,lock không đổi.21nativegenerated paths hiện EOL-only status trong clone thử, normalized content khớp; không copy về worktree. Dùng SDK/Maven/Pub cache hiện có, chưa chứng minh cold máy mới. **Không rerun unit/full/HTTP/DB/UI/E2E** hoặc áp migration.11F03Bsourcehashes còn khớp; Backend/database không đổi từ F03A1106 lịch sử.
 
-F03A `70ca11c`: [service evidence](backend-handover/evidence/F03A_FACE_SERVICE.md), [quickstart](backend-handover/24_FACE_SERVICE_QUICKSTART.md); Backend1106/Python80 và F02/F01/UI trước là **lịch sử**, không phải lượt F03B. [Quyết định tổng hợp](DECISIONS.md), [AGENTS](../AGENTS.md).
+Uncommitted của R01: status này, ghi chú tạm hoãn trong DECISIONS và2report R01.4research22/11 ngoài task giữ nguyên;26Face untracked/cache/model gốc hash không đổi. Không secret/private manifest/log/SDK/cache/build hoặc dữ liệu biometric trong scope docs. Không source executable, DB/volume/process chung bị đổi, không start tài nguyên demo.
+
+Bước tiếp: xử lý blocker trên nhánh đề xuất **integration/core-main-readiness từf45d55a** (chưa tạo), phối hợp inventory/release plan DB, portable runner và current entry docs, rồi chạy selected regression/E2E gate trên ứng viên cuối. R01 chỉ khảo sát, không tự triển khai fixes hoặc merge. [AGENTS](../AGENTS.md), [quyết định](DECISIONS.md).
