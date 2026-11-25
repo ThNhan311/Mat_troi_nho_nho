@@ -92,7 +92,7 @@ node frontend/verify-core-integration.mjs $demo $playwright --current
 node frontend/verify-renewal-integration.mjs $demo $playwright --current
 ```
 
-Không chạy hai harness trên cùng pair hoặc replay write sau lỗi. Nếu timeout, đối chiếu intent/UUID ledger trước cleanup; không dò plan theo tên vì name không unique. Member/PT/Admin auth token memory; reload/login đọc lại server. Face test config không có capture/kiosk identity được cấp: không admission thật. Default Face vẫn off; F03B dataset/calibration/evaluation đang hoãn. Simulator ghi “Thanh toán mô phỏng”, không thu tiền thật. Các module chưa có API hiện Chưa khả dụng; chỉ Web được kiểm chứng.
+Không chạy hai harness trên cùng pair hoặc replay write sau lỗi. Nếu timeout, đối chiếu intent/UUID ledger trước cleanup; không dò plan theo tên vì name không unique. Member/PT/Admin auth token memory; reload/login đọc lại server. Face test config có kiosk tổng hợp riêng theo guard nhưng không có capture/profile binding: không admission thật. Default Face vẫn off; F03B dataset/calibration/evaluation đang hoãn. Simulator ghi “Thanh toán mô phỏng”, không thu tiền thật. Các module chưa có API hiện Chưa khả dụng; chỉ Web được kiểm chứng.
 
 ## Cleanup
 

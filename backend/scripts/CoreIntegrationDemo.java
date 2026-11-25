@@ -29,7 +29,7 @@ public class CoreIntegrationDemo {
   }
   f.setProperty("seeded","true");try(var o=Files.newOutputStream(file)){f.store(o,"PRIVATE I-01 Admin seed authority; never publish");}
   if(current){
-   Files.writeString(dir.resolve("checkin-demo-config.json"),"{\"mode\":\"SIMULATED_TEST\",\"kiosks\":[],\"captures\":[]}",StandardOpenOption.CREATE_NEW);
+   Files.writeString(dir.resolve("checkin-demo-config.json"),"{\"mode\":\"SIMULATED_TEST\",\"kiosks\":[{\"id\":\"core-no-captures\",\"token\":\""+secret()+"\"}],\"captures\":[]}",StandardOpenOption.CREATE_NEW);
    Files.writeString(dir.resolve("enrollment-demo-config.json"),"{\"mode\":\"SIMULATED_TEST\",\"outcomes\":{}}",StandardOpenOption.CREATE_NEW);
   }
   System.out.println("Migrated fresh candidate pair; seeded only synthetic Admin. No plan/account/Membership/payment/Booking seeded.");
