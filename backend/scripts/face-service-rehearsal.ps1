@@ -4,6 +4,7 @@ param(
  [Parameter(Mandatory=$true)][string]$PrivateDirectory,
  [Parameter(Mandatory=$true)][ValidatePattern('^[a-f0-9]{64}$')][string]$ExpectedContainerId,
  [Parameter(Mandatory=$true)][string]$Python,
+ [string]$BaselinePrivateDirectory,
  [switch]$FullSuite
 )
 $ErrorActionPreference='Stop'
@@ -19,7 +20,7 @@ try {
  $env:FACE_SERVICE_PYTHON=(Get-Item -LiteralPath $Python).FullName
  $env:RUN_FACE_SERVICE_POSTGRES_TESTS='true'
  if($FullSuite){
-  & $runner -Action Test -JavaHome $JavaHome -PrivateDirectory $PrivateDirectory -ExpectedContainerId $ExpectedContainerId -FullSuite
+  & $runner -Action Test -JavaHome $JavaHome -PrivateDirectory $PrivateDirectory -ExpectedContainerId $ExpectedContainerId -BaselinePrivateDirectory $BaselinePrivateDirectory -FullSuite
   return
  }
  & $runner -Action NewRun -JavaHome $JavaHome -PrivateDirectory $PrivateDirectory -ExpectedContainerId $ExpectedContainerId

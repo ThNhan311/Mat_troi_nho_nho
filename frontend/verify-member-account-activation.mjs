@@ -1,3 +1,4 @@
+import {verifyAccountResource} from '../backend/scripts/rehearsal-resource.mjs';
 // Actual Admin creation/M03 -> MEMBER email OTP -> password -> M04. Secrets memory-only.
 import {readFile,writeFile,mkdir,readdir} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
@@ -8,7 +9,7 @@ const properties=s=>Object.fromEntries(s.split(/\r?\n/).filter(s=>s.includes('='
 const resource=JSON.parse(await readFile(resolve(dir,'account-resource.json'),'utf8')),run=JSON.parse(await readFile(resolve(dir,'current-run.json'),'utf8')),f=properties(await readFile(resolve(dir,'demo-fixture.properties'),'utf8'));
 const docker=(...a)=>execFileSync('docker',['--context','desktop-linux',...a],{encoding:'utf8'}).trim();
 assert.equal(JSON.parse(docker('context','inspect','desktop-linux'))[0].Endpoints.docker.Host,'npipe:////./pipe/dockerDesktopLinuxEngine');
-const instance=JSON.parse(docker('inspect',resource.container))[0];assert.equal(instance.Id,resource.containerId);assert.equal(instance.Config.Labels['fitcenter.task'],'account-20261123');assert.equal(instance.Mounts.find(x=>x.Destination==='/var/lib/postgresql/data').Name,'fitcenter_account_20261123_data');assert.deepEqual(instance.HostConfig.PortBindings['5432/tcp'],[{HostIp:'127.0.0.1',HostPort:'15441'}]);assert(instance.State.Running);assert.match(run.history,/^fitcenter_account_[a-f0-9]{12}_history_test$/);
+const instance=JSON.parse(docker('inspect',resource.container))[0];verifyAccountResource(resource,instance);assert.equal(instance.Id,resource.containerId);assert.equal(instance.Config.Labels['fitcenter.task'],'account-20261123');assert.equal(instance.Mounts.find(x=>x.Destination==='/var/lib/postgresql/data').Name,resource.volume);assert.deepEqual(instance.HostConfig.PortBindings['5432/tcp'],[{HostIp:'127.0.0.1',HostPort:'15441'}]);assert(instance.State.Running);assert.match(run.history,/^fitcenter_account_[a-f0-9]{12}_history_test$/);
 function sql(q){return docker('exec','-e','PGPASSWORD',instance.Id,'psql','-X','-A','-t','-v','ON_ERROR_STOP=1','-h','127.0.0.1','-U','fitcenter_account_app','-d',run.history,'-c',q);}
 assert.equal(sql("SELECT current_database()||'|'||current_user||'|'||(rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls)::text||'|'||(SELECT string_agg(version,',' ORDER BY installed_rank) FROM flyway_schema_history WHERE success) FROM pg_roles WHERE rolname=current_user"),run.history+'|fitcenter_account_app|false|1,2,3,4,5,6,8,9,10');
 const literal=id=>{assert.match(id,/^[a-f0-9-]{36}$/i);return `'${id}'::uuid`;};

@@ -1,5 +1,7 @@
 # M-03 — chạy lại Admin initial Membership
 
+> Hướng dẫn lịch sử tại commit `5399c57`. Với source hiện hành, dùng [portable setup Core](../INTEGRATION_SETUP.md) và `backend/scripts/core-readiness.ps1`; không áp candidate/authority cũ lên checkout mới. Các lệnh bên dưới được giữ để đọc evidence của task gốc.
+
 Chỉ DB test riêng. [Contract/quyết định](decisions/2026-11-23_M03_INITIAL_MEMBERSHIP.md), [evidence](evidence/M03_INITIAL_MEMBERSHIP.md). Default profile vẫn503 cho M-03; PT activation mặc địnhfalse. Không dùng DB rehearsal1–6,9 làm release, không apply V7/V8 để mở M-03.
 
 ## JDK21 / PostgreSQL

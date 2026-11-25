@@ -1,5 +1,7 @@
 # I-01 — quickstart tích hợp Core trên DB test riêng
 
+> Hướng dẫn lịch sử tại commit `d2774c9`. Với source hiện hành, dùng [portable setup Core](../INTEGRATION_SETUP.md) và `backend/scripts/core-readiness.ps1`; không áp candidate/authority cũ lên checkout mới. Các lệnh bên dưới được giữ để đọc evidence của task gốc.
+
 [Ứng viên migration/release gate](decisions/2026-11-23_I01_MIGRATION_CANDIDATE.md), [evidence](evidence/I01_CORE_INTEGRATION.md). Baseline `9503110`. Không dùng DB chung/production; không áp V7 hoặc coi gap history là release-ready. Chỉ seed Admin cho E2E; dữ liệu tổng hợp cho bài upgrade/regression được tách khỏi DB E2E.
 
 ## Công cụ và authority

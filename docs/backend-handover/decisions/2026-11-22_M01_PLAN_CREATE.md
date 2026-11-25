@@ -1,6 +1,6 @@
 # M-01 — Admin tạo Membership Plan, 22/11/2026
 
-Người dùng giao triển khai từ baseline local 1b1e323 trên feature/admin-membership-plan-create. Bốn tài liệu [khảo sát](../research/2026-11-22_CORE_MEMBERSHIP_PAYMENT_SURVEY.md), [V7](../research/2026-11-22_DATABASE_V7_REVIEW.md), [lát cắt](../research/2026-11-22_FIRST_SLICE_PLAN_CREATE.md) và [nguồn](../research/2026-11-22_SURVEY_SOURCES.json) được giữ nguyên như snapshot đề xuất; yêu cầu mới chỉ chốt M-01, không phê duyệt các quyết định Membership/Payment khác.
+Người dùng giao triển khai từ baseline local 1b1e323 trên feature/admin-membership-plan-create. Bốn tài liệu [khảo sát](../evidence/R01_MAIN_INTEGRATION_READINESS.md), [V7](2026-11-23_I01_MIGRATION_CANDIDATE.md), [lát cắt](../evidence/M01_PLAN_CREATE.md) và [nguồn](../evidence/R01_MAIN_INTEGRATION_RESULTS.json) được giữ nguyên như snapshot đề xuất; yêu cầu mới chỉ chốt M-01, không phê duyệt các quyết định Membership/Payment khác.
 
 Nguồn Topic11 UC-21/§4.1/§5.2 và canonical V2. Không migration, không V7. [OpenAPI](../api/openapi.yaml), [báo cáo](../evidence/M01_PLAN_CREATE.md).
 

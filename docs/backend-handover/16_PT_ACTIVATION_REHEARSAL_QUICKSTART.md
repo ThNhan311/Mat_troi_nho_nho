@@ -1,5 +1,7 @@
 # PT activation rehearsal riêng — Windows/JDK21
 
+> Hướng dẫn lịch sử tại commit `0c31947`. Với source hiện hành, dùng [portable setup Core](../INTEGRATION_SETUP.md) và `backend/scripts/core-readiness.ps1`; không áp candidate/authority cũ lên checkout mới. Các lệnh bên dưới được giữ để đọc evidence của task gốc.
+
 [Quyết định/version](decisions/2026-11-22_PT_ACTIVATION_REHEARSAL.md), [evidence](evidence/PT_ACTIVATION_POSTGRES.md). Đây là tooling cho DB test riêng, không bootstrap production hoặc DB chung. Không sửa V1–V6, không áp V7, không clean/repair/out-of-order. Default app không bật activation.
 
 ## Provision và tests

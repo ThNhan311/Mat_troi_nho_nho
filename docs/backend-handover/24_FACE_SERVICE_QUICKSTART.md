@@ -1,5 +1,7 @@
 # F-03A ? Face Service v? evaluation rehearsal (Windows)
 
+> Hướng dẫn lịch sử tại commit `70ca11c`. Với source hiện hành, dùng [portable setup Core](../INTEGRATION_SETUP.md) và `backend/scripts/core-readiness.ps1`; không áp candidate/authority cũ lên checkout mới. Các lệnh bên dưới được giữ để đọc evidence của task gốc.
+
 [Contract/gi?i h?n](decisions/2026-11-24_F03A_FACE_SERVICE.md), [service OpenAPI](../../face/service_v2/openapi.json), [evidence](evidence/F03A_FACE_SERVICE.md). Base F02 `de82618`, branch `feature/face-service-integration`; source pin Face `fcabeba`. Kh?ng s?a checkout Face/model/cache g?c, kh?ng d? li?u biometric m?i, kh?ng DB chung.
 
 ## Runtime ri?ng v? model

@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$JavaHome,
     [Parameter(Mandatory = $true)][ValidatePattern('^[a-f0-9]{64}$')][string]$ExpectedContainerId,
@@ -9,6 +9,7 @@ param(
     [string]$DatabaseName = 'fitcenter_baseline_20261120_test',
     [ValidatePattern('^[a-z][a-z0-9_]+$')][string]$AppUsername = 'fitcenter_baseline_app',
     [ValidateRange(1024,65535)][int]$DatabasePort = 15437,
+    [ValidatePattern('^sha256:[a-f0-9]{64}$')][string]$ExpectedImage,
     [switch]$StartDatabase,
     [switch]$AccountFocused,
     [switch]$ExcludePtRehearsal,
@@ -50,6 +51,7 @@ try {
     $instanceJson = docker --context $DockerContext inspect $ContainerName
     if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect the selected test container.' }
     $instance = @($instanceJson | ConvertFrom-Json)[0]
+    if ($ExpectedImage -and $instance.Image -ne $ExpectedImage) { throw 'Selected PostgreSQL image differs from the verified manifest.' }
     $postgresMounts = @($instance.Mounts | Where-Object Destination -eq '/var/lib/postgresql/data')
     $bindings = @($instance.HostConfig.PortBindings.'5432/tcp')
     if ($instance.Id -ne $ExpectedContainerId -or $instance.Config.Labels.'fitcenter.task' -ne 'baseline-20261120' -or

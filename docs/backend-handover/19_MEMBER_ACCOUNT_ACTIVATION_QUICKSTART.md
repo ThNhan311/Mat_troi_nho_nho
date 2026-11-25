@@ -1,5 +1,7 @@
 # MEMBER activation — integrated rehearsal quickstart
 
+> Hướng dẫn lịch sử tại commit `9503110`. Với source hiện hành, dùng [portable setup Core](../INTEGRATION_SETUP.md) và `backend/scripts/core-readiness.ps1`; không áp candidate/authority cũ lên checkout mới. Các lệnh bên dưới được giữ để đọc evidence của task gốc.
+
 [Contract/decisions](decisions/2026-11-23_MEMBER_ACCOUNT_ACTIVATION.md), [evidence](evidence/MEMBER_ACCOUNT_ACTIVATION.md). Không dùng DB chung/production. Default gates Member/PT/M03 false; chỉ profile account-integration-rehearsal bật trong target guard. Không compose hai profile rehearsal cũ hoặc tắt guard.
 
 ## 1. Tools và DB riêng

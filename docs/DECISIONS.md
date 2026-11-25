@@ -1,6 +1,6 @@
 # Quyết định FitCenter
 
-Nguồn chuẩn: yêu cầu người dùng của phiên, Topic11 và tài liệu quyết định chi tiết. Các bảng đề xuất trong [khảo sát](backend-handover/research/2026-11-22_CORE_MEMBERSHIP_PAYMENT_SURVEY.md) chưa tự trở thành quyết định.
+Nguồn chuẩn: yêu cầu người dùng của phiên, Topic11 và tài liệu quyết định chi tiết. Các bảng đề xuất trong [khảo sát](backend-handover/evidence/R01_MAIN_INTEGRATION_READINESS.md) chưa tự trở thành quyết định.
 
 ## Đã chốt
 
@@ -21,7 +21,7 @@ Nguồn chuẩn: yêu cầu người dùng của phiên, Topic11 và tài liệu
 
 ## Snapshot trước quyền rehearsal (được cập nhật ở phần quyền mới bên dưới)
 
-- Canonical V1–V6 không có bảng OTP/grant/counter. Chuẩn bị SQL candidate ở docs/backend-handover/proposals, không tên V7/V8, không tự apply hoặc sửa guards. V7 của Duy558fb03 là membership periods và còn rủi ro DROP chưa backfill: [review](backend-handover/research/2026-11-22_DATABASE_V7_REVIEW.md).
+- Canonical V1–V6 không có bảng OTP/grant/counter. Chuẩn bị SQL candidate ở docs/backend-handover/proposals, không tên V7/V8, không tự apply hoặc sửa guards. V7 của Duy558fb03 là membership periods và còn rủi ro DROP chưa backfill: [review](backend-handover/decisions/2026-11-23_I01_MIGRATION_CANDIDATE.md).
 - PT activation mặc định tắt trước khi schema/version được thống nhất. Code/unit/mail test không thay bằng chứng HTTP/PostgreSQL activation thật.
 - MEMBER activation, production mail delivery, password reset, account edit/status/delete, membership activation/renewal/payment chưa thuộc task.
 
@@ -74,3 +74,7 @@ Người dùng cho chuẩn bị camera và dataset được phép, không tự g
 ## F03B tạm hoãn thu ảnh/accuracy —25/11/2026
 
 Người dùng tạm hoãn thu ảnh và đánh giá người thật: **tooling ready; dataset/calibration/evaluation chưa chạy**. Operator đã báo camera preview ổn; không tự chuyển xác nhận camera thành consent. Không tạo study/mẫu/accuracy, không đổi threshold/liveness/admission. R01 chỉ khảo sát tích hợp main, không merge hoặc áp migration/DB chung. [R01 readiness và giới hạn](backend-handover/evidence/R01_MAIN_INTEGRATION_READINESS.md).
+
+## R02 — portable guarded Core rehearsal, 25/11/2026
+
+Người dùng cho sửa portable bootstrap/runner và tài liệu, không merge main/DB chung. Windows/Docker Desktop Linux/JDK21, PostgreSQL17.12 pin digest; mỗi máy sinh namespace/credentials/authority mới. Tái sử dụng frozen12SQL V1–V6,V8–V13, không tự chấp nhận SQL tìm thấy hoặc đổi migration/checksum. Default gates không thay; Face thật chưa nghiệm thu, simulator test-only. Fresh rehearsal khác upgrade/release: thiếu shared inventory/order/backfill thì releaseReady=false. [Setup/gates](INTEGRATION_SETUP.md), [inventory chỉ đọc](DB_INVENTORY.md).

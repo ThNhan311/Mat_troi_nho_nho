@@ -1,13 +1,14 @@
+import {verifyAccountResource} from './rehearsal-resource.mjs';
 // F01 exact UUID cleanup for newly registered runs only. No broad DELETE/TRUNCATE/DROP.
 import {readFile,writeFile,readdir} from 'node:fs/promises';import {execFileSync} from 'node:child_process';import {resolve,sep} from 'node:path';import assert from 'node:assert/strict';
 const dir=resolve(process.argv[2]||'');assert(dir.startsWith(resolve(process.env.LOCALAPPDATA,'Temp')+sep));assert(process.env.PGPASSWORD);
 const resource=JSON.parse(await readFile(resolve(dir,'account-resource.json'),'utf8'));
 const docker=(...a)=>execFileSync('docker',['--context','desktop-linux',...a],{encoding:'utf8'}).trim();
 assert.equal(JSON.parse(docker('context','inspect','desktop-linux'))[0].Endpoints.docker.Host,'npipe:////./pipe/dockerDesktopLinuxEngine');
-const instance=JSON.parse(docker('inspect',resource.container))[0];assert.equal(instance.Id,resource.containerId);assert.equal(instance.Config.Labels['fitcenter.task'],'account-20261123');assert.equal(instance.Mounts.find(x=>x.Destination==='/var/lib/postgresql/data').Name,'fitcenter_account_20261123_data');assert.deepEqual(instance.HostConfig.PortBindings['5432/tcp'],[{HostIp:'127.0.0.1',HostPort:'15441'}]);assert(instance.State.Running);
+const instance=JSON.parse(docker('inspect',resource.container))[0];verifyAccountResource(resource,instance);assert.equal(instance.Id,resource.containerId);assert.equal(instance.Config.Labels['fitcenter.task'],'account-20261123');assert.equal(instance.Mounts.find(x=>x.Destination==='/var/lib/postgresql/data').Name,resource.volume);assert.deepEqual(instance.HostConfig.PortBindings['5432/tcp'],[{HostIp:'127.0.0.1',HostPort:'15441'}]);assert(instance.State.Running);
 const props=s=>Object.fromEntries(s.split(/\r?\n/).filter(s=>s.includes('=')&&!s.startsWith('#')).map(s=>{let i=s.indexOf('=');return[s.slice(0,i),s.slice(i+1).replace(/\\([:=!# ])/g,'$1')];}));
 const literal=id=>{assert.match(id,/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i);return `'${id}'::uuid`;};const output={at:new Date().toISOString(),databases:[],failed:0};
-const privateFiles=await readdir(dir),uiFiles=privateFiles.filter(p=>p==='checkin-e2e-registry.json'||p==='enrollment-ui-results.json'||/^renewal-attempt\d+-registry\.json$/.test(p));
+const privateFiles=await readdir(dir),uiFiles=privateFiles.filter(p=>p==='core-ui-registry.json'||p==='renewal-ui-registry.json'||p==='checkin-e2e-registry.json'||p==='enrollment-ui-results.json'||/^renewal-attempt\d+-registry\.json$/.test(p));
 for(const run of resource.runs)for(const kind of ['empty','history']){
  const db=`fitcenter_account_${run.nonce}_${kind}_test`;assert.equal(run[kind],db);assert.match(run.nonce,/^[a-f0-9]{12}$/);
  const sql=q=>execFileSync('docker',['--context','desktop-linux','exec','-i','-e','PGPASSWORD',instance.Id,'psql','-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h','127.0.0.1','-U','fitcenter_account_app','-d',db],{encoding:'utf8',input:q+'\n'}).trim();

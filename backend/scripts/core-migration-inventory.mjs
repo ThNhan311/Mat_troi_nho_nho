@@ -20,7 +20,7 @@ if(process.argv[2]==='--freeze'){
 }else{
  assert.equal(process.argv[2],'--verify','Use --freeze once after review, or --verify before rehearsal');const m=JSON.parse(await readFile(lock,'utf8'));assert.equal(m.base,base);assert.deepEqual(m.candidate,[1,2,3,4,5,6,8,9,10]);assert.equal(m.releaseReady,false);assert.equal(m.entries.length,9);
  for(const e of m.entries){const b=await readFile(resolve(repo,e.path));assert.equal(hash(b),e.sha256,'SQL bytes changed: '+e.path);assert.equal(flyway(b),e.flywayChecksum);assert.equal(hash(git('show',base+':'+e.path)),e.gitBlobSha256);}
- const actual=git('ls-files','--cached','--others','--exclude-standard','database').toString().trim().split('\n').filter(p=>/\/V\d+__.*\.sql$/.test(p)).sort();assert.deepEqual(actual,m.entries.map(e=>e.path).sort(),'Unexpected migration requires deliberate review');
+ const actual=git('ls-files','--cached','--others','--exclude-standard','database').toString().trim().split('\n').filter(p=>/\/V\d+__.*\.sql$/.test(p)).sort();assert.deepEqual(actual,m.entries.map(e=>e.path).sort(),'Historical I-01 inventory (pin d2774c9); use core-readiness.ps1 for the current exact candidate. Unknown SQL is not accepted.');
  for(const e of m.quarantined)assert.equal(hash(git('show',ref+':'+e.path)),e.sha256);
 }
 console.log('I-01 candidate verified: V1-V6,V8,V9,V10; V7 quarantined; releaseReady=false');

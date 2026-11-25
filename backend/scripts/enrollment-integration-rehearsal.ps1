@@ -4,9 +4,11 @@ param(
  [Parameter(Mandatory=$true)][string]$JavaHome,
  [Parameter(Mandatory=$true)][string]$PrivateDirectory,
  [ValidatePattern('^[a-f0-9]{64}$')][string]$ExpectedContainerId,
+ [string]$BaselinePrivateDirectory,
  [switch]$FullSuite
 )
 $ErrorActionPreference='Stop'
+. (Join-Path $PSScriptRoot 'portable-resources.ps1')
 $repo=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 & node (Join-Path $PSScriptRoot 'enrollment-migration-inventory.mjs')
 if($LASTEXITCODE){throw 'Checkin migration inventory mismatch'}
@@ -27,28 +29,10 @@ $endpoint=@(docker --context $context context inspect $context|ConvertFrom-Json)
 if($endpoint.Endpoints.docker.Host -ne 'npipe:////./pipe/dockerDesktopLinuxEngine'){throw 'Local Docker engine required'}
 function Secret(){ $b=New-Object byte[] 32;$rng=[Security.Cryptography.RandomNumberGenerator]::Create();try{$rng.GetBytes($b)}finally{$rng.Dispose()};[BitConverter]::ToString($b).Replace('-','').ToLowerInvariant() }
 function Save-PrivateJson($path,$value){[IO.File]::WriteAllText($path,($value|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))}
-if($Action -eq 'Provision'){
- if(Test-Path -LiteralPath $manifest){throw 'Manifest exists; verify its resource ID instead of overwriting'}
- if(@(docker --context $context ps -a --filter "name=^/$container$" --format '{{.ID}}').Count -or @(docker --context $context volume ls --filter "name=^$volume$" --format '{{.Name}}').Count){throw 'Resource collision; refuse reuse without ownership manifest'}
- $listener=New-Object Net.Sockets.TcpListener([Net.IPAddress]::Loopback,15441);try{$listener.Start()}finally{$listener.Stop()}
- if(!(Test-Path -LiteralPath $private)){New-Item -ItemType Directory -Path $private|Out-Null}
- $admin=Secret;$app=Secret
- ConvertTo-SecureString $admin -AsPlainText -Force|ConvertFrom-SecureString|Set-Content -LiteralPath (Join-Path $private 'postgres.dpapi')
- ConvertTo-SecureString $app -AsPlainText -Force|ConvertFrom-SecureString|Set-Content -LiteralPath (Join-Path $private 'app.dpapi')
- $envFile=Join-Path $private 'postgres.env';[IO.File]::WriteAllText($envFile,"POSTGRES_PASSWORD=$admin`n",[Text.UTF8Encoding]::new($false))
- $image=docker --context $context inspect fitcenter-baseline-20261120-db --format '{{.Image}}';if($LASTEXITCODE -or $image -notmatch '^sha256:[a-f0-9]{64}$'){throw 'Expected cached baseline PostgreSQL image'}
- $null=docker --context $context volume create --label fitcenter.task=account-20261123 $volume;if($LASTEXITCODE){throw 'Volume create failed'}
- try{$id=docker --context $context create --name $container --label fitcenter.task=account-20261123 --env-file $envFile -p 127.0.0.1:15441:5432 -v "${volume}:/var/lib/postgresql/data" $image;if($LASTEXITCODE){throw 'Container create failed'}}finally{Remove-Item -LiteralPath $envFile}
- $resource=[ordered]@{container=$container;containerId=$id.Trim();volume=$volume;port=15441;image=$image;runs=@();createdAtUtc=[DateTime]::UtcNow.ToString('o')};Save-PrivateJson $manifest $resource
- $null=docker --context $context start $container;if($LASTEXITCODE){throw 'Container start failed'}
- for($i=0;$i -lt 50;$i++){docker --context $context exec $container pg_isready -q -h 127.0.0.1 -U postgres;if(!$LASTEXITCODE){break};Start-Sleep -Milliseconds 200}
- $statement="CREATE ROLE fitcenter_account_app LOGIN PASSWORD '$app' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;"
- $statement|docker --context $context exec -i $container psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres|Out-Null;if($LASTEXITCODE){throw 'Application role provisioning failed'}
- Write-Host "Provisioned dedicated rehearsal container $($resource.containerId), loopback15441; private credential files outside Git."
- return
-}
+if($Action -eq 'Provision'){New-PortablePostgresResource $private 'Account';return}
 if(!(Test-Path -LiteralPath $manifest) -or !$ExpectedContainerId){throw 'Private resource manifest and full ExpectedContainerId required'}
-$r=Get-Content -LiteralPath $manifest -Raw|ConvertFrom-Json
+$r=Get-VerifiedPortableResource $private $ExpectedContainerId 'Account'
+$container=$r.container;$volume=$r.volume
 $i=@(docker --context $context inspect $container|ConvertFrom-Json)[0];$mount=@($i.Mounts|Where-Object Destination -eq '/var/lib/postgresql/data');$binding=@($i.HostConfig.PortBindings.'5432/tcp')
 if($i.Id -ne $ExpectedContainerId -or $i.Id -ne $r.containerId -or $i.Config.Labels.'fitcenter.task' -ne 'account-20261123' -or $i.Image -ne $r.image -or $mount.Count -ne 1 -or $mount[0].Name -ne $volume -or $mount[0].Type -ne 'volume' -or $binding.Count -ne 1 -or $binding[0].HostIp -ne '127.0.0.1' -or $binding[0].HostPort -ne '15441'){throw 'Rehearsal resource identity mismatch'}
 if($Action -eq 'Stop'){if($i.State.Running){$null=docker --context $context stop --timeout 10 $i.Id};Write-Host 'Stopped exact rehearsal container; volume retained';return}
@@ -108,10 +92,9 @@ try{
   [IO.File]::WriteAllText((Join-Path $reviewDir 'V7__membership_periods.sql'),($reviewSql -join "`n")+"`n",[Text.UTF8Encoding]::new($false))
   $started=[DateTime]::UtcNow
   if($FullSuite){
-   if([string]::IsNullOrWhiteSpace($saved.DB_PASSWORD)){throw 'Provide the previously verified baseline DB password in process only for full regression'}
-   $env:DB_PASSWORD=$saved.DB_PASSWORD
-   & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'test-http-baseline.ps1') -JavaHome $JavaHome -ExpectedContainerId e4c5299f24d549bce3d962e539da61411889930ef33be71303c6bf1577d085e0 -StartDatabase -FullSuite -IntegratedAccountSuite
-   $code=$LASTEXITCODE
+   if(!$BaselinePrivateDirectory){throw 'Full regression requires fresh baseline authority; use core-readiness.ps1'}
+   Invoke-PortableBaseline $BaselinePrivateDirectory $JavaHome
+   $code=0
   }else{
    Push-Location (Join-Path $repo 'backend')
    try{ $ErrorActionPreference='Continue'; & .\mvnw.cmd -B -ntp test '-Dtest=EnrollmentPostgresTest,EnrollmentUnitTest' *> (Join-Path $private 'focused-maven-private.log');$code=$LASTEXITCODE;$ErrorActionPreference='Stop' }finally{Pop-Location}

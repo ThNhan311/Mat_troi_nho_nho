@@ -1,0 +1,10 @@
+# Local credentials and private rehearsal authority. Keep templates tracked.
+**/.env
+**/.env.*
+!**/.env.example
+**/*.dpapi
+**/account-resource.json
+**/baseline-resource.json
+**/demo-fixture.properties
+**/*-private.log
+/local-private/

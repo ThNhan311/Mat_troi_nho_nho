@@ -1,5 +1,7 @@
 # M-05/M-06 — renewal/simulator quickstart riêng
 
+> Hướng dẫn lịch sử tại commit `4af8bb8`. Với source hiện hành, dùng [portable setup Core](../INTEGRATION_SETUP.md) và `backend/scripts/core-readiness.ps1`; không áp candidate/authority cũ lên checkout mới. Các lệnh bên dưới được giữ để đọc evidence của task gốc.
+
 [Contract/quyết định/khóa](decisions/2026-11-23_M05_M06_RENEWAL_SIMULATOR.md), [evidence/source hashes](evidence/M05_M06_RENEWAL_SIMULATOR.md). Base `d2774c9`; chỉ rehearsal, không DB chung/production. Đọc [I01 authority/release gate](20_CORE_INTEGRATION_QUICKSTART.md) trước. Không dùng core runner cũ trên branch có V11: inventory cũ cố ý từ chối file thêm.
 
 ## Guard và kiểm thử

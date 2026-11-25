@@ -1,5 +1,7 @@
 # F-01 — Core check-in rehearsal (simulated identity)
 
+> Hướng dẫn lịch sử tại commit `c3eb411`. Với source hiện hành, dùng [portable setup Core](../INTEGRATION_SETUP.md) và `backend/scripts/core-readiness.ps1`; không áp candidate/authority cũ lên checkout mới. Các lệnh bên dưới được giữ để đọc evidence của task gốc.
+
 [Contract/khóa/schema](decisions/2026-11-24_F01_CHECKIN_CORE.md), [Face source survey](evidence/F01_FACE_SOURCE_SURVEY.md), [evidence](evidence/F01_CHECKIN_CORE.md). Base4af8bb8; Core test không phải Face ID E2E. Không camera/model/liveness/biometric thật. Không DB chung, không áp V7 destructive.
 
 ## Công cụ/authority

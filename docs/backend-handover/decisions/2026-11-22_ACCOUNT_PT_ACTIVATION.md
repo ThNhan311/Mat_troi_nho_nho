@@ -1,6 +1,6 @@
 # Admin account và PT first activation — 22/11/2026
 
-Nguồn quyết định là yêu cầu người dùng của task hiện tại; [khảo sát UC/schema](../research/2026-11-22_CORE_MEMBERSHIP_PAYMENT_SURVEY.md) và [V7 Duy](../research/2026-11-22_DATABASE_V7_REVIEW.md) là bối cảnh, không thay thế quyết định. [Trạng thái ngắn](../../PROJECT_STATUS.md), [evidence](../evidence/ACCOUNT_PT_ACTIVATION.md).
+Nguồn quyết định là yêu cầu người dùng của task hiện tại; [khảo sát UC/schema](../evidence/R01_MAIN_INTEGRATION_READINESS.md) và [V7 Duy](2026-11-23_I01_MIGRATION_CANDIDATE.md) là bối cảnh, không thay thế quyết định. [Trạng thái ngắn](../../PROJECT_STATUS.md), [evidence](../evidence/ACCOUNT_PT_ACTIVATION.md).
 
 ## Đã chốt và phạm vi
 
