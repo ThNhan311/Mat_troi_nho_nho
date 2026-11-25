@@ -19,3 +19,5 @@ Phân nhánh kế hoạch:
 - DB đã áp V7 hoặc V8+: giữ nguyên script/checksum/history đã áp; đối chiếu backup và forward corrective migration được phối hợp. Không rewrite/renumber V7–V13 hoặc bật out-of-order để ghép các history khác nhau.
 
 Thiếu inventory thì **releaseReady=false**. V7 trên ref Database558fb03 DROP2payment period columns trước backfill và khác model M03/V11, không được áp chỉ để làm demo chạy. Portable rehearsal chỉ dùng test resources mới có guard; không tái sử dụng DB này.
+
+DB01 bổ sung [inventory bắt buộc expected database/role và so hai model](../database/tools/db01-read-only-inventory.sql), cùng [hướng dẫn từng target và hai đường upgrade](DB01_UPGRADE.md). Chưa có target DB chung được xác định; không chạy SQL/upgrade theo phỏng đoán.

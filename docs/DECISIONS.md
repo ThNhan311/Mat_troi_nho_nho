@@ -78,3 +78,7 @@ Người dùng tạm hoãn thu ảnh và đánh giá người thật: **tooling 
 ## R02 — portable guarded Core rehearsal, 25/11/2026
 
 Người dùng cho sửa portable bootstrap/runner và tài liệu, không merge main/DB chung. Windows/Docker Desktop Linux/JDK21, PostgreSQL17.12 pin digest; mỗi máy sinh namespace/credentials/authority mới. Tái sử dụng frozen12SQL V1–V6,V8–V13, không tự chấp nhận SQL tìm thấy hoặc đổi migration/checksum. Default gates không thay; Face thật chưa nghiệm thu, simulator test-only. Fresh rehearsal khác upgrade/release: thiếu shared inventory/order/backfill thì releaseReady=false. [Setup/gates](INTEGRATION_SETUP.md), [inventory chỉ đọc](DB_INVENTORY.md).
+
+## DB01 — compatibility candidate và nguồn kỳ, 25/11/2026
+
+Theo task người dùng: giải quyết xung đột V7 trên DB test, chưa DB chung/main. **Đề xuất kỹ thuật đã rehearsal:** canonical `membership_paid_periods`, V7 source archive immutable/read-only view, compatibility callback trước pending migrations/V9/V11; V1–V13 nguyên bytes, V14 candidate ngoài default chưa là slot release. Không invent COUNTER/quote/date/receipt, không refund policy mới; missing source/conflict/refund cần reconcile trước import. Initial M03/Renewal locking/business rules giữ nguyên. [Hai đường/giới hạn/inventory](DB01_UPGRADE.md), [evidence](backend-handover/evidence/DB01_MIGRATION_COMPATIBILITY.md). Không coi đề xuất đã test là phê duyệt rollout DB chung hoặc sửa M04/consumer contract.
