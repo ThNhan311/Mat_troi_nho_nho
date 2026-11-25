@@ -124,3 +124,7 @@ DB hiện hữu là **đường khác**: [inventory read-only](DB_INVENTORY.md),
 [R02 evidence](backend-handover/evidence/R02_PORTABLE_SETUP.md) ghi source commit, suites thực chạy, UI/HTTP/DB, cache dùng, lỗi đã sửa và cleanup. Không dùng counts lịch sử làm lượt vừa chạy; máy mới phải chạy guard và selected tests theo scope của mình.
 
 Current candidate evidence: [Core main candidate](backend-handover/evidence/CORE_MAIN_CANDIDATE.md). Báo cáo R02 bên trên là lịch sử; counts mới chỉ có trong evidence ứng viên cuối.
+
+## Tài khoản dễ nhập cho manual demo
+
+Sau khi fixture riêng đã có đủ năm account ACTIVE, dùng [helper alias local](LOCAL_DEMO_ALIASES.md) để đổi sang đuôi example.test mà không thay UUID, password hash hoặc dữ liệu nghiệp vụ. Credentials/handoff luôn ngoài Git; không sửa validation ứng dụng.
