@@ -1,0 +1,240 @@
+{
+  "task": "PR8 post-merge fresh Web Core smoke",
+  "at": "2026-11-25T13:32:17.740170+00:00",
+  "pr": "https://github.com/ThNhan311/Mat_troi_nho_nho/pull/8",
+  "merge": {
+    "merged": true,
+    "method": "merge",
+    "commit": "5259f51c967994c85dcd0ff54512d15ce0e52c9e",
+    "parents": [
+      "5c8693bfaeb4c0e85f4c7bcb21c5fd487dad3516",
+      "f0cb7931f7d5c75c56ab0b0fc69b12e93075decb"
+    ],
+    "expectedHeadSupplied": true,
+    "branchPreserved": true,
+    "standardMergeApi": true,
+    "bypassRequested": false
+  },
+  "preMergeChecks": {
+    "workflowRuns": 0,
+    "statuses": 0,
+    "checkRuns": 0,
+    "ciPassClaimed": false,
+    "protectionMetadata": "403 integration cannot read; standard merge endpoint used, no bypass option"
+  },
+  "source": {
+    "sameTreeAsReviewedCandidate": true,
+    "testedGitBlobsMatched": 390,
+    "publishedSqlHashesMatched": 14,
+    "packagedSql": 12,
+    "versions": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ],
+    "legacyV7V14CallbacksInFreshJar": false,
+    "profile": "core-demo",
+    "faceGates": false
+  },
+  "smoke": {
+    "ui": {
+      "passed": 26,
+      "checks": [
+        "ad original login",
+        "Admin original UI creates real plan201",
+        "member OTP requested202/no-store",
+        "member one-use grant, no JWT",
+        "member ACTIVE after password",
+        "member login after actual activation",
+        "M04 UI same Membership UUID and dates",
+        "M04 renders UUID",
+        "pt OTP requested202/no-store",
+        "pt one-use grant, no JWT",
+        "pt ACTIVE after password",
+        "pt login after actual activation",
+        "PT original UI creates owned real slot",
+        "Vietnam time independent of browser timezone",
+        "member original login",
+        "booking-create server UUID/owner/CONFIRMED",
+        "Member original history same Booking UUID",
+        "Member UI cancels persisted booking",
+        "explicit-new-booking server UUID/owner/CONFIRMED",
+        "Explicit new action produces new Booking UUID",
+        "Reload drops Member memory session",
+        "Member reload/login",
+        "Reload M04 same Membership",
+        "Reload Member same rebooking UUID",
+        "pt original login",
+        "PT original sessions show both committed history and new booking"
+      ]
+    },
+    "http": {
+      "passed": 29,
+      "checks": [
+        "PUT /admin/booking-policy 200",
+        "POST /admin/members 201",
+        "POST /admin/personal-trainers 201",
+        "POST /admin/members 201",
+        "POST /admin/personal-trainers 201",
+        "POST /admin/members/998d8274-b294-41af-af35-008e0996d838/activate-membership 201",
+        "POST /auth/login 401",
+        "POST /auth/login 401",
+        "member actual loopback SMTP delivery",
+        "pt actual loopback SMTP delivery",
+        "POST /auth/member-activation/request-otp 202",
+        "POST /auth/member-activation/verify-otp 200",
+        "POST /auth/member-activation/password 200",
+        "POST /auth/login 200",
+        "POST /auth/pt-activation/request-otp 202",
+        "POST /auth/pt-activation/verify-otp 200",
+        "POST /auth/pt-activation/password 200",
+        "POST /auth/login 200",
+        "GET /trainers 200",
+        "GET /pt/bookings?from=2026-11-24T13%3A28%3A45.656Z&to=2026-12-09T13%3A28%3A45.656Z 200",
+        "GET /bookings/me?from=2026-11-24T13%3A28%3A45.656Z&to=2026-12-09T13%3A28%3A45.656Z 200",
+        "GET /pt/bookings?from=2026-11-24T13%3A28%3A45.656Z&to=2026-12-09T13%3A28%3A45.656Z 200",
+        "POST /bookings/224923e3-3580-4a26-891b-ea9a259151fa/cancel 404",
+        "GET /pt/bookings?from=2026-11-24T13%3A28%3A45.656Z&to=2026-12-09T13%3A28%3A45.656Z 403",
+        "GET /bookings/me?from=2026-11-24T13%3A28%3A45.656Z&to=2026-12-09T13%3A28%3A45.656Z 401",
+        "GET /trainers/f09c497e-0f3e-4502-9f6d-ed0377540b15/slots?from=2026-11-24T13%3A28%3A45.656Z&to=2026-12-09T13%3A28%3A45.656Z 200",
+        "GET /trainers/f09c497e-0f3e-4502-9f6d-ed0377540b15/slots?from=2026-11-24T13%3A28%3A45.656Z&to=2026-12-09T13%3A28%3A45.656Z 200",
+        "GET /trainers 200",
+        "POST /bookings/224923e3-3580-4a26-891b-ea9a259151fa/cancel 409"
+      ]
+    },
+    "db": {
+      "passed": 9,
+      "checks": [
+        "Dedicated E2E database starts with Admin only, no seeded business objects",
+        "M03 creates real counter payment/receipt/snapshots but leaves Member DISABLED",
+        "Both account activations preserve Membership/payment/receipt/snapshots exactly",
+        "Member and PT read the same committed Booking UUID/time",
+        "Owner/role/anonymous checks do not mutate Booking",
+        "PostgreSQL exact Booking UUID/owner/time; slot BOOKED",
+        "Cancel atomically keeps history and reopens future slot",
+        "Repeated old cancel cannot alter rebooked slot or new Booking",
+        "Booking create/cancel/rebook did not change payment/receipt or Membership snapshots"
+      ]
+    },
+    "failed": 0,
+    "skipped": 0,
+    "readback": {
+      "plan": {
+        "id": "f59511b4-27d9-4fd5-a9fb-2386715149a0",
+        "name": "Synthetic I-01 integration plan",
+        "description": "Synthetic isolated integration",
+        "durationDays": 30,
+        "price": 123456.78
+      },
+      "membership": {
+        "id": "69302c0b-4c07-4860-9935-fd79aec2cf13",
+        "planId": "f59511b4-27d9-4fd5-a9fb-2386715149a0",
+        "status": "ACTIVE",
+        "endDate": "2026-12-24",
+        "planName": "Synthetic I-01 integration plan",
+        "startDate": "2026-11-25"
+      },
+      "payment": {
+        "id": "8731d121-c2e1-44e5-912e-4d00effdc4f7",
+        "amount": 123456.78,
+        "status": "SUCCESS",
+        "provider": "COUNTER",
+        "processedAt": "2026-11-25T13:27:51.163577400Z",
+        "providerRef": "counter:8731d121-c2e1-44e5-912e-4d00effdc4f7"
+      },
+      "memberId": "998d8274-b294-41af-af35-008e0996d838",
+      "ptId": "f09c497e-0f3e-4502-9f6d-ed0377540b15",
+      "slot": {
+        "id": "21e195af-e24f-400f-87c3-edf12789d3c1",
+        "ptId": "f09c497e-0f3e-4502-9f6d-ed0377540b15",
+        "startAt": "2026-11-27T07:00:00Z",
+        "endAt": "2026-11-27T08:30:00Z",
+        "status": "AVAILABLE"
+      },
+      "originalBooking": {
+        "id": "224923e3-3580-4a26-891b-ea9a259151fa",
+        "memberId": "998d8274-b294-41af-af35-008e0996d838",
+        "ptId": "f09c497e-0f3e-4502-9f6d-ed0377540b15",
+        "slotId": "21e195af-e24f-400f-87c3-edf12789d3c1",
+        "startAt": "2026-11-27T07:00:00Z",
+        "endAt": "2026-11-27T08:30:00Z",
+        "status": "CONFIRMED",
+        "cancelledBy": null,
+        "cancelReason": null,
+        "cancelledAt": null,
+        "completedAt": null
+      },
+      "rebooking": {
+        "id": "4c15fb5a-46a0-44e9-8776-28f02a8db0e7",
+        "memberId": "998d8274-b294-41af-af35-008e0996d838",
+        "ptId": "f09c497e-0f3e-4502-9f6d-ed0377540b15",
+        "slotId": "21e195af-e24f-400f-87c3-edf12789d3c1",
+        "startAt": "2026-11-27T07:00:00Z",
+        "endAt": "2026-11-27T08:30:00Z",
+        "status": "CONFIRMED",
+        "cancelledBy": null,
+        "cancelReason": null,
+        "cancelledAt": null,
+        "completedAt": null
+      }
+    },
+    "extraGateChecks": {
+      "passed": 3,
+      "failed": 0,
+      "checks": [
+        "Admin real login",
+        "Face enrollment gate503 ERR_FACE_ENROLLMENT_UNAVAILABLE",
+        "Dev/test Admin simulator available with empty list"
+      ]
+    }
+  },
+  "build": {
+    "newBackendPackage": true,
+    "newWebBuilds": [
+      "Member",
+      "PT",
+      "Admin"
+    ],
+    "pubLockEnforced": true,
+    "cachesUsed": true,
+    "coldInstall": false,
+    "fullRegressionRerun": false,
+    "unitWidgetRerun": false,
+    "analyzeRerun": false,
+    "generatedNativeEolOnlyPaths": 21
+  },
+  "cleanup": {
+    "demoDatabases": 2,
+    "registeredPkRows": 31,
+    "failed": 0,
+    "repeatedTwice": true,
+    "taskProcessesStopped": true,
+    "containersStopped": 2,
+    "volumesRetained": true,
+    "protectedResearchFiles": 4,
+    "protectedFaceFiles": 26
+  },
+  "limits": {
+    "targetUpgradeVerified": false,
+    "realOldOrSharedDbUpgrade": false,
+    "productionDeployment": false,
+    "realGateway": false,
+    "realFaceDatasetCalibrationEvaluation": "POSTPONED",
+    "liveness": "NOT_PERFORMED",
+    "realAdmission": false
+  },
+  "images": {
+    "docs/backend-handover/evidence/pr8-postmerge/member-m04-real-activation.png": "a11e1836a234f5b4b829043fe14f86699bb96ac6f53b9961430a3bc0ec24c108",
+    "docs/backend-handover/evidence/pr8-postmerge/member-confirmed.png": "4f779a262ccf2374e77e1b7e9d61c243c182a5f4f67b77ec8e410e45b08f0203",
+    "docs/backend-handover/evidence/pr8-postmerge/pt-reloaded-sessions.png": "af6b175fca852f4170c67e274a0f90ad77e3d36aec7b957273c8ae5f5f8c0ad3"
+  }
+}
