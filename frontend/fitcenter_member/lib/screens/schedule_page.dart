@@ -1,0 +1,1034 @@
+import 'package:flutter/material.dart';
+
+import '../widgets/detail_row.dart';
+import '../services/booking_state.dart';
+import '../services/vietnam_time.dart';
+import '../widgets/api_status.dart';
+import '../widgets/section_title.dart';
+
+class SchedulePage extends StatefulWidget {
+  final BookingState state;
+  const SchedulePage({super.key, required this.state});
+  @override
+  State<SchedulePage> createState() => _SchedulePageState();
+}
+
+class _SchedulePageState extends State<SchedulePage> {
+  // ============================================================
+  // THÁNG HIỂN THỊ
+  // ============================================================
+
+  final _scroll = ScrollController();
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  BookingState get state => widget.state;
+  DateTime displayedMonth = vietnamDate(DateTime.now().toUtc());
+  DateTime? get selectedDate => state.selectedDay;
+  String? get selectedTrainer => state.trainer?.fullName;
+  String? get selectedSlot => state.slotChoices
+      .where((s) => s['id'] == state.slotId)
+      .firstOrNull?['time'];
+  List<Map<String, String>> get trainers => state.trainerChoices;
+  List<Map<String, String>> get slots => state.slotChoices;
+  Map<int, Map<String, String>> get trainedDaysOctober => {
+    for (final b in state.bookings.where(
+      (b) =>
+          b.status == 'COMPLETED' &&
+          vietnamDate(b.startAt).year == displayedMonth.year &&
+          vietnamDate(b.startAt).month == displayedMonth.month,
+    ))
+      vietnamDate(b.startAt).day: {
+        'time': '${vietnamClock(b.startAt)} - ${vietnamClock(b.endAt)}',
+        'type': 'Buổi tập PT',
+      },
+  };
+
+  DateTime _dateOnly(DateTime date) {
+    return DateTime.utc(date.year, date.month, date.day);
+  }
+
+  DateTime get today => vietnamDate(DateTime.now().toUtc());
+
+  bool _isPastDate(DateTime date) {
+    return _dateOnly(date).isBefore(today);
+  }
+
+  bool _isToday(DateTime date) {
+    return _dateOnly(date) == today;
+  }
+
+  bool _isSlotUnavailable(DateTime date, String time) =>
+      state.blocked || !slots.any((s) => s['time'] == time);
+  bool _isTrained(DateTime date) =>
+      date.year == displayedMonth.year &&
+      date.month == displayedMonth.month &&
+      trainedDaysOctober.containsKey(date.day);
+
+  // ============================================================
+  // CALENDAR
+  // ============================================================
+
+  int _daysInMonth(DateTime month) {
+    return DateTime(month.year, month.month + 1, 0).day;
+  }
+
+  int _firstWeekday(DateTime month) {
+    final firstDay = DateTime(month.year, month.month, 1);
+
+    // Dart: Monday = 1 ... Sunday = 7
+    return firstDay.weekday;
+  }
+
+  void _previousMonth() {
+    if (state.blocked) return;
+    setState(
+      () => displayedMonth = DateTime.utc(
+        displayedMonth.year,
+        displayedMonth.month - 1,
+      ),
+    );
+    state.month(displayedMonth);
+  }
+
+  void _nextMonth() {
+    if (state.blocked) return;
+    setState(
+      () => displayedMonth = DateTime.utc(
+        displayedMonth.year,
+        displayedMonth.month + 1,
+      ),
+    );
+    state.month(displayedMonth);
+  }
+
+  void _selectDate(DateTime date) => state.selectDay(date);
+  void _selectTrainer(String id) => state.selectTrainer(id);
+  void _selectSlot(String id) => state.selectSlot(id);
+  bool get canBook =>
+      !state.blocked &&
+      selectedDate != null &&
+      state.trainerId != null &&
+      state.slotId != null;
+
+  Future<void> _showBookingConfirmation() async {
+    if (!canBook) {
+      _showMessage('Vui lòng chọn đầy đủ PT và khung giờ.');
+      return;
+    }
+
+    await state.act(() async {
+      final confirmed = await showModalBottomSheet<bool>(
+        context: context,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 30),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Xác nhận đặt lịch',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                DetailRow('Huấn luyện viên', selectedTrainer!),
+
+                DetailRow('Ngày', _formatDate(selectedDate!)),
+
+                DetailRow('Khung giờ', selectedSlot!),
+
+                const SizedBox(height: 16),
+
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary
+                        .withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Lịch hợp lệ sẽ được xác nhận tự động sau khi hệ thống kiểm tra điều kiện đặt lịch.',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface
+                                .withValues(alpha: 0.7),
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text(
+                      'Xác nhận đặt lịch',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+      if (confirmed == true && mounted && state.alive)
+        await state.createSelected();
+    });
+    if (mounted && _scroll.hasClients) {
+      await _scroll.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  // ============================================================
+  // FORMAT
+  // ============================================================
+
+  String _formatDate(DateTime date) {
+    const weekdays = [
+      'Thứ Hai',
+      'Thứ Ba',
+      'Thứ Tư',
+      'Thứ Năm',
+      'Thứ Sáu',
+      'Thứ Bảy',
+      'Chủ Nhật',
+    ];
+
+    return '${weekdays[date.weekday - 1]}, '
+        '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
+  }
+
+  String _monthName(int month) {
+    const months = [
+      'Tháng 1',
+      'Tháng 2',
+      'Tháng 3',
+      'Tháng 4',
+      'Tháng 5',
+      'Tháng 6',
+      'Tháng 7',
+      'Tháng 8',
+      'Tháng 9',
+      'Tháng 10',
+      'Tháng 11',
+      'Tháng 12',
+    ];
+
+    return months[month - 1];
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
+  @override
+  Widget build(BuildContext context) {
+    final daysInMonth = _daysInMonth(displayedMonth);
+    final firstWeekday = _firstWeekday(displayedMonth);
+
+    final totalCells = ((firstWeekday - 1 + daysInMonth) / 7).ceil() * 7;
+
+    final trainedCount = trainedDaysOctober.length;
+
+    return SafeArea(
+      child: ListView(
+        controller: _scroll,
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        children: [
+          ApiStatus(state: state),
+          // ======================================================
+          // HEADER
+          // ======================================================
+
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Lịch tập',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Theo dõi lịch tập và đặt lịch với PT',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface
+                            .withValues(alpha: 0.65),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // ======================================================
+          // STATISTICS
+          // ======================================================
+          Row(
+            children: [
+              Expanded(
+                child: _statCard(
+                  icon: Icons.check_circle_outline,
+                  title: 'PT hoàn tất',
+                  value: '$trainedCount ngày',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _statCard(
+                  icon: Icons.event_busy_outlined,
+                  title: 'Tự tập',
+                  value: 'Chưa khả dụng',
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // ======================================================
+          // CALENDAR
+          // ======================================================
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              children: [
+                // Month navigation
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: _previousMonth,
+                      icon: Icon(
+                        Icons.chevron_left,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          '${_monthName(displayedMonth.month)} ${displayedMonth.year}',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    IconButton(
+                      onPressed: _nextMonth,
+                      icon: Icon(
+                        Icons.chevron_right,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // Weekday
+                Row(
+                  children: [
+                    for (final day in [
+                      'T2',
+                      'T3',
+                      'T4',
+                      'T5',
+                      'T6',
+                      'T7',
+                      'CN',
+                    ])
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            day,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface
+                                  .withValues(alpha: 0.55),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                // Calendar grid
+                if (!state.loading && slots.isEmpty)
+                  const Text('Không có khung giờ khả dụng trong ngày này.'),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: totalCells,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 4,
+                  ),
+                  itemBuilder: (context, index) {
+                    final dayNumber = index - (firstWeekday - 1) + 1;
+
+                    if (dayNumber < 1 || dayNumber > daysInMonth) {
+                      return const SizedBox();
+                    }
+
+                    final date = DateTime(
+                      displayedMonth.year,
+                      displayedMonth.month,
+                      dayNumber,
+                    );
+
+                    final isPast = _isPastDate(date);
+                    final isToday = _isToday(date);
+                    final isSelected =
+                        selectedDate != null &&
+                        _dateOnly(selectedDate!) == _dateOnly(date);
+                    final isTrained = _isTrained(date);
+
+                    return GestureDetector(
+                      key: ValueKey(
+                        'day-${date.year}-${date.month}-${date.day}',
+                      ),
+                      onTap: state.blocked ? null : () => _selectDate(date),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : isToday
+                              ? Theme.of(context).colorScheme.primary
+                                    .withValues(alpha: 0.15)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: isToday && !isSelected
+                              ? Border.all(
+                                  color: Theme.of(context).colorScheme.primary,
+                                )
+                              : null,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '$dayNumber',
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.onPrimary
+                                    : isPast
+                                    ? Theme.of(context).colorScheme.onSurface
+                                          .withValues(alpha: 0.3)
+                                    : Theme.of(context).colorScheme.onSurface,
+                                fontWeight: isToday || isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+
+                            const SizedBox(height: 4),
+
+                            if (isTrained)
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.onPrimary
+                                      : Theme.of(context).colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              )
+                            else
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.onPrimary
+                                            .withValues(alpha: 0.4)
+                                      : Theme.of(context).colorScheme.onSurface
+                                            .withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Legend
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _legend(
+                      color: Theme.of(context).colorScheme.primary,
+                      text: 'Đã tập',
+                    ),
+                    const SizedBox(width: 20),
+                    _legend(
+                      color: Theme.of(context).colorScheme.onSurface
+                          .withValues(alpha: 0.2),
+                      text: 'Chưa tập',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          // ======================================================
+          // SELECTED DATE
+          // ======================================================
+          if (selectedDate == null)
+            _emptySelection()
+          else
+            _buildSelectedDateSection(),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // SELECTED DATE SECTION
+  // ============================================================
+
+  Widget _buildSelectedDateSection() {
+    final date = selectedDate!;
+    final isPast = _isPastDate(date);
+    final isToday = _isToday(date);
+    final isTrained = _isTrained(date);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionTitle('Ngày được chọn'),
+
+        const SizedBox(height: 12),
+
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      Icons.calendar_today_outlined,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+
+                  const SizedBox(width: 14),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _formatDate(date),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          isToday ? 'Hôm nay' : 'Thông tin buổi tập',
+                          style: TextStyle(
+                            color: isPast
+                                ? Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.38)
+                                : Theme.of(context).colorScheme.primary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+
+              // --------------------------------------------------
+              // NGÀY QUÁ KHỨ
+              // --------------------------------------------------
+              if (isPast)
+                _buildPastDateInfo(isTrained: isTrained)
+              // --------------------------------------------------
+              // NGÀY HÔM NAY / TƯƠNG LAI
+              // --------------------------------------------------
+              else
+                _buildBookingSection(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================
+  // PAST DATE
+  // ============================================================
+
+  Widget _buildPastDateInfo({required bool isTrained}) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: .08),
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Text(
+      isTrained
+          ? 'Có buổi tập PT đã hoàn tất trong ngày này.'
+          : 'Chưa có buổi tập PT hoàn tất trong ngày này.',
+    ),
+  );
+
+  Widget _buildBookingSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // --------------------------------------------------------
+        // STEP 1 - CHỌN PT
+        // --------------------------------------------------------
+
+        Text(
+          '1. Chọn huấn luyện viên',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        ...trainers.map((trainer) => _trainerOption(trainer)),
+
+        const SizedBox(height: 22),
+
+        // --------------------------------------------------------
+        // STEP 2 - CHỌN SLOT
+        // --------------------------------------------------------
+        if (selectedTrainer != null) ...[
+          Text(
+            '2. Chọn khung giờ',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: slots.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 2.8,
+            ),
+            itemBuilder: (context, index) {
+              final slot = slots[index];
+              return _slotOption(slot);
+            },
+          ),
+
+          const SizedBox(height: 22),
+
+          // ------------------------------------------------------
+          // STEP 3 - CONFIRM
+          // ------------------------------------------------------
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: canBook ? _showBookingConfirmation : null,
+              icon: const Icon(Icons.check),
+              label: const Text(
+                'Xác nhận đặt lịch',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                disabledBackgroundColor: Theme.of(context).colorScheme.onSurface
+                    .withValues(alpha: 0.08),
+                disabledForegroundColor: Theme.of(context).colorScheme.onSurface
+                    .withValues(alpha: 0.38),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // ============================================================
+  // TRAINER OPTION
+  // ============================================================
+
+  Widget _trainerOption(Map<String, String> trainer) {
+    final trainerName = trainer['name']!;
+    final isSelected = state.trainerId == trainer['id'];
+
+    return GestureDetector(
+      key: ValueKey('choose-trainer-${trainer['id']}'),
+      onTap: state.blocked ? null : () => _selectTrainer(trainer['id']!),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.08),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                          .withValues(alpha: 0.18)
+                    : Theme.of(context).colorScheme.onSurface
+                          .withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.person,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurface
+                          .withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    trainerName,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Huấn luyện viên cá nhân',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface
+                          .withValues(alpha: 0.55),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurface
+                        .withValues(alpha: 0.38),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // SLOT OPTION
+  // ============================================================
+
+  Widget _slotOption(Map<String, String> data) {
+    final slot = data['time']!;
+    final id = data['id']!;
+    final isSelected = state.slotId == id;
+    final isUnavailable =
+        selectedDate != null && _isSlotUnavailable(selectedDate!, slot);
+
+    return GestureDetector(
+      key: ValueKey('slot-$id'),
+      onTap: isUnavailable ? null : () => _selectSlot(id),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isUnavailable
+              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.02)
+              : isSelected
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.14)
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isUnavailable
+                ? Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.04)
+                : isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.08),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.access_time,
+              size: 17,
+              color: isUnavailable
+                  ? Theme.of(context).colorScheme.onSurface
+                        .withValues(alpha: 0.3)
+                  : isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                slot,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isUnavailable
+                      ? Theme.of(context).colorScheme.onSurface
+                            .withValues(alpha: 0.3)
+                      : isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurface,
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // EMPTY SELECTION
+  // ============================================================
+
+  Widget _emptySelection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.touch_app_outlined,
+            size: 38,
+            color: Theme.of(context).colorScheme.onSurface
+                .withValues(alpha: 0.38),
+          ),
+          SizedBox(height: 12),
+          Text(
+            'Chọn một ngày trên lịch',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Bạn có thể xem lịch sử hoặc đặt lịch cho hôm nay và các ngày sắp tới.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface
+                  .withValues(alpha: 0.55),
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // STAT CARD
+  // ============================================================
+
+  Widget _statCard({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
+
+          const SizedBox(height: 12),
+
+          Text(
+            value,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
+          Text(
+            title,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // LEGEND
+  // ============================================================
+
+  Widget _legend({required Color color, required String text}) {
+    return Row(
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface
+                .withValues(alpha: 0.55),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+}

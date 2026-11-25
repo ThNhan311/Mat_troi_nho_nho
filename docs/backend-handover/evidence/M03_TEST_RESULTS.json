@@ -1,0 +1,225 @@
+{
+  "base": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+  "backend": {
+    "passed": 832,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "focusedSubset": 62,
+    "notSelected": [
+      "PtActivationPostgresTest",
+      "ActivationSchemaRehearsalTest"
+    ],
+    "reports": [
+      {
+        "class": "vn.edu.tdtu.fitcenter.activation.ActivationRehearsalGuardTest",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.activation.PtActivationServiceTest",
+        "tests": 23,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.activation.TestSmtpActivationMailerTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.controller.BookingControllerTest",
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.controller.MembershipControllerTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.controller.PersonalTrainerControllerTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.controller.PtAvailabilityControllerTest",
+        "tests": 29,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.controller.PtBookingControllerTest",
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.DatabaseAlignmentTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.http.AccountHttpTest",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.http.HttpBaselineTest",
+        "tests": 433,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.http.InitialMembershipPostgresTest",
+        "tests": 54,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.membershipinitial.InitialMembershipGuardTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.repository.BookingRepositoryQueryTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.security.JwtAuthenticationFilterTest",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.security.JwtServiceTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.AuthServiceTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.AvailabilityServiceTest",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.BookingEligibilityValidatorTest",
+        "tests": 22,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.BookingLifecycleValidatorTest",
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.BookingPolicyServiceTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.BookingPolicyWriteServiceTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.BookingQueryServiceTest",
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.MembershipPlanCreateServiceTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.MembershipServiceTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.PtBookingQueryServiceTest",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "vn.edu.tdtu.fitcenter.service.ServiceEligibilityValidatorTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "admin": {
+    "passed": 89,
+    "failed": 0,
+    "skipped": 0,
+    "focusedSubset": 16,
+    "analyzeErrors": 0,
+    "analyzeWarnings": 0,
+    "analyzeInfos": 65,
+    "webBuild": "passed"
+  },
+  "member": {
+    "passed": 53,
+    "failed": 0,
+    "skipped": 0,
+    "analyzeErrors": 0,
+    "analyzeWarnings": 0,
+    "analyzeInfos": 44,
+    "webBuild": "passed"
+  },
+  "pt": "Dart unchanged; no rerun"
+}

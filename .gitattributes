@@ -1,0 +1,16 @@
+# I-01 frozen SQL working-tree bytes; no published SQL content/version changes.
+/.gitattributes text eol=lf
+/database/migrations/V1__core_users_members.sql text eol=crlf
+/database/migrations/V2__membership_payment.sql text eol=crlf
+/database/migrations/V3__checkin.sql text eol=crlf
+/database/migrations/V4__pt_booking.sql text eol=crlf
+/database/migrations/V5__workout_notification.sql text eol=crlf
+/database/migrations/V6__audit_log.sql text eol=crlf
+/database/activation-rehearsal/V8__pt_account_activation.sql text eol=lf
+/database/membership-rehearsal/V9__membership_initial_activation.sql text eol=crlf
+/database/member-activation-rehearsal/V10__member_account_activation.sql text eol=crlf
+
+/database/renewal-rehearsal/V11__membership_renewal_simulator.sql text eol=lf
+/database/checkin-rehearsal/V12__checkin_request_ledger.sql text eol=lf
+
+/database/enrollment-rehearsal/V13__face_enrollment_lifecycle.sql text eol=lf

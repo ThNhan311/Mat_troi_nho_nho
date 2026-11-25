@@ -1,0 +1,8 @@
+{
+  "format": 1,
+  "reference": "docker.io/library/postgres@sha256:b60e90042aa6b8dbecd58e224b3e36114dbf8ad754465264c2476ad58a86e45c",
+  "versionPrefix": "postgres (PostgreSQL) 17.12 ",
+  "os": "linux",
+  "architecture": "amd64",
+  "verifiedBy": "Local Docker RepoDigests + postgres --version on 2026-11-25; reuse cache or pull this exact official image digest, never a floating tag."
+}

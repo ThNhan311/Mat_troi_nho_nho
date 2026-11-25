@@ -1,0 +1,1250 @@
+{
+  "task": "DB01 migration compatibility candidate",
+  "base": "ee95e0ccb57475d2b41bb766af11523d2e9b6c66",
+  "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+  "branch": "feature/db01-migration-compatibility",
+  "recordedAt": "2026-11-25T12:22:13.441896+00:00",
+  "releaseReady": false,
+  "sharedDatabaseConnections": 0,
+  "productionChangesApplied": false,
+  "migrationServiceChecks": {
+    "passed": 196,
+    "failed": 0,
+    "skipped": 0,
+    "scenarios": [
+      {
+        "checks": 27,
+        "scenario": "fresh",
+        "failed": 0
+      },
+      {
+        "checks": 19,
+        "scenario": "v6_history",
+        "failed": 0
+      },
+      {
+        "checks": 46,
+        "scenario": "v7_history",
+        "failed": 0
+      },
+      {
+        "checks": 24,
+        "scenario": "existing_core",
+        "failed": 0
+      },
+      {
+        "checks": 22,
+        "scenario": "existing_legacy_core",
+        "failed": 0
+      },
+      {
+        "checks": 6,
+        "scenario": "conflicting_evidence",
+        "failed": 0
+      },
+      {
+        "checks": 17,
+        "scenario": "m03_before_v11",
+        "failed": 0
+      },
+      {
+        "checks": 6,
+        "scenario": "duplicate_receipt",
+        "failed": 0
+      },
+      {
+        "checks": 6,
+        "scenario": "missing_coverage",
+        "failed": 0
+      },
+      {
+        "checks": 6,
+        "scenario": "missing_provenance",
+        "failed": 0
+      },
+      {
+        "checks": 6,
+        "scenario": "refunded",
+        "failed": 0
+      },
+      {
+        "checks": 6,
+        "scenario": "wrong_binding",
+        "failed": 0
+      },
+      {
+        "checks": 5,
+        "scenario": "overlap_rollback",
+        "failed": 0
+      }
+    ],
+    "checks": [
+      {
+        "name": "datasource/role 3689cbd541f_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: fresh",
+        "passed": true
+      },
+      {
+        "name": "fresh install uses original V1-V14 in order",
+        "passed": true
+      },
+      {
+        "name": "M03 real service creates COUNTER+receipt+paid period",
+        "passed": true
+      },
+      {
+        "name": "M03 same-key replay retains exact response",
+        "passed": true
+      },
+      {
+        "name": "PENDING does not extend leap-year membership",
+        "passed": true
+      },
+      {
+        "name": "renewal uses original 2-day quote after plan edit",
+        "passed": true
+      },
+      {
+        "name": "renewal end inclusive with snapshot duration",
+        "passed": true
+      },
+      {
+        "name": "duplicate SUCCESS returns original result",
+        "passed": true
+      },
+      {
+        "name": "SUCCESS replay adds no duplicate period",
+        "passed": true
+      },
+      {
+        "name": "renewal preserves original receipt and M03 snapshots",
+        "passed": true
+      },
+      {
+        "name": "V7 compatibility reader sees new canonical writes",
+        "passed": true
+      },
+      {
+        "name": "Booking/D01 paid coverage works on upgraded canonical data",
+        "passed": true
+      },
+      {
+        "name": "renewal owner isolation after upgrade",
+        "passed": true
+      },
+      {
+        "name": "FAILED grants no paid coverage",
+        "passed": true
+      },
+      {
+        "name": "received funds during SUSPENDED remain reconciliation, not rights",
+        "passed": true
+      },
+      {
+        "name": "reconciliation does not silently grant period",
+        "passed": true
+      },
+      {
+        "name": "bridge repeat accepts traced reconciliation SUCCESS without coverage",
+        "passed": true
+      },
+      {
+        "name": "concurrent independent SUCCESS applies once",
+        "passed": true
+      },
+      {
+        "name": "concurrent independent SUCCESS applies once",
+        "passed": true
+      },
+      {
+        "name": "Member lock serializes two independent renewal periods",
+        "passed": true
+      },
+      {
+        "name": "injected M03 failure propagates",
+        "passed": true
+      },
+      {
+        "name": "M03 failure rolls back Membership/payment/receipt/audit atomically",
+        "passed": true
+      },
+      {
+        "name": "membership migration/services do not mutate Booking",
+        "passed": true
+      },
+      {
+        "name": "legacy name is canonical read-only view",
+        "passed": true
+      },
+      {
+        "name": "legacy writer rejected explicitly",
+        "passed": true
+      },
+      {
+        "name": "rejected legacy write does not mutate canonical periods",
+        "passed": true
+      },
+      {
+        "name": "datasource/role 6c67b0018d3_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: v6_history",
+        "passed": true
+      },
+      {
+        "name": "original audit_logs rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original bookings rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original members rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original membership_plans rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original memberships rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original payment_transactions rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original personal_trainers rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original users rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "two sourced historical periods retained",
+        "passed": true
+      },
+      {
+        "name": "D01 rejects unpaid gap after upgrade",
+        "passed": true
+      },
+      {
+        "name": "unpaid March1 gap is not bridged",
+        "passed": true
+      },
+      {
+        "name": "inclusive leap-day coverage remains valid",
+        "passed": true
+      },
+      {
+        "name": "legacy quote/name/currency not fabricated from current plan",
+        "passed": true
+      },
+      {
+        "name": "legacy name is canonical read-only view",
+        "passed": true
+      },
+      {
+        "name": "legacy writer rejected explicitly",
+        "passed": true
+      },
+      {
+        "name": "rejected legacy write does not mutate canonical periods",
+        "passed": true
+      },
+      {
+        "name": "compatibility restored after V7 before dependent migrations",
+        "passed": true
+      },
+      {
+        "name": "datasource/role a0e4bc9c3f3_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: v7_history",
+        "passed": true
+      },
+      {
+        "name": "V7 payment restoration preserves original columns/timestamps",
+        "passed": true
+      },
+      {
+        "name": "original audit_logs rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original bookings rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original members rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original membership_plans rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original memberships rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original payment_transactions rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original personal_trainers rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original users rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "two sourced historical periods retained",
+        "passed": true
+      },
+      {
+        "name": "D01 rejects unpaid gap after upgrade",
+        "passed": true
+      },
+      {
+        "name": "unpaid March1 gap is not bridged",
+        "passed": true
+      },
+      {
+        "name": "inclusive leap-day coverage remains valid",
+        "passed": true
+      },
+      {
+        "name": "legacy quote/name/currency not fabricated from current plan",
+        "passed": true
+      },
+      {
+        "name": "all original V7 rows preserved in read-only archive",
+        "passed": true
+      },
+      {
+        "name": "V7 receipt remains readable without inventing COUNTER transaction",
+        "passed": true
+      },
+      {
+        "name": "legacy name is canonical read-only view",
+        "passed": true
+      },
+      {
+        "name": "legacy writer rejected explicitly",
+        "passed": true
+      },
+      {
+        "name": "rejected legacy write does not mutate canonical periods",
+        "passed": true
+      },
+      {
+        "name": "M03 real service creates COUNTER+receipt+paid period",
+        "passed": true
+      },
+      {
+        "name": "new M03 cannot reuse an original V7 receipt",
+        "passed": true
+      },
+      {
+        "name": "legacy receipt conflict rolls back new Membership",
+        "passed": true
+      },
+      {
+        "name": "M03 same-key replay retains exact response",
+        "passed": true
+      },
+      {
+        "name": "PENDING does not extend leap-year membership",
+        "passed": true
+      },
+      {
+        "name": "renewal uses original 2-day quote after plan edit",
+        "passed": true
+      },
+      {
+        "name": "renewal end inclusive with snapshot duration",
+        "passed": true
+      },
+      {
+        "name": "duplicate SUCCESS returns original result",
+        "passed": true
+      },
+      {
+        "name": "SUCCESS replay adds no duplicate period",
+        "passed": true
+      },
+      {
+        "name": "renewal preserves original receipt and M03 snapshots",
+        "passed": true
+      },
+      {
+        "name": "V7 compatibility reader sees new canonical writes",
+        "passed": true
+      },
+      {
+        "name": "Booking/D01 paid coverage works on upgraded canonical data",
+        "passed": true
+      },
+      {
+        "name": "renewal owner isolation after upgrade",
+        "passed": true
+      },
+      {
+        "name": "FAILED grants no paid coverage",
+        "passed": true
+      },
+      {
+        "name": "received funds during SUSPENDED remain reconciliation, not rights",
+        "passed": true
+      },
+      {
+        "name": "reconciliation does not silently grant period",
+        "passed": true
+      },
+      {
+        "name": "bridge repeat accepts traced reconciliation SUCCESS without coverage",
+        "passed": true
+      },
+      {
+        "name": "concurrent independent SUCCESS applies once",
+        "passed": true
+      },
+      {
+        "name": "concurrent independent SUCCESS applies once",
+        "passed": true
+      },
+      {
+        "name": "Member lock serializes two independent renewal periods",
+        "passed": true
+      },
+      {
+        "name": "injected M03 failure propagates",
+        "passed": true
+      },
+      {
+        "name": "M03 failure rolls back Membership/payment/receipt/audit atomically",
+        "passed": true
+      },
+      {
+        "name": "membership migration/services do not mutate Booking",
+        "passed": true
+      },
+      {
+        "name": "second migrate does not reapply/backfill",
+        "passed": true
+      },
+      {
+        "name": "second migrate does not duplicate periods",
+        "passed": true
+      },
+      {
+        "name": "datasource/role 46aed0accf5_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: existing_core",
+        "passed": true
+      },
+      {
+        "name": "M03 real service creates COUNTER+receipt+paid period",
+        "passed": true
+      },
+      {
+        "name": "M03 same-key replay retains exact response",
+        "passed": true
+      },
+      {
+        "name": "PENDING does not extend leap-year membership",
+        "passed": true
+      },
+      {
+        "name": "renewal uses original 2-day quote after plan edit",
+        "passed": true
+      },
+      {
+        "name": "renewal end inclusive with snapshot duration",
+        "passed": true
+      },
+      {
+        "name": "duplicate SUCCESS returns original result",
+        "passed": true
+      },
+      {
+        "name": "SUCCESS replay adds no duplicate period",
+        "passed": true
+      },
+      {
+        "name": "renewal preserves original receipt and M03 snapshots",
+        "passed": true
+      },
+      {
+        "name": "Booking/D01 paid coverage works on upgraded canonical data",
+        "passed": true
+      },
+      {
+        "name": "renewal owner isolation after upgrade",
+        "passed": true
+      },
+      {
+        "name": "FAILED grants no paid coverage",
+        "passed": true
+      },
+      {
+        "name": "received funds during SUSPENDED remain reconciliation, not rights",
+        "passed": true
+      },
+      {
+        "name": "reconciliation does not silently grant period",
+        "passed": true
+      },
+      {
+        "name": "bridge repeat accepts traced reconciliation SUCCESS without coverage",
+        "passed": true
+      },
+      {
+        "name": "concurrent independent SUCCESS applies once",
+        "passed": true
+      },
+      {
+        "name": "concurrent independent SUCCESS applies once",
+        "passed": true
+      },
+      {
+        "name": "Member lock serializes two independent renewal periods",
+        "passed": true
+      },
+      {
+        "name": "injected M03 failure propagates",
+        "passed": true
+      },
+      {
+        "name": "M03 failure rolls back Membership/payment/receipt/audit atomically",
+        "passed": true
+      },
+      {
+        "name": "membership migration/services do not mutate Booking",
+        "passed": true
+      },
+      {
+        "name": "existing Core receipts/account/payment state unchanged",
+        "passed": true
+      },
+      {
+        "name": "existing Core paid periods unchanged",
+        "passed": true
+      },
+      {
+        "name": "datasource/role a2e19824622_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: existing_legacy_core",
+        "passed": true
+      },
+      {
+        "name": "original audit_logs rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original bookings rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original member_account_activation rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original members rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original membership_initial_activations rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original membership_plans rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original memberships rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original payment_transactions rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original personal_trainers rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original pt_account_activation rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "original users rows unchanged by upgrade",
+        "passed": true
+      },
+      {
+        "name": "two sourced historical periods retained",
+        "passed": true
+      },
+      {
+        "name": "D01 rejects unpaid gap after upgrade",
+        "passed": true
+      },
+      {
+        "name": "unpaid March1 gap is not bridged",
+        "passed": true
+      },
+      {
+        "name": "inclusive leap-day coverage remains valid",
+        "passed": true
+      },
+      {
+        "name": "legacy quote/name/currency not fabricated from current plan",
+        "passed": true
+      },
+      {
+        "name": "legacy name is canonical read-only view",
+        "passed": true
+      },
+      {
+        "name": "legacy writer rejected explicitly",
+        "passed": true
+      },
+      {
+        "name": "rejected legacy write does not mutate canonical periods",
+        "passed": true
+      },
+      {
+        "name": "existing Core aggregate retained byte-equivalent as JSON archive",
+        "passed": true
+      },
+      {
+        "name": "datasource/role 205e5c3c490_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: conflicting_evidence",
+        "passed": true
+      },
+      {
+        "name": "refuses DB01_CONFLICTING_PERIOD_EVIDENCE",
+        "passed": true
+      },
+      {
+        "name": "failed compatibility upgrade rolls back business rows",
+        "passed": true
+      },
+      {
+        "name": "failure leaves Flyway history unchanged",
+        "passed": true
+      },
+      {
+        "name": "failed upgrade does not publish second source model",
+        "passed": true
+      },
+      {
+        "name": "datasource/role 8593ab76a4d_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: m03_before_v11",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves audit_logs",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves bookings",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves member_account_activation",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves members",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves membership_initial_activations",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves membership_plans",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves memberships",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves payment_transactions",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves personal_trainers",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves pt_account_activation",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 preserves users",
+        "passed": true
+      },
+      {
+        "name": "pre-V11 M03 backfills COUNTER as initial, never as renewal",
+        "passed": true
+      },
+      {
+        "name": "legacy name is canonical read-only view",
+        "passed": true
+      },
+      {
+        "name": "legacy writer rejected explicitly",
+        "passed": true
+      },
+      {
+        "name": "rejected legacy write does not mutate canonical periods",
+        "passed": true
+      },
+      {
+        "name": "datasource/role 6c2144aa7e6_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: duplicate_receipt",
+        "passed": true
+      },
+      {
+        "name": "refuses DB01_DUPLICATE_LEGACY_RECEIPT",
+        "passed": true
+      },
+      {
+        "name": "failed compatibility upgrade rolls back business rows",
+        "passed": true
+      },
+      {
+        "name": "failure leaves Flyway history unchanged",
+        "passed": true
+      },
+      {
+        "name": "failed upgrade does not publish second source model",
+        "passed": true
+      },
+      {
+        "name": "datasource/role 99bb3c93a94_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: missing_coverage",
+        "passed": true
+      },
+      {
+        "name": "refuses DB01_MEMBERSHIP_COVERAGE_PROVENANCE_MISSING",
+        "passed": true
+      },
+      {
+        "name": "failed compatibility upgrade rolls back business rows",
+        "passed": true
+      },
+      {
+        "name": "failure leaves Flyway history unchanged",
+        "passed": true
+      },
+      {
+        "name": "failed upgrade does not publish second source model",
+        "passed": true
+      },
+      {
+        "name": "datasource/role 40fda5c95c4_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: missing_provenance",
+        "passed": true
+      },
+      {
+        "name": "refuses DB01_PAYMENT_PERIOD_PROVENANCE_MISSING",
+        "passed": true
+      },
+      {
+        "name": "failed compatibility upgrade rolls back business rows",
+        "passed": true
+      },
+      {
+        "name": "failure leaves Flyway history unchanged",
+        "passed": true
+      },
+      {
+        "name": "failed upgrade does not publish second source model",
+        "passed": true
+      },
+      {
+        "name": "datasource/role fd95ac01e13_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: refunded",
+        "passed": true
+      },
+      {
+        "name": "refuses DB01_REFUND_RECONCILIATION_REQUIRED",
+        "passed": true
+      },
+      {
+        "name": "failed compatibility upgrade rolls back business rows",
+        "passed": true
+      },
+      {
+        "name": "failure leaves Flyway history unchanged",
+        "passed": true
+      },
+      {
+        "name": "failed upgrade does not publish second source model",
+        "passed": true
+      },
+      {
+        "name": "datasource/role a9ecac4b9a3_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: wrong_binding",
+        "passed": true
+      },
+      {
+        "name": "refuses DB01_LEGACY_PAYMENT_BINDING_MISMATCH",
+        "passed": true
+      },
+      {
+        "name": "failed compatibility upgrade rolls back business rows",
+        "passed": true
+      },
+      {
+        "name": "failure leaves Flyway history unchanged",
+        "passed": true
+      },
+      {
+        "name": "failed upgrade does not publish second source model",
+        "passed": true
+      },
+      {
+        "name": "datasource/role 7935aed2369_",
+        "passed": true
+      },
+      {
+        "name": "new database has no preexisting tables: overlap_rollback",
+        "passed": true
+      },
+      {
+        "name": "overlapping sources fail with controlled migration refusal",
+        "passed": true
+      },
+      {
+        "name": "V14 rollback restores derived aggregates and canonical rows",
+        "passed": true
+      },
+      {
+        "name": "failed V14 does not change Flyway history",
+        "passed": true
+      }
+    ],
+    "callbackOrder": [
+      "before_migrate",
+      "after_7",
+      "restore_after_7_before_8_9_11",
+      "after_8",
+      "after_9",
+      "after_10",
+      "after_11",
+      "after_12",
+      "after_13",
+      "after_14",
+      "before_migrate",
+      "after_7",
+      "restore_after_7_before_8_9_11",
+      "after_8",
+      "after_9",
+      "after_10",
+      "after_11",
+      "after_12",
+      "after_13",
+      "after_14",
+      "before_migrate",
+      "after_8",
+      "after_9",
+      "after_10",
+      "after_11",
+      "after_12",
+      "after_13",
+      "after_14",
+      "before_migrate",
+      "before_migrate",
+      "after_14",
+      "before_migrate",
+      "after_14",
+      "before_migrate",
+      "after_11",
+      "after_12",
+      "after_13",
+      "after_14",
+      "before_migrate",
+      "after_8",
+      "after_9",
+      "after_10",
+      "after_11",
+      "after_12",
+      "after_13",
+      "before_migrate",
+      "before_migrate",
+      "after_8",
+      "after_9",
+      "after_10",
+      "after_11",
+      "after_12",
+      "after_13",
+      "before_migrate"
+    ],
+    "type": "Private PostgreSQL migration plus direct real JDBC services. Not HTTP/UI/JUnit E2E."
+  },
+  "selectedJUnitRegression": {
+    "suites": [
+      {
+        "suite": "vn.edu.tdtu.fitcenter.membershipinitial.InitialMembershipGuardTest",
+        "skipped": 0,
+        "errors": 0,
+        "tests": 8,
+        "failures": 0
+      },
+      {
+        "suite": "vn.edu.tdtu.fitcenter.renewal.RenewalDatesTest",
+        "skipped": 0,
+        "errors": 0,
+        "tests": 10,
+        "failures": 0
+      },
+      {
+        "suite": "vn.edu.tdtu.fitcenter.renewal.RenewalRequestTest",
+        "skipped": 0,
+        "errors": 0,
+        "tests": 15,
+        "failures": 0
+      },
+      {
+        "suite": "vn.edu.tdtu.fitcenter.service.BookingEligibilityValidatorTest",
+        "skipped": 0,
+        "errors": 0,
+        "tests": 22,
+        "failures": 0
+      },
+      {
+        "suite": "vn.edu.tdtu.fitcenter.service.MembershipServiceTest",
+        "skipped": 0,
+        "errors": 0,
+        "tests": 12,
+        "failures": 0
+      },
+      {
+        "suite": "vn.edu.tdtu.fitcenter.service.ServiceEligibilityValidatorTest",
+        "skipped": 0,
+        "errors": 0,
+        "tests": 12,
+        "failures": 0
+      }
+    ],
+    "passed": 79,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "inventory": [
+    {
+      "scenario": "fresh",
+      "versions": "1,2,3,4,5,6,7,8,9,10,11,12,13,14",
+      "readOnly": true,
+      "dataUnchanged": true,
+      "wrongTargetRejected": true,
+      "failed": 0
+    },
+    {
+      "scenario": "existing_core",
+      "versions": "1,2,3,4,5,6,8,9,10,11,12,13,14",
+      "readOnly": true,
+      "dataUnchanged": true,
+      "wrongTargetRejected": true,
+      "failed": 0
+    },
+    {
+      "scenario": "missing_provenance",
+      "versions": "1,2,3,4,5,6,7",
+      "readOnly": true,
+      "dataUnchanged": true,
+      "wrongTargetRejected": true,
+      "failed": 0
+    }
+  ],
+  "guardNegatives": {
+    "unknownSqlRejected": true,
+    "wrongFullIdRejected": true,
+    "resourcesMutated": false,
+    "failed": 0
+  },
+  "cleanSource": {
+    "candidateSha256Matched": 2,
+    "sqlLfPinned": true,
+    "publishedInventoryPassed": true,
+    "powershellParsed": true,
+    "nodeParsed": true,
+    "cleanCheckout": true,
+    "privateResearchAbsent": true,
+    "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf"
+  },
+  "sourceHashes": [
+    {
+      "path": "backend/scripts/Db01MigrationRehearsal.java",
+      "workingTreeSha256": "6c97ccc608c3e7181d5b3e02897ee72120b1440a93843a79e096d8c3986b77ce",
+      "cleanCheckoutSha256": "3d0aec7af38f43c9b47937c1bb2da0d40980fa13de5783e15689a6b4c0b60768",
+      "gitBlob": "a88c9f84e53077b6d4e156525ccd0b5dd080abfa",
+      "eolOnlyDifference": true
+    },
+    {
+      "path": "backend/scripts/db01-rehearsal.ps1",
+      "workingTreeSha256": "ecb6acee15aed8ea41458b1bd17b8de2a8c6410e2eccedc5ecaf1cdc26d67ffd",
+      "cleanCheckoutSha256": "1f2e1f16cbb62c09dffb76b5238b782cb75e5db1d06d33c83334bbfcec31a895",
+      "gitBlob": "62079afc1d4592fb45ecac611692b903794fe69e",
+      "eolOnlyDifference": true
+    },
+    {
+      "path": "backend/scripts/cleanup-db01-rehearsal.mjs",
+      "workingTreeSha256": "4740d111e6ecd61859cef06970bbea706c0313dd748bd0c2e7c9e15b46691f05",
+      "cleanCheckoutSha256": "7b80d0d57a606a68681da02d5a5f943f99b676c32d5b5de53d80c2f28a513dd9",
+      "gitBlob": "76a4a0dae517dcefa090430d8daf4e914c4f0cbf",
+      "eolOnlyDifference": true
+    },
+    {
+      "path": "database/tools/db01-read-only-inventory.sql",
+      "workingTreeSha256": "aba4321b46f20f66a2bc0a75e0f2e4224279892d6b0e81569610a5663b1b17a0",
+      "cleanCheckoutSha256": "cd984823f99bb67df2cd99f60d80ecfa2900e22a960be6ed4ede964a67dc45f0",
+      "gitBlob": "2c59b0c01f19a1878ffb816aad6117c66f29f9a9",
+      "eolOnlyDifference": true
+    },
+    {
+      "path": "docs/backend-handover/proposals/db01/before-upgrade.sql",
+      "workingTreeSha256": "4f9048e565889bb4dfedae23dcc14b9afcd51c71ec7ff5314a52a6f4e72cf23c",
+      "cleanCheckoutSha256": "4f9048e565889bb4dfedae23dcc14b9afcd51c71ec7ff5314a52a6f4e72cf23c",
+      "gitBlob": "2f53ad0650ed76e4f4dfc3221fcaaffb55ed28a6",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "docs/backend-handover/proposals/db01/migration/V14__unify_membership_period_read_model.sql",
+      "workingTreeSha256": "203890209ec10a6a3f1a0ab4e5e46bc21193b00a1e36821343bb86d7295e8c25",
+      "cleanCheckoutSha256": "203890209ec10a6a3f1a0ab4e5e46bc21193b00a1e36821343bb86d7295e8c25",
+      "gitBlob": "02a8def7286decdd13407f30d2bced6469bc50f8",
+      "eolOnlyDifference": false
+    }
+  ],
+  "formattingAfterTest": {
+    "path": "backend/scripts/Db01MigrationRehearsal.java",
+    "testedSha256": "b26a20fb4f31dcafdce62850a91e29e49c0ad83b3919b65117fddd73473f783c",
+    "reviewedSha256": "6c97ccc608c3e7181d5b3e02897ee72120b1440a93843a79e096d8c3986b77ce",
+    "onlyTrailingWhitespaceRemoved": true,
+    "javaTokensUnchangedByWhitespaceSplit": true
+  },
+  "migrationInventory": [
+    {
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": 1458726014,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "df40d5114a8c88f48977e708f4baaf4c36a5f16289432c20a3224c40ada25870",
+      "unchanged": true
+    },
+    {
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": 989506803,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "dffe32d5fc343e6e877234afa79408f3cebd7cbd1828891c31e993f1047cd615",
+      "unchanged": true
+    },
+    {
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": -515824181,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "17a711675169667fa50af87b34dc1e5406c0610fe44cb2f9cefaf35a7b7322e1",
+      "unchanged": true
+    },
+    {
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": 568475058,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "79844557f18bc878247a70997013f037f7eebbb0fc5f59502665bf1227c3dc3e",
+      "unchanged": true
+    },
+    {
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": 1125685481,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "ad8d568c9cc57351b977d3bfb71b56f68193f1c14a407d7763c72e9b6f17ae39",
+      "unchanged": true
+    },
+    {
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": -1514799074,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "486497e40e779250ab592646df46996e42ee7d771dfdc8332c8591cb70e6a28c",
+      "unchanged": true
+    },
+    {
+      "version": 7,
+      "path": "database/database/migrations/V7__membership_periods.sql",
+      "sourceCommit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "flywayChecksum": -349926232,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "gitBlobSha256": "668fdd672fdcff04e89525b3cadec3bc957f186f38fe0065dc4417a6f1b29b41",
+      "location": "PRIVATE export of pinned Git object, never default release location"
+    },
+    {
+      "version": 8,
+      "path": "database/activation-rehearsal/V8__pt_account_activation.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": -750065425,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "7f38b7f83662d4895dcce71ae50accc64321786f5fe7af5ea044bdd4fa619902",
+      "unchanged": true
+    },
+    {
+      "version": 9,
+      "path": "database/membership-rehearsal/V9__membership_initial_activation.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": 2048807649,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "98783c7fcbfba450c46d9d625d74f5b8bca85cce897bd7887222c2e1bbee2648",
+      "unchanged": true
+    },
+    {
+      "version": 10,
+      "path": "database/member-activation-rehearsal/V10__member_account_activation.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": 1490426486,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "cf6d6918134409f552576b14644b9847fa127a5a81b4e1964da260bd6ad19f29",
+      "unchanged": true
+    },
+    {
+      "version": 11,
+      "path": "database/renewal-rehearsal/V11__membership_renewal_simulator.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": 2066778787,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "88f0e48fb077c777fb3d17f9872397fa6e8e10686bf0c4067ca7a0e6f0de0e61",
+      "unchanged": true
+    },
+    {
+      "version": 12,
+      "path": "database/checkin-rehearsal/V12__checkin_request_ledger.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": 1844552835,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "2d889683ee254ee312fea46b0930a2bd73461ee531633a7ec31c28c2e4e276ae",
+      "unchanged": true
+    },
+    {
+      "version": 13,
+      "path": "database/enrollment-rehearsal/V13__face_enrollment_lifecycle.sql",
+      "sourceCommit": "fd603d7ad1939caf868f663c7e560bc63767bfcf",
+      "flywayChecksum": 247602960,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN",
+      "rawSha256": "71ac5940a5d4a64b8e53659b38c6aa7bf9004356ff03172aa32b7d44de4121e6",
+      "unchanged": true
+    },
+    {
+      "version": 14,
+      "path": "docs/backend-handover/proposals/db01/migration/V14__unify_membership_period_read_model.sql",
+      "rawSha256": "203890209ec10a6a3f1a0ab4e5e46bc21193b00a1e36821343bb86d7295e8c25",
+      "flywayChecksum": -753147948,
+      "privateFreshObservedApplied": true,
+      "sharedAppliedStatus": "UNKNOWN; version slot not released",
+      "dependsOn": [
+        "before-upgrade compatibility callback",
+        "V9",
+        "V11",
+        "V7 resolve only when applied/protected fresh route"
+      ],
+      "releaseReady": false
+    }
+  ],
+  "cleanup": {
+    "databasesIncludingDebugAttempts": 69,
+    "registeredPkRows": 909,
+    "failed": 0,
+    "repeatedTwice": true,
+    "outsideSentinelPreserved": true,
+    "ownSentinelRemovedExactly": true,
+    "ownedContainerStopped": true,
+    "volumeRetained": true
+  },
+  "protectedResearchUnchanged": 4,
+  "protectedFaceUnchanged": 26,
+  "productionJavaDartPublishedSqlUnchanged": true,
+  "failuresFixed": [
+    "Guarded missing-regclass lookup and missing SQL alias in compatibility candidate.",
+    "Harness compares original-table snapshots independently of newly added empty tables and compares JSON values across UUID/string serialization.",
+    "Source overlap now refuses with explicit DB01_PERIOD_SOURCE_CONFLICT independent of random import order.",
+    "psql17 quit argument does not yield nonzero; target refusal uses read-only exception plus ON_ERROR_STOP."
+  ],
+  "limits": [
+    "Shared target inventory/backup/provenance and version14 publication order unknown.",
+    "Legacy snapshots remain unknown; no inference from current plan.",
+    "M04 legacy planName fallback and old consumer LEGACY-source handling need review before rollout.",
+    "No production/profile gates, API/Frontend, refund/gateway or Face functionality changed.",
+    "No new HTTP/UI E2E, full1106, Flutter or biometric accuracy run in DB01.",
+    "Cached tools/dependencies/image used; not cold install."
+  ],
+  "finalTextArtifactAudit": {
+    "relativeMarkdownLinks": 980,
+    "broken": [],
+    "secretPatternMatches": [],
+    "trackedPrivateBuildArtifacts": [],
+    "sharedDatabaseConnections": 0,
+    "scope": "Latest tracked text plus DB01 deliverables; file targets, not external websites/anchors or forensic Git-history/OCR scan"
+  }
+}

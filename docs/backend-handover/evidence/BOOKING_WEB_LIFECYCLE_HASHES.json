@@ -1,0 +1,52 @@
+{
+  "baseCommit": "9fe34b99324ab53748c495145c1c0d2c8a4abd12",
+  "backendBase": "089b5e27bda9cc4c543d5d239d3f51377b5e80af",
+  "frontendPinnedSource": "0307242a34ceb76a289f7ed1f43653e5a1862948",
+  "branch": "feature/frontend-booking-lifecycle",
+  "hashBasis": "Exact current working-tree bytes; historical Web slice hashes remain in BOOKING_WEB_SOURCE_HASHES.json at commit 9fe34b9.",
+  "executableSha256": {
+    "backend/scripts/BookingDemo.java": "225c1ea04e9c44ef45fed42c1efdbe44dbe577ec917684d71884999cbe8c9012",
+    "backend/scripts/booking-demo.ps1": "065e9a0a4105ebda7bc197baadf8c3cc1e0a0cab14ced854f2c5344b6539b093",
+    "frontend/fitcenter_member/lib/main.dart": "fcc1ea7b0af5f504feb69dce4eb6807262e8661413095ca45b4678a88100fed6",
+    "frontend/fitcenter_member/lib/screens/booking_dashboard.dart": "42f6e0386aed0a70e0c024ba2edfce7b9c804505a2a878bb764bd6f281fd2547",
+    "frontend/fitcenter_member/lib/services/api_client.dart": "e4c79c2747aebcb06e031aec3b14b8208fc18013ed07a4b77086e048ea21ec15",
+    "frontend/fitcenter_member/lib/services/booking_models.dart": "1c3ceaa74c4644f05ed2ff5949cc85a41521ec974f0558a69571aeb2cf3fb7f4",
+    "frontend/fitcenter_member/lib/services/booking_service.dart": "680524ab8267b048b6e6d4ed9b265de864d19c24ddcb039fbc3c63a3dac092a1",
+    "frontend/fitcenter_member/lib/services/vietnam_time.dart": "b39ed2be58c4220bebee340bc0d8565746a114c05223abef2c1c190ee6ebbf24",
+    "frontend/fitcenter_member/test/api_client_test.dart": "e11552db862a9cd6783047fe12c14269d1dd5d2b5d402170f0830cdfa0524ba6",
+    "frontend/fitcenter_member/test/lifecycle_test.dart": "6ec56df2f12d2ac2342c0502ccb8f46fcfe88ddbc69b3843f824e5ba73d3862e",
+    "frontend/fitcenter_pt/lib/main.dart": "28a6a1690286bab7892e11f0a2008e54ae5bb7c5c7a8dd02b17e1954f83d3a5f",
+    "frontend/fitcenter_pt/lib/screens/booking_dashboard.dart": "402a143d030113c42b6d16901c3f38422c11ea6a53116e2f1c3027d213f56b7c",
+    "frontend/fitcenter_pt/lib/services/api_client.dart": "e4c79c2747aebcb06e031aec3b14b8208fc18013ed07a4b77086e048ea21ec15",
+    "frontend/fitcenter_pt/lib/services/booking_models.dart": "c3d59b453fd12bdd9c475501776a80e55c9ad0bae2bc109e1f88b262b6ad7bb0",
+    "frontend/fitcenter_pt/lib/services/booking_service.dart": "f97e1b20632d1bd106a6e0aadf1a916bef0857dd6639e95d5c325c2c3c94548a",
+    "frontend/fitcenter_pt/lib/services/vietnam_time.dart": "b39ed2be58c4220bebee340bc0d8565746a114c05223abef2c1c190ee6ebbf24",
+    "frontend/fitcenter_pt/test/api_client_test.dart": "9275efd4175b46b4e70704989e807252bedccff29c40e7129d1038f5a4989a39",
+    "frontend/fitcenter_pt/test/lifecycle_test.dart": "d449fe342cf8cbb826d50d5da13949bb823db7a710cc23d1ad0f32aff15c4459",
+    "frontend/verify-booking-lifecycle.mjs": "f6eb5965f4d7160366cb6e32e91551856a75a1383678810a4e67d4fcef805093"
+  },
+  "flutter": {
+    "member": {
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0
+    },
+    "pt": {
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0
+    },
+    "focusedIsSubset": true
+  },
+  "http": {
+    "checks": 41,
+    "requests": 20,
+    "failed": 0,
+    "skipped": 0
+  },
+  "postgresql": {
+    "checks": 13,
+    "failed": 0,
+    "skipped": 0
+  }
+}

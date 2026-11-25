@@ -1,0 +1,571 @@
+{
+  "base": "d2774c9b860e7d263b26edac1003502da8781790",
+  "branch": "feature/membership-renewal-simulator",
+  "backend": {
+    "selectedFull": {
+      "tests": 989,
+      "passed": 989,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "suites": [
+        {
+          "name": "vn.edu.tdtu.fitcenter.activation.ActivationRehearsalGuardTest",
+          "tests": "9",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.activation.MemberActivationGuardTest",
+          "tests": "7",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.activation.MemberActivationServiceTest",
+          "tests": "23",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.activation.PtActivationServiceTest",
+          "tests": "23",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.activation.TestSmtpActivationMailerTest",
+          "tests": "3",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.controller.BookingControllerTest",
+          "tests": "33",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.controller.MembershipControllerTest",
+          "tests": "3",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.controller.PersonalTrainerControllerTest",
+          "tests": "14",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.controller.PtAvailabilityControllerTest",
+          "tests": "29",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.controller.PtBookingControllerTest",
+          "tests": "33",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.DatabaseAlignmentTest",
+          "tests": "4",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.AccountHttpTest",
+          "tests": "16",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.CoreMigrationCandidatePostgresTest",
+          "tests": "4",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.HttpBaselineTest",
+          "tests": "433",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.IntegratedInitialMembershipPostgresTest",
+          "tests": "54",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.IntegratedPtActivationPostgresTest",
+          "tests": "23",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.MemberAccountActivationPostgresTest",
+          "tests": "24",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.MemberActivationSchemaPostgresTest",
+          "tests": "5",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.RenewalPostgresTest",
+          "tests": "46",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.membershipinitial.InitialMembershipGuardTest",
+          "tests": "8",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.renewal.RenewalDatesTest",
+          "tests": "10",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.renewal.RenewalRequestTest",
+          "tests": "15",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.repository.BookingRepositoryQueryTest",
+          "tests": "4",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.security.JwtAuthenticationFilterTest",
+          "tests": "11",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.security.JwtServiceTest",
+          "tests": "10",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.AuthServiceTest",
+          "tests": "10",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.AvailabilityServiceTest",
+          "tests": "16",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.BookingEligibilityValidatorTest",
+          "tests": "22",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.BookingLifecycleValidatorTest",
+          "tests": "21",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.BookingPolicyServiceTest",
+          "tests": "4",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.BookingPolicyWriteServiceTest",
+          "tests": "7",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.BookingQueryServiceTest",
+          "tests": "18",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.MembershipPlanCreateServiceTest",
+          "tests": "7",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.MembershipServiceTest",
+          "tests": "12",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.PtBookingQueryServiceTest",
+          "tests": "16",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.ServiceEligibilityValidatorTest",
+          "tests": "12",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        }
+      ]
+    },
+    "focusedSubset": {
+      "tests": 71,
+      "passed": 71,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "excludedProfiles": [
+      "PtActivationPostgresTest",
+      "ActivationSchemaRehearsalTest",
+      "InitialMembershipPostgresTest"
+    ],
+    "selection": "*Test,!PtActivationPostgresTest,!ActivationSchemaRehearsalTest,!InitialMembershipPostgresTest",
+    "jvm": "JDK21/UTC",
+    "packagePassed": true
+  },
+  "flutter": {
+    "Member": {
+      "tests": 80,
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0,
+      "analyzeExit": 0,
+      "analyzeErrors": 0,
+      "analyzeWarnings": 0,
+      "analyzeInfos": 85,
+      "webBuildPassed": true
+    },
+    "Admin": {
+      "tests": 110,
+      "passed": 110,
+      "failed": 0,
+      "skipped": 0,
+      "analyzeExit": 0,
+      "analyzeErrors": 0,
+      "analyzeWarnings": 0,
+      "analyzeInfos": 85,
+      "webBuildPassed": true
+    },
+    "PT": "Dart unchanged; Flutter suite not selected"
+  },
+  "e2e": {
+    "at": "2026-11-23T16:08:02.861Z",
+    "scenario": "Only Admin seeded. Plans, Member, initial counter Membership and renewal quotes/results use actual API/UI. Member activates through actual SMTP/UI. Real server Clock; early renewal CURRENT/NEXT, no future completion.",
+    "ui": [
+      "ad original login",
+      "member OTP requested202/no-store",
+      "member one-use grant, no JWT",
+      "member ACTIVE after password",
+      "member login after actual activation",
+      "Member activation and login use original UI and real loopback mail sink",
+      "Original Member Membership read-back",
+      "create-success-quote server PENDING with exact snapshot",
+      "Member renders true payment UUID",
+      "ad original login",
+      "Admin original navigation simulator SUCCESS",
+      "Server success grants exactly one period",
+      "member original login",
+      "Member reload/login shows server CURRENT/NEXT and SUCCESS",
+      "create-FAILED server PENDING with exact snapshot",
+      "Member renders true payment UUID",
+      "ad original login",
+      "Admin original navigation simulator FAILED",
+      "member original login",
+      "Member reload reflects actual FAILED",
+      "create-CANCELLED server PENDING with exact snapshot",
+      "Member renders true payment UUID",
+      "ad original login",
+      "Admin original navigation simulator CANCELLED",
+      "member original login",
+      "Member reload reflects actual CANCELLED",
+      "Reload clears in-memory Member session",
+      "member original login",
+      "Final login reads committed result from server"
+    ],
+    "http": [
+      "POST /admin/membership-plans 201",
+      "POST /admin/membership-plans 201",
+      "POST /admin/members 201",
+      "POST /admin/members/7e8138f8-684e-4e82-80d8-09d2227d38ba/activate-membership 201",
+      "member actual loopback SMTP delivery",
+      "GET /memberships/ba3b646f-fb3b-4c81-8978-d297aff442a0/periods 200",
+      "GET /payments/me 200",
+      "GET /payments/me 200",
+      "POST /admin/payment-simulator/transactions/8f4fc768-706d-4fd5-a07b-a4aacb2b19ec/results 200",
+      "POST /admin/payment-simulator/transactions/8f4fc768-706d-4fd5-a07b-a4aacb2b19ec/results 409",
+      "POST /admin/members 201",
+      "POST /auth/member-activation/request-otp 202",
+      "POST /auth/member-activation/verify-otp 200",
+      "POST /auth/member-activation/password 200",
+      "POST /auth/login 200",
+      "GET /payments/8f4fc768-706d-4fd5-a07b-a4aacb2b19ec 404",
+      "GET /memberships/ba3b646f-fb3b-4c81-8978-d297aff442a0/periods 404",
+      "POST /admin/payment-simulator/transactions/8f4fc768-706d-4fd5-a07b-a4aacb2b19ec/results 403"
+    ],
+    "db": [
+      "Fresh dedicated database contains synthetic Admin only",
+      "M03 counter activation writes one real initial period, account stays DISABLED",
+      "PENDING changes neither expiry nor paid periods",
+      "PostgreSQL same Membership UUID; original plan FK retained and paid future period uses renewal plan",
+      "FAILED does not change dates or periods",
+      "CANCELLED does not change dates or periods",
+      "Exact result replay grants no second period or audit",
+      "Late conflicting failure is traced without downgrading SUCCESS",
+      "Ownership and role cannot grant or expose other Member payments",
+      "M03 receipt/payment preserved and no Booking mutation"
+    ],
+    "readback": {
+      "membershipId": "ba3b646f-fb3b-4c81-8978-d297aff442a0",
+      "initialPlanId": "eb630394-48a2-46b3-b41f-8ab3380b88fb",
+      "renewalPlanId": "db676b07-ef2c-470c-b93c-fc39f736d166",
+      "success": {
+        "id": "8f4fc768-706d-4fd5-a07b-a4aacb2b19ec",
+        "requestId": "5e215533-c84b-4003-9f8f-66efed7da726",
+        "membershipId": "ba3b646f-fb3b-4c81-8978-d297aff442a0",
+        "memberId": "7e8138f8-684e-4e82-80d8-09d2227d38ba",
+        "planId": "db676b07-ef2c-470c-b93c-fc39f736d166",
+        "planName": "Synthetic M05 Renewal zero-price",
+        "amount": "0.00",
+        "durationDays": 3,
+        "currency": "VND",
+        "provider": "SIMULATOR",
+        "providerRef": "sim:8f4fc768-706d-4fd5-a07b-a4aacb2b19ec",
+        "status": "SUCCESS",
+        "fulfillmentStatus": "APPLIED",
+        "reconciliationReason": null,
+        "periodId": "2d4fb010-cae7-48cf-b69c-2d704b65df59",
+        "periodStart": "2026-11-25",
+        "periodEnd": "2026-11-27",
+        "createdAt": "2026-11-23T16:08:13.835215Z",
+        "processedAt": "2026-11-23T16:08:19.479525Z",
+        "eventId": "4927fba0-71e6-4ccc-adbf-0f94f92a8473",
+        "eventOutcome": "APPLIED"
+      },
+      "quotes": [
+        {
+          "id": "8f4fc768-706d-4fd5-a07b-a4aacb2b19ec",
+          "status": "PENDING"
+        },
+        {
+          "id": "683dceea-24be-4ae2-bb43-06e6e22594f2",
+          "status": "PENDING"
+        },
+        {
+          "id": "86e5a97d-c921-4d8b-96af-b55963d082ef",
+          "status": "PENDING"
+        }
+      ]
+    },
+    "failed": 0,
+    "skipped": 0,
+    "finishedAt": "2026-11-23T16:08:51.547Z"
+  },
+  "migration": {
+    "legacyPayments": 6,
+    "legacyTablesPreserved": 19,
+    "emptyHistory": [
+      {
+        "version": "1",
+        "script": "V1__core_users_members.sql",
+        "checksum": 1458726014,
+        "success": true
+      },
+      {
+        "version": "2",
+        "script": "V2__membership_payment.sql",
+        "checksum": 989506803,
+        "success": true
+      },
+      {
+        "version": "3",
+        "script": "V3__checkin.sql",
+        "checksum": -515824181,
+        "success": true
+      },
+      {
+        "version": "4",
+        "script": "V4__pt_booking.sql",
+        "checksum": 568475058,
+        "success": true
+      },
+      {
+        "version": "5",
+        "script": "V5__workout_notification.sql",
+        "checksum": 1125685481,
+        "success": true
+      },
+      {
+        "version": "6",
+        "script": "V6__audit_log.sql",
+        "checksum": -1514799074,
+        "success": true
+      },
+      {
+        "version": "8",
+        "script": "V8__pt_account_activation.sql",
+        "checksum": -750065425,
+        "success": true
+      },
+      {
+        "version": "9",
+        "script": "V9__membership_initial_activation.sql",
+        "checksum": 2048807649,
+        "success": true
+      },
+      {
+        "version": "10",
+        "script": "V10__member_account_activation.sql",
+        "checksum": 1490426486,
+        "success": true
+      },
+      {
+        "version": "11",
+        "script": "V11__membership_renewal_simulator.sql",
+        "checksum": 2066778787,
+        "success": true
+      }
+    ],
+    "sourceBeforeHash": "a39919b353f46622d3834c328a544cbe0cb8a2c38da056ba27872e26db5799dd",
+    "historicalHistory": [
+      {
+        "version": "1",
+        "script": "V1__core_users_members.sql",
+        "checksum": 1458726014,
+        "success": true
+      },
+      {
+        "version": "2",
+        "script": "V2__membership_payment.sql",
+        "checksum": 989506803,
+        "success": true
+      },
+      {
+        "version": "3",
+        "script": "V3__checkin.sql",
+        "checksum": -515824181,
+        "success": true
+      },
+      {
+        "version": "4",
+        "script": "V4__pt_booking.sql",
+        "checksum": 568475058,
+        "success": true
+      },
+      {
+        "version": "5",
+        "script": "V5__workout_notification.sql",
+        "checksum": 1125685481,
+        "success": true
+      },
+      {
+        "version": "6",
+        "script": "V6__audit_log.sql",
+        "checksum": -1514799074,
+        "success": true
+      },
+      {
+        "version": "8",
+        "script": "V8__pt_account_activation.sql",
+        "checksum": -750065425,
+        "success": true
+      },
+      {
+        "version": "9",
+        "script": "V9__membership_initial_activation.sql",
+        "checksum": 2048807649,
+        "success": true
+      },
+      {
+        "version": "10",
+        "script": "V10__member_account_activation.sql",
+        "checksum": 1490426486,
+        "success": true
+      },
+      {
+        "version": "11",
+        "script": "V11__membership_renewal_simulator.sql",
+        "checksum": 2066778787,
+        "success": true
+      }
+    ],
+    "releaseReady": false
+  },
+  "cleanup": {
+    "databases": 22,
+    "checks": 54,
+    "failed": 0,
+    "repeatCompleted": true,
+    "nonfixtureRowsPreserved": true
+  },
+  "remoteReview": {
+    "checkedAtUtc": "2026-11-23T16:12:12.2502202Z",
+    "repository": "https://github.com/ThNhan311/Mat_troi_nho_nho",
+    "defaultBranch": "main",
+    "workflowCount": 0,
+    "workflowRunCount": 0,
+    "deploymentsReturned": 0,
+    "webhookCount": 0,
+    "localBranch": "feature/membership-renewal-simulator",
+    "base": "d2774c9b860e7d263b26edac1003502da8781790",
+    "databaseRef": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+    "method": "Read-only REST inventory; connector exposes PR-only commit workflow runs, not full workflow/deployment/hook inventory.",
+    "arrayCountsVerified": "Parsed raw REST JSON arrays with Python; PowerShell wrapper counts discarded"
+  },
+  "releaseReady": false
+}

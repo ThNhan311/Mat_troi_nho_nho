@@ -1,0 +1,360 @@
+{
+  "atUtc": "2026-11-22T12:27:26.844Z",
+  "branch": "feature/admin-membership-plan-create",
+  "base": "1b1e323ff8ac0f947b3145b6544bac81339931ba",
+  "workingTree": true,
+  "staged": false,
+  "committed": false,
+  "backend": {
+    "jdk": "Temurin 21.0.13+9",
+    "profile": "default",
+    "focusedHttp": {
+      "passed": 433,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "subsetOfFull": true
+    },
+    "full": {
+      "passed": 720,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "m01Http": {
+      "passed": 45,
+      "subsetOfFull": true
+    },
+    "m01ServiceUnit": {
+      "passed": 7,
+      "subsetOfFull": true
+    },
+    "suites": [
+      {
+        "name": "vn.edu.tdtu.fitcenter.controller.BookingControllerTest",
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "74407502f3b0955e0b06e7bb372aaebb1b9749405b2863b724b7ab5d0f3fea5f"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.controller.MembershipControllerTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "e46c07609a39ffb44bdc33fe1790b9c2cdc327ed64f23a5d01ebcd5b741c7b13"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.controller.PersonalTrainerControllerTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "3b5af1968683b01de5c00aab0ff53197cf709fb3d4295f66a55daa1ccab30190"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.controller.PtAvailabilityControllerTest",
+        "tests": 29,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "481703a43107432ff9dfdcd7c81b7cf469877b3fda0e37aabc30ae52c3d12025"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.controller.PtBookingControllerTest",
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "a047c72d8319307fb575258a8d1a19149876dc5d2e56861b15ccc80d8569a908"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.DatabaseAlignmentTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "e4a2c80883181317a3ec4d3cd4bbac6ce6ae16bae4bbffa39fd789662e788529"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.FitcenterApplicationTests",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "0cf1f0fe52f575eb21350733ae8eaa82ab339eee939fa1561e179123e6a3dde3"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.http.HttpBaselineTest",
+        "tests": 433,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "606610c3f92d3dc2a93075143783d2bf1a6e745eedcb55f398c5ee9cab0f7a51"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.repository.BookingRepositoryQueryTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "6f8744454c6091c5e7d7b63f7b9014b9b43509a886b65f961cf3d84ebde0b891"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.security.JwtAuthenticationFilterTest",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "49987d0cc88600fbb7eb109aba025aa83663adcd57fa0fecbaa9396ae1fd679b"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.security.JwtServiceTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "ad76e27db5a5bd2ee80ad271770c563d8eb8ecb38d9b39f59967ffe869529324"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.AuthServiceTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "d76fb6f16334824590ea47183e871422497f9f5b03b047dbf0cd07db4fbd4a9d"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.AvailabilityServiceTest",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "57ebd9641a0c3d9b9dc621281b6c1bbc0d916f47af17c59f16b326d1ef5a6a47"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.BookingEligibilityValidatorTest",
+        "tests": 22,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "cbbd583f0970ebdb1038390b468c1ebc3993fd0c650d71ad30ab6d44f65c3b95"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.BookingLifecycleValidatorTest",
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "e06fa6703f6f4f1291e1f10eb67533f2884da09196fde149de35d25a97b3e2ae"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.BookingPolicyServiceTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "0c61aa027c6f87102ba87a917051c29c060a0efc807230e45da286b7523362fe"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.BookingPolicyWriteServiceTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "c2ea420c3e237d62463fb8247f0c7114ba8c70f9ddae2c53df1eaeb3e9968154"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.BookingQueryServiceTest",
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "e6e48a51d8cd542d26d3b6dd4b019c9948491d4331fce324eed7474646a1a4db"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.MembershipPlanCreateServiceTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "800c479ef875dfb76e08191fb57533d67d66d18ae4fb505dbf60c5fce205a4da"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.MembershipServiceTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "93b6e386d161529b1a70d5c09d599d20486a3880a8624352db384ecd16ae2f96"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.PtBookingQueryServiceTest",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "790f353e71b25444febde027f34f4d14c257d810ba2ce04d442fde354549ccf2"
+      },
+      {
+        "name": "vn.edu.tdtu.fitcenter.service.ServiceEligibilityValidatorTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "reportSha256": "7c8cf86ef2f7bb191731519ef80bb9c2fe1affea62db378b5735ab5f6bffabdc"
+      }
+    ]
+  },
+  "admin": {
+    "flutter": "3.50.1",
+    "dart": "3.14.0",
+    "focused": {
+      "passed": 27,
+      "failed": 0,
+      "skipped": 0,
+      "subsetOfFull": true
+    },
+    "full": {
+      "passed": 63,
+      "failed": 0,
+      "skipped": 0
+    },
+    "analyze": {
+      "errors": 0,
+      "warnings": 0,
+      "infos": 39
+    },
+    "webJavaScriptBuild": "passed",
+    "wasmNative": "not accepted; not executed as target",
+    "initialBuildFailure": "missing SDK artifacts restored from checksum-verified same-version official bundle"
+  },
+  "memberPt": {
+    "rerun": false,
+    "reason": "No shared Member/PT source/client/static server changed; historical counts not reused as current results"
+  },
+  "realUi": {
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "viewport": [
+      1024,
+      768
+    ],
+    "timezone": "America/Los_Angeles",
+    "createPostCount": 1,
+    "created": [
+      {
+        "id": "17912087-c4a0-4598-b4f4-df71f8445e21",
+        "name": "Synthetic M01 UI plan",
+        "description": "Synthetic M01 original Admin screen",
+        "durationDays": 37,
+        "price": 123456.78
+      }
+    ],
+    "finishedAt": "2026-11-22T07:29:42.473Z",
+    "earlierHarnessAttemptsFailed": 5,
+    "earlierAttemptsReconciledAndCleaned": true
+  },
+  "memberHttpReadback": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "note": "API only, no Member Membership UI integration"
+  },
+  "db": {
+    "prepareChecks": 2,
+    "audit": {
+      "phase": "audit",
+      "dbChecks": 3,
+      "failed": 0,
+      "skipped": 0,
+      "createdIds": [
+        "17912087-c4a0-4598-b4f4-df71f8445e21"
+      ],
+      "at": "2026-11-22T07:30:44.195Z"
+    },
+    "cleanupFirstChecks": 4,
+    "cleanupRepeatChecks": 3,
+    "nonPlanSnapshotUnchanged": true,
+    "finalRows": {
+      "users": 0,
+      "members": 0,
+      "personalTrainers": 0,
+      "plans": 0,
+      "memberships": 0,
+      "payments": 0,
+      "bookings": 0,
+      "slots": 0,
+      "policy": 0
+    },
+    "history": "1,2,3,4,5,6",
+    "volumeRetained": true
+  },
+  "cleanup": {
+    "ownPidsStopped": [
+      29312,
+      9476,
+      28980
+    ],
+    "portsClosed": [
+      3002,
+      18081,
+      15437
+    ],
+    "containerStopped": true,
+    "sharedResourcesChanged": false
+  },
+  "limits": [
+    "Active-only plan list and create",
+    "No update/status/delete",
+    "No account creation/activation/renewal/payment",
+    "No Member Membership UI",
+    "D01 snapshot, completion unchanged",
+    "No migration/V7/push/merge"
+  ],
+  "review": {
+    "taskFileCount": 25,
+    "preservedResearchFiles": 4,
+    "executableHashesVerified": 12,
+    "uiSourceHashesVerified": 22,
+    "credentialMatches": 0,
+    "localLinksChecked": 89,
+    "gitIndexFiles": 0,
+    "protectedSourceUnchanged": [
+      "database/migrations",
+      "backend/pom.xml",
+      "Member/PT",
+      "Admin ApiClient/theme"
+    ],
+    "taskFiles": [
+      "backend/src/main/java/vn/edu/tdtu/fitcenter/controller/AdminMembershipPlanController.java",
+      "backend/src/main/java/vn/edu/tdtu/fitcenter/dto/membership/MembershipPlanCreateRequest.java",
+      "backend/src/main/java/vn/edu/tdtu/fitcenter/service/MembershipPlanCreateService.java",
+      "backend/src/test/java/vn/edu/tdtu/fitcenter/http/HttpBaselineTest.java",
+      "backend/src/test/java/vn/edu/tdtu/fitcenter/service/MembershipPlanCreateServiceTest.java",
+      "docs/backend-handover/05_API_DOCUMENTATION.md",
+      "docs/backend-handover/06_TESTING_GUIDE.md",
+      "docs/backend-handover/15_BOOKING_WEB_QUICKSTART.md",
+      "docs/backend-handover/api/openapi.yaml",
+      "docs/backend-handover/decisions/2026-11-22_M01_PLAN_CREATE.md",
+      "docs/backend-handover/evidence/M01_PLAN_CREATE.md",
+      "docs/backend-handover/evidence/M01_PLAN_CREATE_CHECKS.json",
+      "docs/backend-handover/evidence/M01_PLAN_CREATE_HASHES.json",
+      "docs/backend-handover/evidence/SOURCE_TRACEABILITY.md",
+      "docs/backend-handover/evidence/m01-plan-create/active-list-before-create.png",
+      "docs/backend-handover/evidence/m01-plan-create/create-form.png",
+      "docs/backend-handover/evidence/m01-plan-create/created-plan.png",
+      "docs/backend-handover/evidence/m01-plan-create/persisted-plan.png",
+      "frontend/fitcenter_ad/lib/main.dart",
+      "frontend/fitcenter_ad/lib/screens/home_page.dart",
+      "frontend/fitcenter_ad/lib/screens/membership_page.dart",
+      "frontend/fitcenter_ad/lib/services/membership_plan_service.dart",
+      "frontend/fitcenter_ad/test/membership_plan_test.dart",
+      "frontend/verify-membership-plan-demo.mjs",
+      "frontend/verify-membership-plan-ui.mjs"
+    ]
+  }
+}

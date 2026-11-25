@@ -1,0 +1,66 @@
+{
+  "at": "2026-11-23T14:48:28.799Z",
+  "databases": [
+    {
+      "name": "fitcenter_account_6519819aec26_empty_test",
+      "registered": 0,
+      "checks": 3,
+      "nonfixtureRowsPreserved": 0
+    },
+    {
+      "name": "fitcenter_account_6519819aec26_history_test",
+      "registered": 303,
+      "checks": 3,
+      "nonfixtureRowsPreserved": 0
+    },
+    {
+      "name": "fitcenter_account_28074329177e_empty_test",
+      "registered": 0,
+      "checks": 3,
+      "nonfixtureRowsPreserved": 0
+    },
+    {
+      "name": "fitcenter_account_28074329177e_history_test",
+      "registered": 303,
+      "checks": 3,
+      "nonfixtureRowsPreserved": 0
+    },
+    {
+      "name": "fitcenter_account_ae15e24eafd5_empty_test",
+      "registered": 0,
+      "checks": 3,
+      "nonfixtureRowsPreserved": 0
+    },
+    {
+      "name": "fitcenter_account_ae15e24eafd5_history_test",
+      "registered": 23,
+      "checks": 3,
+      "nonfixtureRowsPreserved": 0
+    },
+    {
+      "name": "fitcenter_account_4820e1ba430e_empty_test",
+      "registered": 0,
+      "checks": 3,
+      "nonfixtureRowsPreserved": 0
+    },
+    {
+      "name": "fitcenter_account_4820e1ba430e_history_test",
+      "registered": 30,
+      "checks": 3,
+      "nonfixtureRowsPreserved": 0
+    },
+    {
+      "name": "fitcenter_account_c747e146b150_empty_test",
+      "registered": 0,
+      "checks": 3,
+      "nonfixtureRowsPreserved": 0
+    },
+    {
+      "name": "fitcenter_account_c747e146b150_history_test",
+      "registered": 30,
+      "checks": 3,
+      "nonfixtureRowsPreserved": 0
+    }
+  ],
+  "failed": 0
+}

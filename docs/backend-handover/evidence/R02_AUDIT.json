@@ -1,0 +1,86 @@
+{
+  "migrationHashes": [
+    {
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sha256": "df40d5114a8c88f48977e708f4baaf4c36a5f16289432c20a3224c40ada25870",
+      "unchanged": true
+    },
+    {
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sha256": "dffe32d5fc343e6e877234afa79408f3cebd7cbd1828891c31e993f1047cd615",
+      "unchanged": true
+    },
+    {
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sha256": "17a711675169667fa50af87b34dc1e5406c0610fe44cb2f9cefaf35a7b7322e1",
+      "unchanged": true
+    },
+    {
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sha256": "79844557f18bc878247a70997013f037f7eebbb0fc5f59502665bf1227c3dc3e",
+      "unchanged": true
+    },
+    {
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sha256": "ad8d568c9cc57351b977d3bfb71b56f68193f1c14a407d7763c72e9b6f17ae39",
+      "unchanged": true
+    },
+    {
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sha256": "486497e40e779250ab592646df46996e42ee7d771dfdc8332c8591cb70e6a28c",
+      "unchanged": true
+    },
+    {
+      "version": 8,
+      "path": "database/activation-rehearsal/V8__pt_account_activation.sql",
+      "sha256": "7f38b7f83662d4895dcce71ae50accc64321786f5fe7af5ea044bdd4fa619902",
+      "unchanged": true
+    },
+    {
+      "version": 9,
+      "path": "database/membership-rehearsal/V9__membership_initial_activation.sql",
+      "sha256": "98783c7fcbfba450c46d9d625d74f5b8bca85cce897bd7887222c2e1bbee2648",
+      "unchanged": true
+    },
+    {
+      "version": 10,
+      "path": "database/member-activation-rehearsal/V10__member_account_activation.sql",
+      "sha256": "cf6d6918134409f552576b14644b9847fa127a5a81b4e1964da260bd6ad19f29",
+      "unchanged": true
+    },
+    {
+      "version": 11,
+      "path": "database/renewal-rehearsal/V11__membership_renewal_simulator.sql",
+      "sha256": "88f0e48fb077c777fb3d17f9872397fa6e8e10686bf0c4067ca7a0e6f0de0e61",
+      "unchanged": true
+    },
+    {
+      "version": 12,
+      "path": "database/checkin-rehearsal/V12__checkin_request_ledger.sql",
+      "sha256": "2d889683ee254ee312fea46b0930a2bd73461ee531633a7ec31c28c2e4e276ae",
+      "unchanged": true
+    },
+    {
+      "version": 13,
+      "path": "database/enrollment-rehearsal/V13__face_enrollment_lifecycle.sql",
+      "sha256": "71ac5940a5d4a64b8e53659b38c6aa7bf9004356ff03172aa32b7d44de4121e6",
+      "unchanged": true
+    }
+  ],
+  "publishedSqlUnchanged": 12,
+  "protectedResearchUnchanged": 4,
+  "protectedFaceUnchanged": 26,
+  "missingTrackedMarkdownLinks": [],
+  "secretPatternMatches": [],
+  "trackedPrivateBuildArtifacts": [],
+  "runtimeAppSchemaUnchangedSinceFullTest": true,
+  "at": "2026-11-25",
+  "checkedRelativeMarkdownLinks": 967,
+  "scanMethod": "Tracked plus explicitly selected R02 deliverables; skip fenced/inline code and external URLs; relative file targets, not anchors/external websites."
+}

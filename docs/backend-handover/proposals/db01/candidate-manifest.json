@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "releaseReady": false,
+  "base": "ee95e0ccb57475d2b41bb766af11523d2e9b6c66",
+  "v7Commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+  "v7Path": "database/database/migrations/V7__membership_periods.sql",
+  "v7GitSha256": "668fdd672fdcff04e89525b3cadec3bc957f186f38fe0065dc4417a6f1b29b41",
+  "v7FlywayChecksum": -349926232,
+  "entries": [
+    {
+      "path": "docs/backend-handover/proposals/db01/before-upgrade.sql",
+      "sha256": "4f9048e565889bb4dfedae23dcc14b9afcd51c71ec7ff5314a52a6f4e72cf23c"
+    },
+    {
+      "path": "docs/backend-handover/proposals/db01/migration/V14__unify_membership_period_read_model.sql",
+      "sha256": "203890209ec10a6a3f1a0ab4e5e46bc21193b00a1e36821343bb86d7295e8c25"
+    }
+  ]
+}

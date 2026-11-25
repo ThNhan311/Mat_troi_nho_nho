@@ -1,0 +1,26 @@
+{
+  "format": 1,
+  "purpose": "Fresh private Web Core demo; not an arbitrary existing DB upgrade",
+  "sourceInventory": "database/enrollment-integration-candidate.json",
+  "sourceInventorySha256": "d310f22d419ed2b9317aacd78dfbd04985d705cdb58f87f9a4601f234161d87a",
+  "versions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "profile": "core-demo",
+  "legacyV7Included": false,
+  "compatibilityCallbackIncluded": false,
+  "v14Included": false,
+  "entitlementPeriodSource": "membership_paid_periods",
+  "targetUpgradeVerified": false
+}

@@ -1,0 +1,150 @@
+{
+  "atUtc": "2026-11-23T07:32:22.935414+00:00",
+  "baseline": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+  "branch": "research/admin-initial-membership-activation",
+  "databaseRef": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+  "canonical": [
+    {
+      "path": "database/migrations/V1__core_users_members.sql",
+      "gitBlob": "79c83be0e547e8a8703395d53af1eb7526d26753",
+      "sha256WorkingBytes": "df40d5114a8c88f48977e708f4baaf4c36a5f16289432c20a3224c40ada25870"
+    },
+    {
+      "path": "database/migrations/V2__membership_payment.sql",
+      "gitBlob": "b3635e3f5e19953c03b0a701e1f67e6113d24321",
+      "sha256WorkingBytes": "dffe32d5fc343e6e877234afa79408f3cebd7cbd1828891c31e993f1047cd615"
+    },
+    {
+      "path": "database/migrations/V3__checkin.sql",
+      "gitBlob": "59d35887b0e298d4d6249711575f3a961edfe39d",
+      "sha256WorkingBytes": "17a711675169667fa50af87b34dc1e5406c0610fe44cb2f9cefaf35a7b7322e1"
+    },
+    {
+      "path": "database/migrations/V4__pt_booking.sql",
+      "gitBlob": "e0530847d59eb08ba267310de222cc9b121f5487",
+      "sha256WorkingBytes": "79844557f18bc878247a70997013f037f7eebbb0fc5f59502665bf1227c3dc3e"
+    },
+    {
+      "path": "database/migrations/V5__workout_notification.sql",
+      "gitBlob": "6a279436aa33ca2546a3e751235db356c54366a6",
+      "sha256WorkingBytes": "ad8d568c9cc57351b977d3bfb71b56f68193f1c14a407d7763c72e9b6f17ae39"
+    },
+    {
+      "path": "database/migrations/V6__audit_log.sql",
+      "gitBlob": "01d56355ff96e96c140bd7f22499f806d3851767",
+      "sha256WorkingBytes": "486497e40e779250ab592646df46996e42ee7d771dfdc8332c8591cb70e6a28c"
+    }
+  ],
+  "remoteRefVersions": {
+    "1": [
+      "origin/backend",
+      "origin/feature/admin-account-pt-activation",
+      "origin/feature/backend-db-alignment",
+      "origin/feature/backend-pt-booking",
+      "origin/feature/database-schema",
+      "origin/feature/member-membership-read",
+      "origin/feature/pt-activation-postgres-rehearsal"
+    ],
+    "2": [
+      "origin/backend",
+      "origin/feature/admin-account-pt-activation",
+      "origin/feature/backend-db-alignment",
+      "origin/feature/backend-pt-booking",
+      "origin/feature/database-schema",
+      "origin/feature/member-membership-read",
+      "origin/feature/pt-activation-postgres-rehearsal"
+    ],
+    "3": [
+      "origin/feature/admin-account-pt-activation",
+      "origin/feature/backend-db-alignment",
+      "origin/feature/backend-pt-booking",
+      "origin/feature/database-schema",
+      "origin/feature/member-membership-read",
+      "origin/feature/pt-activation-postgres-rehearsal"
+    ],
+    "4": [
+      "origin/feature/admin-account-pt-activation",
+      "origin/feature/backend-db-alignment",
+      "origin/feature/backend-pt-booking",
+      "origin/feature/database-schema",
+      "origin/feature/member-membership-read",
+      "origin/feature/pt-activation-postgres-rehearsal"
+    ],
+    "5": [
+      "origin/feature/admin-account-pt-activation",
+      "origin/feature/backend-db-alignment",
+      "origin/feature/backend-pt-booking",
+      "origin/feature/database-schema",
+      "origin/feature/member-membership-read",
+      "origin/feature/pt-activation-postgres-rehearsal"
+    ],
+    "6": [
+      "origin/feature/admin-account-pt-activation",
+      "origin/feature/backend-db-alignment",
+      "origin/feature/backend-pt-booking",
+      "origin/feature/database-schema",
+      "origin/feature/member-membership-read",
+      "origin/feature/pt-activation-postgres-rehearsal"
+    ],
+    "7": [
+      "origin/feature/database-schema"
+    ],
+    "8": [
+      "origin/feature/member-membership-read",
+      "origin/feature/pt-activation-postgres-rehearsal"
+    ]
+  },
+  "priorResearchHashes": {
+    "docs/backend-handover/research/2026-11-22_CORE_MEMBERSHIP_PAYMENT_SURVEY.md": "3a98ff122efd8c33266b6d6304ccf4f6ed6e0050f1f5f5fae0f8cfae509e4070",
+    "docs/backend-handover/research/2026-11-22_DATABASE_V7_REVIEW.md": "225b029fe3c8b0290c880488de6ff0643455e13796e914263a284ed74e669398",
+    "docs/backend-handover/research/2026-11-22_FIRST_SLICE_PLAN_CREATE.md": "400729599f337fe4362022f2b3e8606fe8a42bcf1a1a1bd77de231d14ff0bb97",
+    "docs/backend-handover/research/2026-11-22_SURVEY_SOURCES.json": "9d952a9b8f0aeb4b74a012b56fe27f89dcd0b65342b4dd1d843e74173b1aca80"
+  },
+  "hashAlgorithm": "SHA256 Git blobs at sourceBase for tracked inputs; working bytes for untracked research/Topic11",
+  "topic11": {
+    "path": "D:/Workspace/HKI_26_27/CNPM_project/Tài liệu/Topic11_FITCENTER.docx",
+    "sha256": "5e2164806b4927390e986712e04d53bee09255a3eac9ab33997bc4ff6f6a47b5",
+    "locators": "OOXML paragraphs P0118-0119/P0322-0352/P1002-1005; not pages"
+  },
+  "inputsAtBase": {
+    "AGENTS.md": "38ac223d219a375eb4c38573499861ecf036a0aca24cacc0cff9a2c338fe9194",
+    "docs/DECISIONS.md": "17d1d0cf1895e41bfe80982e173846310589eced71d02e232c50eac3097b0442",
+    "backend/pom.xml": "04ead1d0aa2ec9ebfd8edb7f1459a5bdecd84180392131da6e7bfed8aa68027e",
+    "database/migrations/V1__core_users_members.sql": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+    "database/migrations/V2__membership_payment.sql": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+    "database/migrations/V6__audit_log.sql": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+    "database/activation-rehearsal/V8__pt_account_activation.sql": "7f38b7f83662d4895dcce71ae50accc64321786f5fe7af5ea044bdd4fa619902",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/service/AdminAccountService.java": "35c4f2a008fa66030ac0edf943f120529c30fabdede2dbaa84e13b3ddca0a908",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/service/MembershipService.java": "b2a104e713fef820ce2328b55cb5c9ebec2b6b905f3ebfad5765226689a24f12",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/service/MembershipPlanCreateService.java": "3e67c15e4eb985dd426082665f1e28ace087ed4dfab99e72e9e910f7b80dc729",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/service/BookingCreateService.java": "7cc3e87b4c00514b85d68a5c01f43b4061c1dfb23b11c6c762b1fa0bdcc99b1c",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/service/BookingLifecycleService.java": "36f96408d81f361eed5500b8ca3535340a716d90acc677054d1e562c91a1e85e",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/service/ServiceEligibilityService.java": "eaa18d7035e0c91ded6fd6757d9a810dc0a1b079ac4af9c3c39e4dfc03153239",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/repository/MemberRepository.java": "9564ce70f82595826150927da54aa8aa63c9e983d3a14a6caa69e6cce10f3aea",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/repository/MembershipRepository.java": "9de317024a57cc1e48996fc24a7cf64e113839714b7be2d23947b4dc4bb4d695",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/dto/error/ApiErrorResponse.java": "4e9236f5632bf37dfc18c44fd863fc690b9e8e5a7efbc9f0db14b8a0915dc61d",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/exception/ApiExceptionHandler.java": "69c3953cc82a5b2fdb034dda35c64f54e25453f3bbd03d7d52cb960b3c19d586",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/config/SecurityConfig.java": "fe5260489be6ada0b359703beb6da802bee2ec174a72b055ea5d64c6aae8c425",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/config/WebConfig.java": "82cdcec3fedf9863019ce317ff40cd44f6b73291b75c79cbf9f31d84e18750cd",
+    "frontend/fitcenter_ad/lib/screens/home_page.dart": "c09061efe90fafc9d3c8c50ce44107320fc31aefa5ff52937afc93fbcf67e6db",
+    "frontend/fitcenter_ad/lib/screens/initial_activation_page.dart": "076863816502e115430ff7b5e2c374a67444eba660f5287e67ee470067a967a3",
+    "frontend/fitcenter_ad/lib/screens/account_page.dart": "95124c957b52a1423ac15894e15a5ca57be453f68d0e1cc0a48f0ae359018e4e",
+    "frontend/fitcenter_ad/lib/services/api_client.dart": "e4c79c2747aebcb06e031aec3b14b8208fc18013ed07a4b77086e048ea21ec15",
+    "frontend/fitcenter_ad/lib/services/admin_account_service.dart": "88492b9da674ba340572c0fa016a7bfe2a5f01da267acc63ae665560c41ff379",
+    "frontend/fitcenter_member/lib/screens/membership_page.dart": "f1c34a743e0b8aa5c497b055f8a601568ce85f22975c3d612e2361a7d8c4327f"
+  },
+  "remoteV7": {
+    "ref": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+    "path": "database/database/migrations/V7__membership_periods.sql",
+    "gitBlob": "4d8d8d74955df908ce903d9039a6fab0898a75b7",
+    "sha256": "668fdd672fdcff04e89525b3cadec3bc957f186f38fe0065dc4417a6f1b29b41"
+  },
+  "activity": {
+    "sqlExecuted": false,
+    "migrationsApplied": false,
+    "testsRun": false,
+    "databaseConnections": false,
+    "changes": "documents only; no executable changes",
+    "proposalVersion": "V9 tentative; not a release reservation"
+  }
+}

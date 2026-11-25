@@ -1,0 +1,30 @@
+// Exact UUID account demo guard, snapshot, audit and cleanup. Never applies DDL.
+// PGPASSWORD process only; node frontend/verify-account-demo.mjs <private manifest> <prepare|audit|cleanup>
+import {readFile,writeFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {resolve,dirname,sep} from 'node:path';
+import assert from 'node:assert/strict';
+const manifest=resolve(process.argv[2]||''),phase=process.argv[3];assert(manifest.startsWith(resolve(process.env.LOCALAPPDATA,'Temp')+sep));assert(['prepare','audit','cleanup'].includes(phase));assert(process.env.PGPASSWORD);
+const dir=dirname(manifest),beforePath=resolve(dir,'account-db-before.json'),registry=resolve(dir,'account-ui-results.json');
+const docker=(...a)=>execFileSync('docker',['--context','desktop-linux',...a],{encoding:'utf8'}).trim();
+const instance=JSON.parse(docker('inspect','fitcenter-baseline-20261120-db'))[0];
+assert.equal(instance.Id,'e4c5299f24d549bce3d962e539da61411889930ef33be71303c6bf1577d085e0');assert(instance.State.Running);assert.equal(instance.Config.Labels['fitcenter.task'],'baseline-20261120');
+const mounts=instance.Mounts.filter(m=>m.Destination==='/var/lib/postgresql/data');assert.equal(mounts.length,1);assert.equal(mounts[0].Type,'volume');assert.equal(mounts[0].Name,'fitcenter_baseline_20261120_data');assert.deepEqual(instance.HostConfig.PortBindings['5432/tcp'],[{HostIp:'127.0.0.1',HostPort:'15437'}]);
+const endpoint=JSON.parse(docker('context','inspect','desktop-linux'))[0];assert.equal(endpoint.Endpoints.docker.Host,'npipe:////./pipe/dockerDesktopLinuxEngine');
+function sql(q){return docker('exec','-e','PGPASSWORD',instance.Id,'psql','-X','-A','-t','-v','ON_ERROR_STOP=1','-h','127.0.0.1','-U','fitcenter_baseline_app','-d','fitcenter_baseline_20261120_test','-c',q);}
+assert.equal(sql("SELECT current_database()||'|'||current_user||'|'||(rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls)::text||'|'||(SELECT string_agg(version,',' ORDER BY installed_rank) FROM flyway_schema_history WHERE success) FROM pg_roles WHERE rolname=current_user"),'fitcenter_baseline_20261120_test|fitcenter_baseline_app|false|1,2,3,4,5,6');
+const snapshot=(excluded=[])=>{for(const id of excluded)assert.match(id,/^[0-9a-f-]{36}$/i);const filter=excluded.length?` NOT IN (${excluded.map(x=>`'${x}'::uuid`).join(',')})`:' IS NOT NULL';return JSON.parse(sql(`SELECT json_build_object('users',(SELECT json_agg(t) FROM (SELECT id,role,status FROM users WHERE id ${filter} ORDER BY id)t),'members',(SELECT json_agg(t) FROM (SELECT * FROM members WHERE user_id ${filter} ORDER BY id)t),'pts',(SELECT json_agg(t) FROM (SELECT * FROM personal_trainers WHERE user_id ${filter} ORDER BY id)t),'audit',(SELECT json_agg(t) FROM (SELECT * FROM audit_logs WHERE entity_id ${filter} ORDER BY id)t),'memberships',(SELECT json_agg(t) FROM (SELECT * FROM memberships ORDER BY id)t),'plans',(SELECT json_agg(t) FROM (SELECT * FROM membership_plans ORDER BY id)t),'payments',(SELECT json_agg(t) FROM (SELECT * FROM payment_transactions ORDER BY id)t),'bookings',(SELECT json_agg(t) FROM (SELECT * FROM bookings ORDER BY id)t),'slots',(SELECT json_agg(t) FROM (SELECT * FROM availability_slots ORDER BY id)t))`));};
+assert.equal(sql("SELECT to_regclass('public.pt_account_activation') IS NULL"),'t');
+if(phase==='prepare'){await writeFile(beforePath,JSON.stringify(snapshot()),{flag:'wx'});console.log(JSON.stringify({phase,dbChecks:2,failed:0}));}
+else{
+ const before=JSON.parse(await readFile(beforePath,'utf8')),r=JSON.parse(await readFile(registry,'utf8'));assert.equal(r.created.length,1);let checks=0;
+ for(const a of r.created){assert.match(a.userId,/^[0-9a-f-]{36}$/i);assert.match(a.profileId,/^[0-9a-f-]{36}$/i);assert(!before.users?.some(x=>x.id===a.userId));assert.equal(a.email,r.intentEmail);assert.match(a.email,/^account-ui-[0-9a-f-]{36}@example\.invalid$/);assert.equal(a.fullName,'Synthetic account UI PT');
+ const rows=JSON.parse(sql(`SELECT coalesce(json_agg(t),'[]') FROM (SELECT u.id,u.role,u.status,u.email,p.id profile_id,p.full_name,(u.password_hash LIKE '$2%') bcrypt FROM users u JOIN personal_trainers p ON p.user_id=u.id WHERE u.id='${a.userId}'::uuid AND p.id='${a.profileId}'::uuid)t`));
+ if(phase==='cleanup'&&!rows.length){checks++;continue;}
+ assert.deepEqual(rows,[{id:a.userId,role:'PT',status:'DISABLED',email:a.email,profile_id:a.profileId,full_name:a.fullName,bcrypt:true}]);checks++;
+ const audit=JSON.parse(sql(`SELECT coalesce(json_agg(t),'[]') FROM (SELECT id,actor_user_id,action,entity_type FROM audit_logs WHERE entity_id='${a.userId}'::uuid ORDER BY id)t`));assert.equal(audit.length,1);assert.equal(audit[0].action,'ACCOUNT_CREATED_PENDING_ACTIVATION');assert.equal(audit[0].entity_type,'USER');const f=Object.fromEntries((await readFile(manifest,'utf8')).split(/\r?\n/).filter(x=>x.includes('=')&&!x.startsWith('#')).map(x=>{const i=x.indexOf('=');return[x.slice(0,i),x.slice(i+1)];}));assert.equal(audit[0].actor_user_id,f['admin.userId']);checks++;
+ assert.deepEqual(snapshot([a.userId]),before,'No mutation outside exact account UUID');checks++;
+ if(phase==='cleanup'){assert.match(audit[0].id,/^[0-9a-f-]{36}$/i);const out=sql(`BEGIN; SELECT id FROM users WHERE id='${a.userId}'::uuid FOR UPDATE; DELETE FROM audit_logs WHERE id='${audit[0].id}'::uuid AND entity_id='${a.userId}'::uuid AND action='ACCOUNT_CREATED_PENDING_ACTIVATION'; DELETE FROM personal_trainers WHERE id='${a.profileId}'::uuid AND user_id='${a.userId}'::uuid; DELETE FROM users WHERE id='${a.userId}'::uuid AND role='PT' AND status='DISABLED'; COMMIT;`);assert.equal((out.match(/DELETE 1/g)||[]).length,3);assert.deepEqual(snapshot(),before);checks++;}
+ }
+ const result={phase,dbChecks:checks,failed:0,skipped:0,at:new Date().toISOString()};await writeFile(resolve(dir,'account-db-'+phase+'.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+}

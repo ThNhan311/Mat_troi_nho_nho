@@ -1,0 +1,21 @@
+package vn.edu.tdtu.fitcenter.enrollment;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.mock.env.MockEnvironment;
+import tools.jackson.databind.ObjectMapper;
+import java.time.*;import java.util.*;import javax.crypto.Mac;import javax.crypto.spec.SecretKeySpec;import java.nio.charset.StandardCharsets;
+import static org.junit.jupiter.api.Assertions.*;import static org.mockito.Mockito.*;
+class FaceServiceUnitTest {
+    final ObjectMapper json=new ObjectMapper();final Instant now=Instant.parse("2030-01-01T00:00:00Z");
+    final UUID request=UUID.randomUUID(),capture=UUID.randomUUID(),profile=UUID.randomUUID();
+    final String key=UUID.randomUUID().toString()+UUID.randomUUID();
+    RemoteEnrollmentAdapter adapter(){return new RemoteEnrollmentAdapter(new MockEnvironment(),mock(javax.sql.DataSource.class),json,mock(org.springframework.jdbc.core.JdbcTemplate.class),Clock.fixed(now,ZoneOffset.UTC),"");}
+    Map<String,Object> proof(){var d=new LinkedHashMap<String,Object>();d.put("request",request.toString());d.put("capture",capture.toString());d.put("profile",profile.toString());d.put("reference","f02:"+profile);d.put("generation",1);d.put("issuedAt",now.getEpochSecond());d.put("expiresAt",now.getEpochSecond()+10);d.put("model","insightface-buffalo_s");d.put("provenance","SYNTHETIC_PROTOCOL");d.put("liveness","NOT_PERFORMED");d.put("admissionEnabled",false);d.put("outcome","MATCHED");return d;}
+    Map<String,Object> sign(Map<String,Object> d)throws Exception{String payload=Base64.getUrlEncoder().withoutPadding().encodeToString(json.writeValueAsBytes(d));var mac=Mac.getInstance("HmacSHA256");mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8),"HmacSHA256"));return Map.of("payload",payload,"signature",HexFormat.of().formatHex(mac.doFinal(payload.getBytes(StandardCharsets.US_ASCII))));}
+    @Test void guardedAdapterCannotEnableInDefaultProfileOrTouchDb(){var ds=mock(javax.sql.DataSource.class);var a=new RemoteEnrollmentAdapter(new MockEnvironment(),ds,json,mock(org.springframework.jdbc.core.JdbcTemplate.class),Clock.fixed(now,ZoneOffset.UTC),"");assertThrows(IllegalStateException.class,a::afterPropertiesSet);verifyNoInteractions(ds);assertNull(a.identify(capture));}
+    @Test void authenticEnvelopeIsParsedButNeverConstitutesAdmission()throws Exception{var a=adapter();var parsed=a.verifyAttestation(sign(proof()),request,capture,key,now);assertEquals(json.writeValueAsString(proof()),json.writeValueAsString(parsed));assertNull(a.identify(capture));}
+    @ParameterizedTest @ValueSource(strings={"request","capture","profile","reference","generation","fractionalGeneration","issuedAt","expiresAt","longExpiry","fractionalTime","model","provenance","liveness","admission"})
+    void invalidSignedBindingsAndEvidenceRejected(String field)throws Exception{var d=proof();switch(field){case "request","capture","profile"->d.put(field,UUID.randomUUID().toString());case "reference"->d.put(field,"f02:"+UUID.randomUUID());case "generation"->d.put(field,0);case "fractionalGeneration"->d.put("generation",1.5);case "issuedAt"->d.put(field,now.getEpochSecond()+1);case "expiresAt"->d.put(field,now.getEpochSecond());case "longExpiry"->d.put("expiresAt",now.getEpochSecond()+11);case "fractionalTime"->d.put("issuedAt",(double)now.getEpochSecond());case "model"->d.put(field,"buffalo_l");case "provenance"->d.put(field,"public-client");case "liveness"->d.put(field,"PASSED");case "admission"->d.put("admissionEnabled",true);default->throw new IllegalArgumentException();}assertThrows(vn.edu.tdtu.fitcenter.checkin.CheckinFailure.class,()->adapter().verifyAttestation(sign(d),request,capture,key,now));}
+    @Test void wrongSignatureMissingFieldsAndExpiryBoundaryRejected()throws Exception{var a=adapter();var signed=sign(proof());assertThrows(Exception.class,()->a.verifyAttestation(signed,request,capture,key+"wrong",now));assertThrows(Exception.class,()->a.verifyAttestation(Map.of(),request,capture,key,now));assertNotNull(a.verifyAttestation(signed,request,capture,key,now.plusSeconds(9)));assertThrows(Exception.class,()->a.verifyAttestation(signed,request,capture,key,now.plusSeconds(10)));}
+}

@@ -1,0 +1,481 @@
+{
+  "base": "c3eb411cfbb6cfdfdfdc441d850d2eea456f7b46",
+  "branch": "feature/face-enrollment",
+  "backend": {
+    "selectedFull": {
+      "suites": [
+        {
+          "name": "vn.edu.tdtu.fitcenter.activation.ActivationRehearsalGuardTest",
+          "tests": "9",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.activation.MemberActivationGuardTest",
+          "tests": "7",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.activation.MemberActivationServiceTest",
+          "tests": "23",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.activation.PtActivationServiceTest",
+          "tests": "23",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.activation.TestSmtpActivationMailerTest",
+          "tests": "3",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.checkin.CheckinUnitTest",
+          "tests": "12",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.controller.BookingControllerTest",
+          "tests": "33",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.controller.MembershipControllerTest",
+          "tests": "3",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.controller.PersonalTrainerControllerTest",
+          "tests": "14",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.controller.PtAvailabilityControllerTest",
+          "tests": "29",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.controller.PtBookingControllerTest",
+          "tests": "33",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.DatabaseAlignmentTest",
+          "tests": "4",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.enrollment.EnrollmentUnitTest",
+          "tests": "8",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.AccountHttpTest",
+          "tests": "16",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.CheckinDefaultHttpTest",
+          "tests": "2",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.CheckinPostgresTest",
+          "tests": "40",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.CoreMigrationCandidatePostgresTest",
+          "tests": "4",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.EnrollmentPostgresTest",
+          "tests": "25",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.HttpBaselineTest",
+          "tests": "433",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.IntegratedInitialMembershipPostgresTest",
+          "tests": "54",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.IntegratedPtActivationPostgresTest",
+          "tests": "23",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.MemberAccountActivationPostgresTest",
+          "tests": "24",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.MemberActivationSchemaPostgresTest",
+          "tests": "5",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.http.RenewalPostgresTest",
+          "tests": "46",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.membershipinitial.InitialMembershipGuardTest",
+          "tests": "8",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.renewal.RenewalDatesTest",
+          "tests": "10",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.renewal.RenewalRequestTest",
+          "tests": "15",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.repository.BookingRepositoryQueryTest",
+          "tests": "4",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.security.JwtAuthenticationFilterTest",
+          "tests": "11",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.security.JwtServiceTest",
+          "tests": "10",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.AuthServiceTest",
+          "tests": "10",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.AvailabilityServiceTest",
+          "tests": "16",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.BookingEligibilityValidatorTest",
+          "tests": "22",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.BookingLifecycleValidatorTest",
+          "tests": "21",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.BookingPolicyServiceTest",
+          "tests": "4",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.BookingPolicyWriteServiceTest",
+          "tests": "7",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.BookingQueryServiceTest",
+          "tests": "18",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.MembershipPlanCreateServiceTest",
+          "tests": "7",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.MembershipServiceTest",
+          "tests": "12",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.PtBookingQueryServiceTest",
+          "tests": "16",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        },
+        {
+          "name": "vn.edu.tdtu.fitcenter.service.ServiceEligibilityValidatorTest",
+          "tests": "12",
+          "failures": "0",
+          "errors": "0",
+          "skipped": "0"
+        }
+      ],
+      "total": {
+        "tests": 1076,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "passed": 1076,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "selector": "*Test,!PtActivationPostgresTest,!ActivationSchemaRehearsalTest,!InitialMembershipPostgresTest",
+    "focusedPassed": 30,
+    "focusedIsSubset": true,
+    "notSelected": [
+      "PtActivationPostgresTest",
+      "ActivationSchemaRehearsalTest",
+      "InitialMembershipPostgresTest",
+      "FitcenterApplicationTests (does not match *Test)"
+    ],
+    "integratedCounterpartsRan": true,
+    "jdk": 21,
+    "db": "PostgreSQL17.12/test only"
+  },
+  "admin": {
+    "passed": 133,
+    "failed": 0,
+    "skipped": 0,
+    "newTests": 23,
+    "analyze": "exit0 with --no-fatal-infos; 0error/0warning",
+    "infoDiagnostics": 109,
+    "buildWeb": "passed, API_BASE_URL dart-define18086"
+  },
+  "python": {
+    "passed": 49,
+    "failed": 0,
+    "skipped": 0,
+    "selection": "27 unchanged F01 addon +22 pinned Face state/auth tests; no camera/model/liveness"
+  },
+  "e2e": {
+    "uiChecks": 10,
+    "directHttpChecks": 10,
+    "dbChecks": 6,
+    "failed": 0,
+    "skipped": 0,
+    "mode": "SIMULATED_TEST",
+    "ui": [
+      "Start is PENDING and members.id, no premature ACTIVE",
+      "No profile before adapter finalize",
+      "Server confirmed synthetic ACTIVE",
+      "Start is PENDING and members.id, no premature ACTIVE",
+      "Re-enrollment failure is shown as failure",
+      "Start is PENDING and members.id, no premature ACTIVE",
+      "Replacement uses a new server profile UUID",
+      "Revocation removes all admission rights",
+      "Reload requires login",
+      "Reload/login reads same persisted UUID/status"
+    ],
+    "http": [
+      {
+        "method": "POST",
+        "path": "/auth/login",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/admin/membership-plans",
+        "status": 201
+      },
+      {
+        "method": "POST",
+        "path": "/admin/members/b64965c8-11a5-4f70-8e13-96720c1edf55/activate-membership",
+        "status": 201
+      },
+      {
+        "method": "POST",
+        "path": "/check-ins/face",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/check-ins/face",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/check-ins/face",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/check-ins/face",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/admin/members/b64965c8-11a5-4f70-8e13-96720c1edf55/face-enrollments",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/auth/login",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/admin/members/b64965c8-11a5-4f70-8e13-96720c1edf55/face-enrollments",
+        "status": 403
+      }
+    ],
+    "db": [
+      "Ready adapter reference maps to FacialProfile and members.id; simulated Core admits paid Member",
+      "Failed re-enrollment retains previous ACTIVE profile",
+      "Old profile/request rejected after replacement; new capture maps correctly",
+      "Member cannot access Admin enrollment",
+      "Account, Membership/payment/receipt/activation and Booking rows unchanged by enrollment",
+      "DB preserves consent/actor/history for both profile UUIDs"
+    ],
+    "readback": [
+      {
+        "id": "48a9f13f-70b4-418e-bc82-e73b6dbb24f6",
+        "member_id": "b64965c8-11a5-4f70-8e13-96720c1edf55",
+        "status": "REVOKED",
+        "operation_id": "d755e96b-be7d-46cd-b226-d09f767bb784",
+        "started_by": "18666950-6234-40e8-a106-7228329ada80",
+        "finalized_by": "18666950-6234-40e8-a106-7228329ada80",
+        "consent_version": "face-consent-v1",
+        "identity_mode": "SIMULATED_TEST"
+      },
+      {
+        "id": "ce3247ef-dea2-4a4e-8e12-0e269ea20343",
+        "member_id": "b64965c8-11a5-4f70-8e13-96720c1edf55",
+        "status": "REVOKED",
+        "operation_id": "5f14d8f8-5f54-4916-80cd-3fed105a0fd0",
+        "started_by": "18666950-6234-40e8-a106-7228329ada80",
+        "finalized_by": "18666950-6234-40e8-a106-7228329ada80",
+        "consent_version": "face-consent-v1",
+        "identity_mode": "SIMULATED_TEST"
+      }
+    ],
+    "finishedAt": "2026-11-24T04:11:19.156Z",
+    "fixture": "Admin and two ACTIVE Member accounts only are JDBC synthetic fixtures. No FacialProfile is seeded. Enrollment occurs through real Admin UI with simulated external adapter; no camera/identity/liveness."
+  },
+  "cleanup": {
+    "databases": 44,
+    "checks": 92,
+    "failed": 0,
+    "repeatPassed": true,
+    "outsideRowsPreserved": true,
+    "ownedProcessesStopped": 6,
+    "volumeRetained": true
+  },
+  "migration": {
+    "version": 13,
+    "candidate": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ],
+    "v7Applied": false,
+    "releaseReady": false,
+    "sharedInventory": "unknown"
+  },
+  "failuresFixed": [
+    "Test compile: Java var compound declaration split",
+    "Focused assertion: disabled JWT convention401, plus real after-lock actor403 test",
+    "Widget assertion: scroll lazy list before checking offscreen failure",
+    "Final review: a new revoke idempotency key records its new acknowledgement time; original profile revokedAt/audit remain immutable; added PG test and reran full/UI."
+  ],
+  "realEnrollmentRecognitionLivenessVerified": false,
+  "remoteReview": {
+    "checkedAtUtc": "2026-11-24T04:04:39.8315296Z",
+    "workflows": 0,
+    "webhooks": 0,
+    "runs": 0,
+    "deployments": 0
+  }
+}

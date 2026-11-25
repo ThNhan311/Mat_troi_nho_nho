@@ -1,0 +1,681 @@
+{
+  "format": 1,
+  "base": "4af8bb8a51908cc46643fba009659c3903c1dba3",
+  "databaseRef": "origin/feature/database-schema",
+  "databaseCommit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+  "candidate": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "releaseReady": false,
+  "sharedDatabaseInventory": "UNKNOWN: no shared DB was contacted; V7 may already be applied elsewhere",
+  "entries": [
+    {
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sha256": "df40d5114a8c88f48977e708f4baaf4c36a5f16289432c20a3224c40ada25870",
+      "flywayChecksum": 1458726014,
+      "gitBlobSha256": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+      "dependsOn": [],
+      "classification": "canonical"
+    },
+    {
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sha256": "dffe32d5fc343e6e877234afa79408f3cebd7cbd1828891c31e993f1047cd615",
+      "flywayChecksum": 989506803,
+      "gitBlobSha256": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+      "dependsOn": [
+        1
+      ],
+      "classification": "canonical"
+    },
+    {
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sha256": "17a711675169667fa50af87b34dc1e5406c0610fe44cb2f9cefaf35a7b7322e1",
+      "flywayChecksum": -515824181,
+      "gitBlobSha256": "38a44e0713fb190453337f4c511b640a52809bafafdbfc3f2257315ccf690a7a",
+      "dependsOn": [
+        1,
+        2
+      ],
+      "classification": "canonical"
+    },
+    {
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sha256": "79844557f18bc878247a70997013f037f7eebbb0fc5f59502665bf1227c3dc3e",
+      "flywayChecksum": 568475058,
+      "gitBlobSha256": "089d1746f5fab0013a79a0fce3fc8338d60e7dcd775b1aaab1e2dbe6f59ac930",
+      "dependsOn": [
+        1,
+        2,
+        3
+      ],
+      "classification": "canonical"
+    },
+    {
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sha256": "ad8d568c9cc57351b977d3bfb71b56f68193f1c14a407d7763c72e9b6f17ae39",
+      "flywayChecksum": 1125685481,
+      "gitBlobSha256": "73e0f126f863e11064bb364f404838d36a319350c4e4812d6e5c8492831e1b6c",
+      "dependsOn": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "classification": "canonical"
+    },
+    {
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sha256": "486497e40e779250ab592646df46996e42ee7d771dfdc8332c8591cb70e6a28c",
+      "flywayChecksum": -1514799074,
+      "gitBlobSha256": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+      "dependsOn": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "classification": "canonical"
+    },
+    {
+      "version": 8,
+      "path": "database/activation-rehearsal/V8__pt_account_activation.sql",
+      "sha256": "7f38b7f83662d4895dcce71ae50accc64321786f5fe7af5ea044bdd4fa619902",
+      "flywayChecksum": -750065425,
+      "gitBlobSha256": "7f38b7f83662d4895dcce71ae50accc64321786f5fe7af5ea044bdd4fa619902",
+      "dependsOn": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "classification": "rehearsal"
+    },
+    {
+      "version": 9,
+      "path": "database/membership-rehearsal/V9__membership_initial_activation.sql",
+      "sha256": "98783c7fcbfba450c46d9d625d74f5b8bca85cce897bd7887222c2e1bbee2648",
+      "flywayChecksum": 2048807649,
+      "gitBlobSha256": "7be48ad851e9e9cee19df1b3afeb2e20958117d108723cd2b36d46a813bdb2ca",
+      "dependsOn": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8
+      ],
+      "classification": "rehearsal"
+    },
+    {
+      "version": 10,
+      "path": "database/member-activation-rehearsal/V10__member_account_activation.sql",
+      "sha256": "cf6d6918134409f552576b14644b9847fa127a5a81b4e1964da260bd6ad19f29",
+      "flywayChecksum": 1490426486,
+      "gitBlobSha256": "9322365f431e16b19fb1700d79086d6a19db8d5715f71b6483874983ecefb0b3",
+      "dependsOn": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9
+      ],
+      "classification": "rehearsal"
+    },
+    {
+      "version": 11,
+      "path": "database/renewal-rehearsal/V11__membership_renewal_simulator.sql",
+      "sha256": "88f0e48fb077c777fb3d17f9872397fa6e8e10686bf0c4067ca7a0e6f0de0e61",
+      "flywayChecksum": 2066778787,
+      "dependsOn": [
+        1,
+        2,
+        6,
+        8,
+        9,
+        10
+      ],
+      "classification": "rehearsal"
+    },
+    {
+      "version": 12,
+      "path": "database/checkin-rehearsal/V12__checkin_request_ledger.sql",
+      "sha256": "2d889683ee254ee312fea46b0930a2bd73461ee531633a7ec31c28c2e4e276ae",
+      "flywayChecksum": 1844552835,
+      "dependsOn": [
+        3,
+        11
+      ],
+      "classification": "guarded-checkin-rehearsal-only"
+    }
+  ],
+  "quarantined": [
+    {
+      "version": 7,
+      "path": "database/database/migrations/V7__membership_periods.sql",
+      "sha256": "668fdd672fdcff04e89525b3cadec3bc957f186f38fe0065dc4417a6f1b29b41",
+      "flywayChecksum": -349926232,
+      "reason": "Drops payment period columns without backfill; incompatible with current M03 COUNTER records. Never execute in this candidate."
+    }
+  ],
+  "knownRemoteMigrations": [
+    {
+      "ref": "refs/remotes/origin/feature/admin-account-pt-activation",
+      "commit": "66a70311517ccd0bf287eff45b476f1ce5138a16",
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sha256": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+      "flywayChecksum": 1458726014
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-account-pt-activation",
+      "commit": "66a70311517ccd0bf287eff45b476f1ce5138a16",
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sha256": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+      "flywayChecksum": 989506803
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-account-pt-activation",
+      "commit": "66a70311517ccd0bf287eff45b476f1ce5138a16",
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sha256": "38a44e0713fb190453337f4c511b640a52809bafafdbfc3f2257315ccf690a7a",
+      "flywayChecksum": -515824181
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-account-pt-activation",
+      "commit": "66a70311517ccd0bf287eff45b476f1ce5138a16",
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sha256": "089d1746f5fab0013a79a0fce3fc8338d60e7dcd775b1aaab1e2dbe6f59ac930",
+      "flywayChecksum": 568475058
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-account-pt-activation",
+      "commit": "66a70311517ccd0bf287eff45b476f1ce5138a16",
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sha256": "73e0f126f863e11064bb364f404838d36a319350c4e4812d6e5c8492831e1b6c",
+      "flywayChecksum": 1125685481
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-account-pt-activation",
+      "commit": "66a70311517ccd0bf287eff45b476f1ce5138a16",
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sha256": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+      "flywayChecksum": -1514799074
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-membership-initial-activation",
+      "commit": "5399c5707288669997e898740daa36c57d04d632",
+      "version": 8,
+      "path": "database/activation-rehearsal/V8__pt_account_activation.sql",
+      "sha256": "7f38b7f83662d4895dcce71ae50accc64321786f5fe7af5ea044bdd4fa619902",
+      "flywayChecksum": -750065425
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-membership-initial-activation",
+      "commit": "5399c5707288669997e898740daa36c57d04d632",
+      "version": 9,
+      "path": "database/membership-rehearsal/V9__membership_initial_activation.sql",
+      "sha256": "7be48ad851e9e9cee19df1b3afeb2e20958117d108723cd2b36d46a813bdb2ca",
+      "flywayChecksum": 2048807649
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-membership-initial-activation",
+      "commit": "5399c5707288669997e898740daa36c57d04d632",
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sha256": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+      "flywayChecksum": 1458726014
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-membership-initial-activation",
+      "commit": "5399c5707288669997e898740daa36c57d04d632",
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sha256": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+      "flywayChecksum": 989506803
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-membership-initial-activation",
+      "commit": "5399c5707288669997e898740daa36c57d04d632",
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sha256": "38a44e0713fb190453337f4c511b640a52809bafafdbfc3f2257315ccf690a7a",
+      "flywayChecksum": -515824181
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-membership-initial-activation",
+      "commit": "5399c5707288669997e898740daa36c57d04d632",
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sha256": "089d1746f5fab0013a79a0fce3fc8338d60e7dcd775b1aaab1e2dbe6f59ac930",
+      "flywayChecksum": 568475058
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-membership-initial-activation",
+      "commit": "5399c5707288669997e898740daa36c57d04d632",
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sha256": "73e0f126f863e11064bb364f404838d36a319350c4e4812d6e5c8492831e1b6c",
+      "flywayChecksum": 1125685481
+    },
+    {
+      "ref": "refs/remotes/origin/feature/admin-membership-initial-activation",
+      "commit": "5399c5707288669997e898740daa36c57d04d632",
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sha256": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+      "flywayChecksum": -1514799074
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-db-alignment",
+      "commit": "1f3efdd76bdd0c0c0cc5db6f2f4d5db8b5cbfe40",
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sha256": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+      "flywayChecksum": 1458726014
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-db-alignment",
+      "commit": "1f3efdd76bdd0c0c0cc5db6f2f4d5db8b5cbfe40",
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sha256": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+      "flywayChecksum": 989506803
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-db-alignment",
+      "commit": "1f3efdd76bdd0c0c0cc5db6f2f4d5db8b5cbfe40",
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sha256": "38a44e0713fb190453337f4c511b640a52809bafafdbfc3f2257315ccf690a7a",
+      "flywayChecksum": -515824181
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-db-alignment",
+      "commit": "1f3efdd76bdd0c0c0cc5db6f2f4d5db8b5cbfe40",
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sha256": "089d1746f5fab0013a79a0fce3fc8338d60e7dcd775b1aaab1e2dbe6f59ac930",
+      "flywayChecksum": 568475058
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-db-alignment",
+      "commit": "1f3efdd76bdd0c0c0cc5db6f2f4d5db8b5cbfe40",
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sha256": "73e0f126f863e11064bb364f404838d36a319350c4e4812d6e5c8492831e1b6c",
+      "flywayChecksum": 1125685481
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-db-alignment",
+      "commit": "1f3efdd76bdd0c0c0cc5db6f2f4d5db8b5cbfe40",
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sha256": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+      "flywayChecksum": -1514799074
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-pt-booking",
+      "commit": "8eebb9b9192d092f5a4080e853aa739ba582a308",
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sha256": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+      "flywayChecksum": 1458726014
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-pt-booking",
+      "commit": "8eebb9b9192d092f5a4080e853aa739ba582a308",
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sha256": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+      "flywayChecksum": 989506803
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-pt-booking",
+      "commit": "8eebb9b9192d092f5a4080e853aa739ba582a308",
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sha256": "38a44e0713fb190453337f4c511b640a52809bafafdbfc3f2257315ccf690a7a",
+      "flywayChecksum": -515824181
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-pt-booking",
+      "commit": "8eebb9b9192d092f5a4080e853aa739ba582a308",
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sha256": "089d1746f5fab0013a79a0fce3fc8338d60e7dcd775b1aaab1e2dbe6f59ac930",
+      "flywayChecksum": 568475058
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-pt-booking",
+      "commit": "8eebb9b9192d092f5a4080e853aa739ba582a308",
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sha256": "73e0f126f863e11064bb364f404838d36a319350c4e4812d6e5c8492831e1b6c",
+      "flywayChecksum": 1125685481
+    },
+    {
+      "ref": "refs/remotes/origin/feature/backend-pt-booking",
+      "commit": "8eebb9b9192d092f5a4080e853aa739ba582a308",
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sha256": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+      "flywayChecksum": -1514799074
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 1,
+      "path": "database/database/migrations/V1__core_users_members.sql",
+      "sha256": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+      "flywayChecksum": 1458726014
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 2,
+      "path": "database/database/migrations/V2__membership_payment.sql",
+      "sha256": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+      "flywayChecksum": 989506803
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 3,
+      "path": "database/database/migrations/V3__checkin.sql",
+      "sha256": "38a44e0713fb190453337f4c511b640a52809bafafdbfc3f2257315ccf690a7a",
+      "flywayChecksum": -515824181
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 4,
+      "path": "database/database/migrations/V4__pt_booking.sql",
+      "sha256": "089d1746f5fab0013a79a0fce3fc8338d60e7dcd775b1aaab1e2dbe6f59ac930",
+      "flywayChecksum": 568475058
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 5,
+      "path": "database/database/migrations/V5__workout_notification.sql",
+      "sha256": "73e0f126f863e11064bb364f404838d36a319350c4e4812d6e5c8492831e1b6c",
+      "flywayChecksum": 1125685481
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 6,
+      "path": "database/database/migrations/V6__audit_log.sql",
+      "sha256": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+      "flywayChecksum": -1514799074
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 7,
+      "path": "database/database/migrations/V7__membership_periods.sql",
+      "sha256": "668fdd672fdcff04e89525b3cadec3bc957f186f38fe0065dc4417a6f1b29b41",
+      "flywayChecksum": -349926232
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sha256": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+      "flywayChecksum": 1458726014
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sha256": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+      "flywayChecksum": 989506803
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sha256": "38a44e0713fb190453337f4c511b640a52809bafafdbfc3f2257315ccf690a7a",
+      "flywayChecksum": -515824181
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sha256": "089d1746f5fab0013a79a0fce3fc8338d60e7dcd775b1aaab1e2dbe6f59ac930",
+      "flywayChecksum": 568475058
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sha256": "73e0f126f863e11064bb364f404838d36a319350c4e4812d6e5c8492831e1b6c",
+      "flywayChecksum": 1125685481
+    },
+    {
+      "ref": "refs/remotes/origin/feature/database-schema",
+      "commit": "558fb03fd5927ca9e04d17b54fd46e429fe62bb5",
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sha256": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+      "flywayChecksum": -1514799074
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-account-activation",
+      "commit": "950311082d4cc5b2c5b85b1a3f8cd644246cd932",
+      "version": 8,
+      "path": "database/activation-rehearsal/V8__pt_account_activation.sql",
+      "sha256": "7f38b7f83662d4895dcce71ae50accc64321786f5fe7af5ea044bdd4fa619902",
+      "flywayChecksum": -750065425
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-account-activation",
+      "commit": "950311082d4cc5b2c5b85b1a3f8cd644246cd932",
+      "version": 10,
+      "path": "database/member-activation-rehearsal/V10__member_account_activation.sql",
+      "sha256": "9322365f431e16b19fb1700d79086d6a19db8d5715f71b6483874983ecefb0b3",
+      "flywayChecksum": 1490426486
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-account-activation",
+      "commit": "950311082d4cc5b2c5b85b1a3f8cd644246cd932",
+      "version": 9,
+      "path": "database/membership-rehearsal/V9__membership_initial_activation.sql",
+      "sha256": "7be48ad851e9e9cee19df1b3afeb2e20958117d108723cd2b36d46a813bdb2ca",
+      "flywayChecksum": 2048807649
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-account-activation",
+      "commit": "950311082d4cc5b2c5b85b1a3f8cd644246cd932",
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sha256": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+      "flywayChecksum": 1458726014
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-account-activation",
+      "commit": "950311082d4cc5b2c5b85b1a3f8cd644246cd932",
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sha256": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+      "flywayChecksum": 989506803
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-account-activation",
+      "commit": "950311082d4cc5b2c5b85b1a3f8cd644246cd932",
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sha256": "38a44e0713fb190453337f4c511b640a52809bafafdbfc3f2257315ccf690a7a",
+      "flywayChecksum": -515824181
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-account-activation",
+      "commit": "950311082d4cc5b2c5b85b1a3f8cd644246cd932",
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sha256": "089d1746f5fab0013a79a0fce3fc8338d60e7dcd775b1aaab1e2dbe6f59ac930",
+      "flywayChecksum": 568475058
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-account-activation",
+      "commit": "950311082d4cc5b2c5b85b1a3f8cd644246cd932",
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sha256": "73e0f126f863e11064bb364f404838d36a319350c4e4812d6e5c8492831e1b6c",
+      "flywayChecksum": 1125685481
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-account-activation",
+      "commit": "950311082d4cc5b2c5b85b1a3f8cd644246cd932",
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sha256": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+      "flywayChecksum": -1514799074
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-membership-read",
+      "commit": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+      "version": 8,
+      "path": "database/activation-rehearsal/V8__pt_account_activation.sql",
+      "sha256": "7f38b7f83662d4895dcce71ae50accc64321786f5fe7af5ea044bdd4fa619902",
+      "flywayChecksum": -750065425
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-membership-read",
+      "commit": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sha256": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+      "flywayChecksum": 1458726014
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-membership-read",
+      "commit": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sha256": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+      "flywayChecksum": 989506803
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-membership-read",
+      "commit": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sha256": "38a44e0713fb190453337f4c511b640a52809bafafdbfc3f2257315ccf690a7a",
+      "flywayChecksum": -515824181
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-membership-read",
+      "commit": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sha256": "089d1746f5fab0013a79a0fce3fc8338d60e7dcd775b1aaab1e2dbe6f59ac930",
+      "flywayChecksum": 568475058
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-membership-read",
+      "commit": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sha256": "73e0f126f863e11064bb364f404838d36a319350c4e4812d6e5c8492831e1b6c",
+      "flywayChecksum": 1125685481
+    },
+    {
+      "ref": "refs/remotes/origin/feature/member-membership-read",
+      "commit": "92328e0b6a81134921e77e6545b2d5bc02d6d622",
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sha256": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+      "flywayChecksum": -1514799074
+    },
+    {
+      "ref": "refs/remotes/origin/feature/pt-activation-postgres-rehearsal",
+      "commit": "0c31947b60bacbb7d7516556a7f2b44193ec86a8",
+      "version": 8,
+      "path": "database/activation-rehearsal/V8__pt_account_activation.sql",
+      "sha256": "7f38b7f83662d4895dcce71ae50accc64321786f5fe7af5ea044bdd4fa619902",
+      "flywayChecksum": -750065425
+    },
+    {
+      "ref": "refs/remotes/origin/feature/pt-activation-postgres-rehearsal",
+      "commit": "0c31947b60bacbb7d7516556a7f2b44193ec86a8",
+      "version": 1,
+      "path": "database/migrations/V1__core_users_members.sql",
+      "sha256": "3a9fd259733154638fb7bb02becdbb19f7cbe460d4ae8c6e8f6d2ec76fe1e7a6",
+      "flywayChecksum": 1458726014
+    },
+    {
+      "ref": "refs/remotes/origin/feature/pt-activation-postgres-rehearsal",
+      "commit": "0c31947b60bacbb7d7516556a7f2b44193ec86a8",
+      "version": 2,
+      "path": "database/migrations/V2__membership_payment.sql",
+      "sha256": "95b039f5a2074a1a2c7980220d1aba1563b1d5dd3f5249abd78c2f97662ddb25",
+      "flywayChecksum": 989506803
+    },
+    {
+      "ref": "refs/remotes/origin/feature/pt-activation-postgres-rehearsal",
+      "commit": "0c31947b60bacbb7d7516556a7f2b44193ec86a8",
+      "version": 3,
+      "path": "database/migrations/V3__checkin.sql",
+      "sha256": "38a44e0713fb190453337f4c511b640a52809bafafdbfc3f2257315ccf690a7a",
+      "flywayChecksum": -515824181
+    },
+    {
+      "ref": "refs/remotes/origin/feature/pt-activation-postgres-rehearsal",
+      "commit": "0c31947b60bacbb7d7516556a7f2b44193ec86a8",
+      "version": 4,
+      "path": "database/migrations/V4__pt_booking.sql",
+      "sha256": "089d1746f5fab0013a79a0fce3fc8338d60e7dcd775b1aaab1e2dbe6f59ac930",
+      "flywayChecksum": 568475058
+    },
+    {
+      "ref": "refs/remotes/origin/feature/pt-activation-postgres-rehearsal",
+      "commit": "0c31947b60bacbb7d7516556a7f2b44193ec86a8",
+      "version": 5,
+      "path": "database/migrations/V5__workout_notification.sql",
+      "sha256": "73e0f126f863e11064bb364f404838d36a319350c4e4812d6e5c8492831e1b6c",
+      "flywayChecksum": 1125685481
+    },
+    {
+      "ref": "refs/remotes/origin/feature/pt-activation-postgres-rehearsal",
+      "commit": "0c31947b60bacbb7d7516556a7f2b44193ec86a8",
+      "version": 6,
+      "path": "database/migrations/V6__audit_log.sql",
+      "sha256": "c9cf767d7f8abab252870f0ccb91c6def699c83f1ba1ec9997e642be75efc1c1",
+      "flywayChecksum": -1514799074
+    }
+  ]
+}

@@ -1,0 +1,261 @@
+{
+  "base": "de82618c21d2aaeb2c3b1d39df4382b3928d93e7",
+  "branch": "feature/face-service-integration",
+  "hashKind": "raw tested working-tree bytes; lfSha256 additionally allows Git text EOL normalization",
+  "files": {
+    "backend/scripts/face-service-rehearsal.ps1": {
+      "rawSha256": "19c9037b9f5d3d663a7ca8a011f8b7ec71e8b6f434c6b73ced2f4776e49825af",
+      "lfSha256": "9dccef81b2260eea83ad196f2a6f4eeaf8f5877dd515b3ebbeebe9d5200ff31b",
+      "bytes": 3629,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/checkin/CheckinService.java": {
+      "rawSha256": "fb21d5bec3436c9b4abff731e52bd7f06d74016c4da087aa4e0d9af412187589",
+      "lfSha256": "201cb29e849f959c90f01bde9c37a1b44a52a63a15f39cae2d3cac8c148f9374",
+      "bytes": 11347,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/checkin/FaceVerificationAdapter.java": {
+      "rawSha256": "569d7ab131ce9364568cb1fdff62379e24e9d0988a49db65bbc43cfdf37aec13",
+      "lfSha256": "a44cb5449bd5fab1325564a78b0b59576f57dc117f4d341eee808a93bfafc7a9",
+      "bytes": 456,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/enrollment/EnrollmentAdapter.java": {
+      "rawSha256": "b9be79ac1566733e38726be5dcab7b8bd49247c9e229a6fce155d790eb7bfe4b",
+      "lfSha256": "cc4a0974ca76fcb02119e66c41de08dffe272fccb73353fd3dd6eb6231aab01d",
+      "bytes": 943,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/enrollment/EnrollmentService.java": {
+      "rawSha256": "f46d28b6a6bc94ea405a49f0b22bdb771bd9f173ed3a9febd8a17cb0b0eedc7b",
+      "lfSha256": "b83f63b75bc346a119ca6f3f6bf796627fa9ceb4f09f3c6fcffee50fc305fb46",
+      "bytes": 14567,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/enrollment/EnrollmentTestAdapter.java": {
+      "rawSha256": "0d3de03b423461e87eded9b035e29b4596cd23434e5a8694f969a4408617defe",
+      "lfSha256": "df2254dc95d917d6b76a0155d8d25e7c60fbc491678c38661a2bf57738d0bcb9",
+      "bytes": 5041,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/enrollment/EnrollmentVerificationAdapter.java": {
+      "rawSha256": "3e8c79c446db925c79b5dd04e5ec2967a645b2d39179a36681485378fa885842",
+      "lfSha256": "0d2191fce71dd8fc95993e98484c008a020e1a8acd29bd1430f362aad404ab81",
+      "bytes": 1480,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/enrollment/RemoteEnrollmentAdapter.java": {
+      "rawSha256": "1c23a98fe5f9588f616837baf11b39569959c94200c1745d0701949eba1fd55f",
+      "lfSha256": "6804a8a9d662f4f77105dd539e75718b0993b3f75cc144a56ba6b8417490df17",
+      "bytes": 11251,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/enrollment/FaceServiceUnitTest.java": {
+      "rawSha256": "70eb6025a74d9811e2face2e34dedbcd205a40df894e4051e686b18d8b85dfa5",
+      "lfSha256": "27253063a180b5eb5028b5c3735387ec88774dacd9e57893d66af5788cc242a2",
+      "bytes": 4271,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/http/FaceServiceIntegrationDatabase.java": {
+      "rawSha256": "d879c3f0c67b5d80122a12a9ae1cef5684bee6602d79187236a700a647610e85",
+      "lfSha256": "4b12d04dd47282d9c462bfed5d0e807ceebb45059ee95220290dbb87ab9f943f",
+      "bytes": 10191,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/http/FaceServicePostgresTest.java": {
+      "rawSha256": "278f9d01f429b7733280c139c6cf73e3358f73dfb42b22f8cb0803e98d481989",
+      "lfSha256": "189995d224a70e92d7ab40f98b958cb6320f3968b24452729c366d5b93d2b2c2",
+      "bytes": 25288,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/__init__.py": {
+      "rawSha256": "11c4b01f1aa64d4d791f39cce4d69927e08edbb4310f67a36318318fca9ac6fa",
+      "lfSha256": "11c4b01f1aa64d4d791f39cce4d69927e08edbb4310f67a36318318fca9ac6fa",
+      "bytes": 74,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/integration/core_client.py": {
+      "rawSha256": "159c5026e33d409f0520247660b9e456287b369877163f151e9049aacea1d7de",
+      "lfSha256": "159c5026e33d409f0520247660b9e456287b369877163f151e9049aacea1d7de",
+      "bytes": 5372,
+      "provenance": "UNCHANGED_F01_REGRESSION"
+    },
+    "face/integration/tests/test_core_client.py": {
+      "rawSha256": "034f25eb41c62451c9233967ece4ddc1d3f3cf483bbaf712539c93974a7423c5",
+      "lfSha256": "034f25eb41c62451c9233967ece4ddc1d3f3cf483bbaf712539c93974a7423c5",
+      "bytes": 7760,
+      "provenance": "UNCHANGED_F01_REGRESSION"
+    },
+    "face/prototype/__init__.py": {
+      "rawSha256": "e314871133acdd57afb41768c59692560104812c78fcff93eb2afd1b413c0c27",
+      "lfSha256": "e314871133acdd57afb41768c59692560104812c78fcff93eb2afd1b413c0c27",
+      "bytes": 53,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/prototype/auth_client.py": {
+      "rawSha256": "c7f9b718a98ca06a412e8f7ee48d96afd054588a5ed2f8028826e587cb08778c",
+      "lfSha256": "c7f9b718a98ca06a412e8f7ee48d96afd054588a5ed2f8028826e587cb08778c",
+      "bytes": 3003,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/prototype/config.py": {
+      "rawSha256": "6a065685e81cc37e7d37baade1bfaa2eb01be99e96fe3da8bb5e3c337e08d97c",
+      "lfSha256": "6a065685e81cc37e7d37baade1bfaa2eb01be99e96fe3da8bb5e3c337e08d97c",
+      "bytes": 3564,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/prototype/controller.py": {
+      "rawSha256": "679cb1e923c0c5689e1658097c771c3d6fb148dc84d0c921593b29c3aa9e8a60",
+      "lfSha256": "679cb1e923c0c5689e1658097c771c3d6fb148dc84d0c921593b29c3aa9e8a60",
+      "bytes": 1443,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/prototype/embedder.py": {
+      "rawSha256": "8e520e7d0fec775e8727323710d53d1ba6502c2cd44c307a0de67c72aca983ef",
+      "lfSha256": "8e520e7d0fec775e8727323710d53d1ba6502c2cd44c307a0de67c72aca983ef",
+      "bytes": 1202,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/prototype/enroll.py": {
+      "rawSha256": "2dd6f2013ca6ff960b08ca526a23d409ce681c912f11d7bb23220828877ab2f3",
+      "lfSha256": "2dd6f2013ca6ff960b08ca526a23d409ce681c912f11d7bb23220828877ab2f3",
+      "bytes": 4376,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/prototype/gallery.py": {
+      "rawSha256": "fae4f87d0215f9c6f74aef35159e795f0c942e722087e30ecd702265138c1e68",
+      "lfSha256": "fae4f87d0215f9c6f74aef35159e795f0c942e722087e30ecd702265138c1e68",
+      "bytes": 4686,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/prototype/matcher.py": {
+      "rawSha256": "a2a0a576f1065934c686bb8e844ec391e8940785055a5091c433238ddceac1e7",
+      "lfSha256": "a2a0a576f1065934c686bb8e844ec391e8940785055a5091c433238ddceac1e7",
+      "bytes": 1293,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/prototype/selector.py": {
+      "rawSha256": "bf6e8b5a5045c9a901dd2d0845ca6649ef5ddd839f0210246cb666744220d06a",
+      "lfSha256": "bf6e8b5a5045c9a901dd2d0845ca6649ef5ddd839f0210246cb666744220d06a",
+      "bytes": 2046,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/prototype/state_machine.py": {
+      "rawSha256": "e03bf6e8438da4016b256cba02cc3e89e54ac12ff9b58361062013d80d5addcc",
+      "lfSha256": "e03bf6e8438da4016b256cba02cc3e89e54ac12ff9b58361062013d80d5addcc",
+      "bytes": 4998,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/prototype/types.py": {
+      "rawSha256": "8ff71122f4091d2abab662bcd54bba4a68a298d647eb9f4b5129adf1df0e69b4",
+      "lfSha256": "8ff71122f4091d2abab662bcd54bba4a68a298d647eb9f4b5129adf1df0e69b4",
+      "bytes": 1901,
+      "provenance": "PINNED_UNMODIFIED"
+    },
+    "face/service_v2/__init__.py": {
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "lfSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/__main__.py": {
+      "rawSha256": "996eed6c592f716f51b1bd8ec00e528c309d80f3dc2a5fd9630de18443bd9941",
+      "lfSha256": "ee1d9918651b3e824e9ffae9f14a2b5b1779b3374609754272057756b45f5af7",
+      "bytes": 1210,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/api.py": {
+      "rawSha256": "0cd740c090bce0919fdc3235ce0367abd381f43bb0bd05b0ac6b3dd57d22b735",
+      "lfSha256": "83c1cf60b4f0d06aa3f763d99a261c300b936d1b61f0e5b354baaa438b6d4bf4",
+      "bytes": 6959,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/artifacts.py": {
+      "rawSha256": "98971e391ceef0aad77fb867f890b6c132c3615ae53e7ca77c29e0997407f31a",
+      "lfSha256": "d71cc19495c07ce42c083383a026682eb98d187f4397c6d2debb13d6214fe1f8",
+      "bytes": 2317,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/evaluate.py": {
+      "rawSha256": "890584947d4eb191689188a99406d46c5aee1c3cfac436f1a59e7e0738e3e170",
+      "lfSha256": "32d87904a87fa22d508831afce5542d6f0461e02f2e57408ccccb20ade74d1a5",
+      "bytes": 7001,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/requirements-lock.txt": {
+      "rawSha256": "584e334f15d722ac4f604974384d117714249c5e1a2402fe3fc1f2a6a732281f",
+      "lfSha256": "63d03b0d6b319f32265d5b2e45fbdde31e6c1ac74681f7dcdc230075cb4401ca",
+      "bytes": 892,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/requirements.txt": {
+      "rawSha256": "71d3a7edcec438538312dfb5cb3133e1061c28a1af1f1b8bb57043141fe81230",
+      "lfSha256": "0ecb75f7b56792f12547891df84ae5e0dfc05f3b9d06730c829db8b5c646983f",
+      "bytes": 226,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/runtime.py": {
+      "rawSha256": "fad0385043c7831813a16911f3040e6574c3c4b2d24144b5bff20662cd190d33",
+      "lfSha256": "301e7b912640b6e07ff1a46de287fb73aa2d8a1cffd080bee89bfd3e02062a64",
+      "bytes": 1909,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/smoke.py": {
+      "rawSha256": "8e08cfae2148378079015c703142ff9dd1fde6697faf1dfe4fafde9d377b2343",
+      "lfSha256": "302cb1bea734edc0fdadf8cb4776c7ce654ae14314ec42cd098fee9af4a8cb1e",
+      "bytes": 4013,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/store.py": {
+      "rawSha256": "6dbe965d6869ba762820ecb3a7ea3187bdcd72bcefef2a660c8205398948bf79",
+      "lfSha256": "7a2da6cac7952782849846b0ed18f6910171c45ffcef03fd8b31e018fdb8d1ff",
+      "bytes": 10915,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/tests/__init__.py": {
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "lfSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/tests/protocol_host.py": {
+      "rawSha256": "1f0a717b97102448436cdbe488d7526b50ab23cf63e9ced91283373c9a1bfed4",
+      "lfSha256": "27cac6a0aeec25ad98453be8d91731a97dc355982676a996185e54084662ba9d",
+      "bytes": 2766,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/tests/test_evaluate.py": {
+      "rawSha256": "a1de3083e5ee8eb8badb370efa13d87f33ab57ca7330f29c260ef20b18352b68",
+      "lfSha256": "cdd119d37d845dd75a5c881d834380f1c7d6569cc4d0362d83304dd87f3a0b82",
+      "bytes": 3198,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    },
+    "face/service_v2/tests/test_service.py": {
+      "rawSha256": "5060052e87f6354f0f6f76272a775c2d0565bf2b05bca0cc5528a74007416d4d",
+      "lfSha256": "2cf49f0aed5a08302946bc4bbf030177abfff759f1525ead3522dd93972ceaaf",
+      "bytes": 11650,
+      "provenance": "F03A_NEW_OR_MODIFIED"
+    }
+  },
+  "importedUnmodified": {
+    "ref": "fcabeba765d6e597cbc5fbed76fafc08f9604e03",
+    "files": {
+      "face/__init__.py": "11c4b01f1aa64d4d791f39cce4d69927e08edbb4310f67a36318318fca9ac6fa",
+      "face/prototype/__init__.py": "e314871133acdd57afb41768c59692560104812c78fcff93eb2afd1b413c0c27",
+      "face/prototype/embedder.py": "8e520e7d0fec775e8727323710d53d1ba6502c2cd44c307a0de67c72aca983ef",
+      "face/prototype/gallery.py": "fae4f87d0215f9c6f74aef35159e795f0c942e722087e30ecd702265138c1e68",
+      "face/prototype/matcher.py": "a2a0a576f1065934c686bb8e844ec391e8940785055a5091c433238ddceac1e7",
+      "face/prototype/enroll.py": "2dd6f2013ca6ff960b08ca526a23d409ce681c912f11d7bb23220828877ab2f3",
+      "face/prototype/auth_client.py": "c7f9b718a98ca06a412e8f7ee48d96afd054588a5ed2f8028826e587cb08778c",
+      "face/prototype/config.py": "6a065685e81cc37e7d37baade1bfaa2eb01be99e96fe3da8bb5e3c337e08d97c",
+      "face/prototype/controller.py": "679cb1e923c0c5689e1658097c771c3d6fb148dc84d0c921593b29c3aa9e8a60",
+      "face/prototype/state_machine.py": "e03bf6e8438da4016b256cba02cc3e89e54ac12ff9b58361062013d80d5addcc",
+      "face/prototype/types.py": "8ff71122f4091d2abab662bcd54bba4a68a298d647eb9f4b5129adf1df0e69b4",
+      "face/prototype/selector.py": "bf6e8b5a5045c9a901dd2d0845ca6649ef5ddd839f0210246cb666744220d06a",
+      "face/.gitignore": "9126f9ab20f119dc6b55e1ce1884c00cbe8076a035f1a0d445844102fc69bcd3"
+    }
+  },
+  "originalFaceUntrackedFilesPreserved": 26,
+  "migrationChange": false
+}

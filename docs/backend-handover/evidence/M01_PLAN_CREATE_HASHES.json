@@ -1,0 +1,56 @@
+{
+  "atUtc": "2026-11-22T12:27:26.826Z",
+  "branch": "feature/admin-membership-plan-create",
+  "base": "1b1e323ff8ac0f947b3145b6544bac81339931ba",
+  "algorithm": "SHA256, exact working bytes; no line-ending normalization",
+  "executable": {
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/controller/AdminMembershipPlanController.java": "2625e6856312fc476b480792be7e4d548e1974cad788efecd17de4fbfccd3947",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/dto/membership/MembershipPlanCreateRequest.java": "23be058606547a50385a192109f2363aaa24cafa5b36d01df2f7316c5cff9ed0",
+    "backend/src/main/java/vn/edu/tdtu/fitcenter/service/MembershipPlanCreateService.java": "3e67c15e4eb985dd426082665f1e28ace087ed4dfab99e72e9e910f7b80dc729",
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/service/MembershipPlanCreateServiceTest.java": "670b9285c2d054628d9730b561c1dec6f7221c62c0ca991c1a24953b7ef2f939",
+    "backend/src/test/java/vn/edu/tdtu/fitcenter/http/HttpBaselineTest.java": "2e932878b3ecd4ed5287819a10e0e6c6acc1b196e4b2922c0b8d7c111105ef53",
+    "frontend/fitcenter_ad/lib/main.dart": "2c5e38ab38a4ad5f137f5fbb770ab262d92ea8042b6bf1bae1a0d15fdc5ad3ae",
+    "frontend/fitcenter_ad/lib/screens/home_page.dart": "1574e5571d73d5f7cff5b02bd76b6d22270dcbb847891344c64864b422a620ba",
+    "frontend/fitcenter_ad/lib/screens/membership_page.dart": "ab7981c1f07d405df0410fcc862e635b613a2a59f44b037b5f7cbb2110770033",
+    "frontend/fitcenter_ad/lib/services/membership_plan_service.dart": "28ef31d79389cdbe50c573c45b13a4108922f01027cc85953802dac132e6f524",
+    "frontend/fitcenter_ad/test/membership_plan_test.dart": "0b18a7b4ebb37e57d8781ea53b6ec9372487e3ccb4647d8a289b409d591d035b",
+    "frontend/verify-membership-plan-demo.mjs": "f664218eeb72a3cdf2ca4b7a90580f75ffa3805d071e092968d990255de1fc1d",
+    "frontend/verify-membership-plan-ui.mjs": "a906cc13ba0f1bc1038396fd6377627a717b92d09b0cc93912f09567cafa83ad"
+  },
+  "preservedResearch": {
+    "docs/backend-handover/research/2026-11-22_CORE_MEMBERSHIP_PAYMENT_SURVEY.md": "3a98ff122efd8c33266b6d6304ccf4f6ed6e0050f1f5f5fae0f8cfae509e4070",
+    "docs/backend-handover/research/2026-11-22_DATABASE_V7_REVIEW.md": "225b029fe3c8b0290c880488de6ff0643455e13796e914263a284ed74e669398",
+    "docs/backend-handover/research/2026-11-22_FIRST_SLICE_PLAN_CREATE.md": "400729599f337fe4362022f2b3e8606fe8a42bcf1a1a1bd77de231d14ff0bb97",
+    "docs/backend-handover/research/2026-11-22_SURVEY_SOURCES.json": "9d952a9b8f0aeb4b74a012b56fe27f89dcd0b65342b4dd1d843e74173b1aca80"
+  },
+  "uiSourceHashes": {
+    "backend/scripts/booking-demo.ps1": "89d23b0aa9e177e521adcffbacefc6a733907c4063aa9a0aa3636fed949c53b9",
+    "frontend/fitcenter_ad/lib/main.dart": "2c5e38ab38a4ad5f137f5fbb770ab262d92ea8042b6bf1bae1a0d15fdc5ad3ae",
+    "frontend/fitcenter_ad/lib/screens/account_page.dart": "e8853627bea16a405933dd910e4359d3a337d83b8e1f34e134bb0bd2ca546b24",
+    "frontend/fitcenter_ad/lib/screens/activity_records_page.dart": "e5ae7c1c8b205c625ef19724713806068d4299d35dd5a4b7ad332b1e68c674b8",
+    "frontend/fitcenter_ad/lib/screens/booking_policy_page.dart": "5c7d588cb2d084aebdfe6004e70b15950a926e53c708339e98db44fbe2a0e211",
+    "frontend/fitcenter_ad/lib/screens/home_page.dart": "1574e5571d73d5f7cff5b02bd76b6d22270dcbb847891344c64864b422a620ba",
+    "frontend/fitcenter_ad/lib/screens/initial_activation_page.dart": "076863816502e115430ff7b5e2c374a67444eba660f5287e67ee470067a967a3",
+    "frontend/fitcenter_ad/lib/screens/login_page.dart": "0817ab08d1894bcf1d4fd4840004c2f0a5be6b9d905db09b6c916accbace09d9",
+    "frontend/fitcenter_ad/lib/screens/membership_page.dart": "ab7981c1f07d405df0410fcc862e635b613a2a59f44b037b5f7cbb2110770033",
+    "frontend/fitcenter_ad/lib/services/api_client.dart": "e4c79c2747aebcb06e031aec3b14b8208fc18013ed07a4b77086e048ea21ec15",
+    "frontend/fitcenter_ad/lib/services/booking_policy_service.dart": "9a5d597099ae4110397203148e5bf279007dedae8ce99b56a353ffe02ff3b1d6",
+    "frontend/fitcenter_ad/lib/services/membership_plan_service.dart": "28ef31d79389cdbe50c573c45b13a4108922f01027cc85953802dac132e6f524",
+    "frontend/fitcenter_ad/lib/services/vietnam_time.dart": "dd7dd4b36c570bad3ab70cf23530a24c7bd13d1bc870956f983c777d7b2ff914",
+    "frontend/fitcenter_ad/lib/theme/app_theme.dart": "da13bb3ae1f8613da1cf5dd48ac069605531085625247248392c8c3988911d6b",
+    "frontend/fitcenter_ad/pubspec.lock": "dc4424144979111121c2ae9373d990cacd356a0c6b2482ac3d9e36f468ac97c9",
+    "frontend/fitcenter_ad/pubspec.yaml": "c08cda87bc94e46c630216b8a955ddc7ee7e814a772c09292948ad79274bafd5",
+    "frontend/fitcenter_ad/test/api_client_test.dart": "1d504397f99cab41b02bf5d4dba4ece8d50f7c30d2f722a3df74a8f341d5ae68",
+    "frontend/fitcenter_ad/test/booking_policy_test.dart": "0cff11356fa15ff4cb5df60c1e2b2913b8ff074a50bb891abd41f48b01cd8e61",
+    "frontend/fitcenter_ad/test/membership_plan_test.dart": "0b18a7b4ebb37e57d8781ea53b6ec9372487e3ccb4647d8a289b409d591d035b",
+    "frontend/serve-booking-web.mjs": "4fa316f6b5fee584b8e825744e5283fb66ecdbf4af3a2f78860d55fbe375b695",
+    "frontend/verify-membership-plan-demo.mjs": "f664218eeb72a3cdf2ca4b7a90580f75ffa3805d071e092968d990255de1fc1d",
+    "frontend/verify-membership-plan-ui.mjs": "a906cc13ba0f1bc1038396fd6377627a717b92d09b0cc93912f09567cafa83ad"
+  },
+  "images": {
+    "docs/backend-handover/evidence/m01-plan-create/active-list-before-create.png": "31ec020c5dc3fdede47e20c2de1e461c9f418309b3cf4f6839a877e1a69bee1c",
+    "docs/backend-handover/evidence/m01-plan-create/create-form.png": "8302caceb2f47e733b00678ad49ee9ce69ff5ffd4e7ed89b8b8942735d2b07bc",
+    "docs/backend-handover/evidence/m01-plan-create/created-plan.png": "7308d13ccbd91d44af0492555356b382ff5a3a710e16ff53d62a538460f737c5",
+    "docs/backend-handover/evidence/m01-plan-create/persisted-plan.png": "a120d06f7d2b9a2138fe2b866a10cb8b2458a49151f2fbb84120f8e697fab2be"
+  }
+}

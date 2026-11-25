@@ -1,0 +1,91 @@
+{
+  "baseCommit": "70ca11ce4eee068b1b25147e829b0d804e105a53",
+  "branch": "feature/face-camera-evaluation",
+  "sourceCount": 11,
+  "faceSourceRef": "fcabeba765d6e597cbc5fbed76fafc08f9604e03",
+  "scope": "11 executable source/test files; working-tree raw and normalized LF hashes before closing commit. Git may normalize CRLF; compare LF hash after checkout.",
+  "files": [
+    {
+      "path": "face/evaluation/__init__.py",
+      "workingTreeSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalizedLfSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "provenance": "NEW_F03B",
+      "bytes": 0
+    },
+    {
+      "path": "face/evaluation/capture.py",
+      "workingTreeSha256": "164118386d19e153fbdbb49a138bcacf3de83d61f3c031db8bfe524527aca0d1",
+      "normalizedLfSha256": "1d800c48d88313c0d594e11016ef2865aa940a3befa69852278a8d47600a3b23",
+      "provenance": "NEW_F03B",
+      "bytes": 9544
+    },
+    {
+      "path": "face/evaluation/dataset.py",
+      "workingTreeSha256": "c16144acb667ff4fcab5eafb94bff946363f9edf289443acf54a6657c14db27b",
+      "normalizedLfSha256": "166ec00050cf0ebb4d91ff58f6496c7a6eec1f812b6f1cc46abab7228ca2dc33",
+      "provenance": "NEW_F03B",
+      "bytes": 14996
+    },
+    {
+      "path": "face/evaluation/study.py",
+      "workingTreeSha256": "3d6ab888f2fa91e5c60be437377ec2d8d70441fbfcb724fabe9725e51b5405c4",
+      "normalizedLfSha256": "35c897b23cabdeaa22a32a74c3519740d04639ccf839a8fd9f22ed594abe09d2",
+      "provenance": "NEW_F03B",
+      "bytes": 7842
+    },
+    {
+      "path": "face/evaluation/tests/__init__.py",
+      "workingTreeSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalizedLfSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "provenance": "NEW_F03B",
+      "bytes": 0
+    },
+    {
+      "path": "face/evaluation/tests/conftest.py",
+      "workingTreeSha256": "3fd638f49315bd9225a9671420444a0fcb4ca72e42b69da9ab8ec113b80346e7",
+      "normalizedLfSha256": "8dcdae88684188a36243bd2382e1b7f9d9508c5aca4df86a55c4a618c275c1c6",
+      "provenance": "NEW_F03B",
+      "bytes": 1496
+    },
+    {
+      "path": "face/evaluation/tests/test_capture.py",
+      "workingTreeSha256": "c84c9cc2d0770a2e74427609bc05d0198732c0d3cc9a7787743c8f6b14b56238",
+      "normalizedLfSha256": "e2d5c418a98e4b2b75fe3176829451e11ed59976e7f09fe466101090fc48b329",
+      "provenance": "NEW_F03B",
+      "bytes": 9006
+    },
+    {
+      "path": "face/evaluation/tests/test_study.py",
+      "workingTreeSha256": "51d01ea8ffdb86cd485464b858ce8497052d950d073de3a09a77fe8c758c96f0",
+      "normalizedLfSha256": "0fb20eb2c7812f78f3a849fbc5d99091c601d6e80cda74a7dc28e40365d535c1",
+      "provenance": "NEW_F03B",
+      "bytes": 7144
+    },
+    {
+      "path": "face/prototype/camera.py",
+      "workingTreeSha256": "90ea6708ac63f13538714c1d65783f0936c799fbd63be243b568b81c1416fde1",
+      "normalizedLfSha256": "90ea6708ac63f13538714c1d65783f0936c799fbd63be243b568b81c1416fde1",
+      "provenance": "IMPORTED_UNMODIFIED_FACE_PIN",
+      "bytes": 2675
+    },
+    {
+      "path": "face/prototype/detector.py",
+      "workingTreeSha256": "0b33ab68552d3463fef5f5ea79f0ffeb26a78d6fffa91ace2f8f3214e98a864a",
+      "normalizedLfSha256": "0b33ab68552d3463fef5f5ea79f0ffeb26a78d6fffa91ace2f8f3214e98a864a",
+      "provenance": "IMPORTED_UNMODIFIED_FACE_PIN",
+      "bytes": 2856
+    },
+    {
+      "path": "face/service_v2/evaluate.py",
+      "workingTreeSha256": "8b48605aea237565a2179d67f655f55f66bd36887098f822c3bd7b2f3b9205dc",
+      "normalizedLfSha256": "23e4f0cf8c4e611cbb5fe9f42c8325f208f01d5dd246df3825cfb0882f223290",
+      "provenance": "MODIFIED_F03A_EVALUATION_CLI",
+      "bytes": 7177
+    }
+  ],
+  "outsideTaskPreservation": {
+    "originalFaceUntrackedHashesChecked": 26,
+    "changedOrMissing": 0,
+    "researchUntrackedFilesPreserved": 4
+  }
+}

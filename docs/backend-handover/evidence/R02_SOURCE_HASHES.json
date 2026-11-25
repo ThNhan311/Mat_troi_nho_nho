@@ -1,0 +1,202 @@
+{
+  "sourceCommit": "44d579863d6c703fc062d83c8a6b4d6655cd1b55",
+  "meaning": "Raw SHA256 per filesystem; Git blob identifies committed content; CRLF/LF checkout-only differences explicitly reported. No production Java/Dart/SQL migration changed.",
+  "executableFiles": [
+    {
+      "path": "backend/scripts/CoreIntegrationDemo.java",
+      "gitBlob": "a3263f5366faba59e1283cff645ac8e194d07343",
+      "workingTreeSha256": "a9f378229d3ebb467cb4bc50eea47e430c17f38645f77a75308d1df5373630a6",
+      "cleanCheckoutSha256": "a9f378229d3ebb467cb4bc50eea47e430c17f38645f77a75308d1df5373630a6",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/PreparePortableBaseline.java",
+      "gitBlob": "ff20d10ddd8cbac856dddc3649ecd69d9c0d5795",
+      "workingTreeSha256": "aeb12adcef762f257241177b6956df0eb3cf12c6cfaae200701c89d63f0e9648",
+      "cleanCheckoutSha256": "aeb12adcef762f257241177b6956df0eb3cf12c6cfaae200701c89d63f0e9648",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/account-integration-rehearsal.ps1",
+      "gitBlob": "1890fb6eb464978cee699b91c416cf99e0ef2d64",
+      "workingTreeSha256": "961486c9940d686ffa99f639643831b0999cc16bb6f26cdcb469a9f930b3de0e",
+      "cleanCheckoutSha256": "961486c9940d686ffa99f639643831b0999cc16bb6f26cdcb469a9f930b3de0e",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/checkin-migration-inventory.mjs",
+      "gitBlob": "d4e1c81d7c46b27318886bbe558fa256a85b02c5",
+      "workingTreeSha256": "3fe73584bd2441b0ff2636411522cd60524c761b9d851991352624a8593d5126",
+      "cleanCheckoutSha256": "3fe73584bd2441b0ff2636411522cd60524c761b9d851991352624a8593d5126",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/cleanup-checkin-integration.mjs",
+      "gitBlob": "88f253caf80dc786151c0b3a374cc396dbc6b39e",
+      "workingTreeSha256": "33397b68432705196ef191ecad7858def9e0aa431a55af1a5f8f9383b81370ce",
+      "cleanCheckoutSha256": "33397b68432705196ef191ecad7858def9e0aa431a55af1a5f8f9383b81370ce",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/cleanup-enrollment-integration.mjs",
+      "gitBlob": "e227fe71f9f6a83d7a2caa0aa18702f5cd055a16",
+      "workingTreeSha256": "24a66b3b1925dec1efe71c0dda76896c16718758b5822b6dd07508986e1a807b",
+      "cleanCheckoutSha256": "24a66b3b1925dec1efe71c0dda76896c16718758b5822b6dd07508986e1a807b",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/core-migration-inventory.mjs",
+      "gitBlob": "d84aa21e668dd63d910dabfeee0a36a0c542723e",
+      "workingTreeSha256": "6c25dcf4cadbc2b378cf2cc41f7ccc0ace5240fd01d3790d4f38c6b208369002",
+      "cleanCheckoutSha256": "6c25dcf4cadbc2b378cf2cc41f7ccc0ace5240fd01d3790d4f38c6b208369002",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/core-readiness.ps1",
+      "gitBlob": "392138a46c3e879da4b85e052caf30dcd9bd9d58",
+      "workingTreeSha256": "3612db8de5f59cb30381f3547843df85b89d85abe9b311fcb8163fc25e3fe7f2",
+      "cleanCheckoutSha256": "3612db8de5f59cb30381f3547843df85b89d85abe9b311fcb8163fc25e3fe7f2",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/enrollment-integration-rehearsal.ps1",
+      "gitBlob": "9ce26cdded2d6547d8496acc425960fb3dfaf748",
+      "workingTreeSha256": "81df29cf70113e99bdafcfe1c34d08001f52c7d802bf77ca501b70968b8bcb95",
+      "cleanCheckoutSha256": "81df29cf70113e99bdafcfe1c34d08001f52c7d802bf77ca501b70968b8bcb95",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/face-service-rehearsal.ps1",
+      "gitBlob": "322cb851c0df723cca70af7453e900728fe0cdf3",
+      "workingTreeSha256": "92ee9e26249ebdcbd3e747264d275c6071f8d434e982b7776bbb92d9242bfe23",
+      "cleanCheckoutSha256": "92ee9e26249ebdcbd3e747264d275c6071f8d434e982b7776bbb92d9242bfe23",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/portable-resources.ps1",
+      "gitBlob": "ec6c829792ed7d9f985b2a0412e0e9aa5c43e393",
+      "workingTreeSha256": "5f42b5c2f9cb78f75f9fa5f464fd2acba86987521901073b9e06b1431624d505",
+      "cleanCheckoutSha256": "5f42b5c2f9cb78f75f9fa5f464fd2acba86987521901073b9e06b1431624d505",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/rehearsal-resource.mjs",
+      "gitBlob": "dc7b0a30c86180cee3a337df750d74d311f46b5b",
+      "workingTreeSha256": "256121bdf41b8834d4b55ad59daeb4c6c00e7c8a987f4bf3a3426e4e762f28de",
+      "cleanCheckoutSha256": "256121bdf41b8834d4b55ad59daeb4c6c00e7c8a987f4bf3a3426e4e762f28de",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/rehearsal-resource.test.mjs",
+      "gitBlob": "096fdc7189076eb93485cd992a310ba461823caf",
+      "workingTreeSha256": "4f9f911718c3826753bb637aa78c294433fe26d304a54b03924f8dd215794d81",
+      "cleanCheckoutSha256": "4f9f911718c3826753bb637aa78c294433fe26d304a54b03924f8dd215794d81",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/renewal-migration-inventory.mjs",
+      "gitBlob": "0bb8ee5f84714522d9c9b2bc0dfc06c9a99078ab",
+      "workingTreeSha256": "1febd54a28550977ec2ec80ad4c195db1687897eaad61788eacfb51bd7475ffe",
+      "cleanCheckoutSha256": "1febd54a28550977ec2ec80ad4c195db1687897eaad61788eacfb51bd7475ffe",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/test-http-baseline.ps1",
+      "gitBlob": "f678445d2a4307c81c5d2ae7b71d499eb59b95c0",
+      "workingTreeSha256": "22e742bef03c585cc5c8870ab884674f824b8791ebacc70b410df17d29b3f6c2",
+      "cleanCheckoutSha256": "22e742bef03c585cc5c8870ab884674f824b8791ebacc70b410df17d29b3f6c2",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "backend/scripts/test-portable-guards.ps1",
+      "gitBlob": "173342d2a1c6270aa393fa142c01ebe9b7304c58",
+      "workingTreeSha256": "7609435f99582002887ef168e2c91bc9f6f4296ead53a4e13dc631e9095f4468",
+      "cleanCheckoutSha256": "7609435f99582002887ef168e2c91bc9f6f4296ead53a4e13dc631e9095f4468",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "database/tools/read-only-inventory.sql",
+      "gitBlob": "fceef2493a4c32087b574bbb253f50f6535b65f3",
+      "workingTreeSha256": "6dad2709221d73ffe06e33eff14d08d32e72444fe93e3a3888d040099e3ad818",
+      "cleanCheckoutSha256": "6dad2709221d73ffe06e33eff14d08d32e72444fe93e3a3888d040099e3ad818",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "frontend/cleanup-core-integration.mjs",
+      "gitBlob": "eb9bab55d12624434e60b87233b48a340b36625c",
+      "workingTreeSha256": "e5bcff3a350a41e0ff43dd69db92f4ada0a4fcf82d3904572428209c81cee4bb",
+      "cleanCheckoutSha256": "e5bcff3a350a41e0ff43dd69db92f4ada0a4fcf82d3904572428209c81cee4bb",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "frontend/cleanup-member-account-activation.mjs",
+      "gitBlob": "445cc4710998b05325b103212f35e28cf67a9d44",
+      "workingTreeSha256": "e58e31c9c9a8e818bc11add367bc69dcba9cc4552352999f1279e06c07f73557",
+      "cleanCheckoutSha256": "e58e31c9c9a8e818bc11add367bc69dcba9cc4552352999f1279e06c07f73557",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "frontend/cleanup-renewal-integration.mjs",
+      "gitBlob": "6a6f8b576930613990a954442a3769a97723a360",
+      "workingTreeSha256": "d3243b1c534fb10c8b8e3f785da456483ec3fed5df86cd11697c396af11a51ad",
+      "cleanCheckoutSha256": "d3243b1c534fb10c8b8e3f785da456483ec3fed5df86cd11697c396af11a51ad",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "frontend/serve-booking-web.mjs",
+      "gitBlob": "54934db930ab9d0619ecb8ae471ed856e7f46f0c",
+      "workingTreeSha256": "e44637f6cfafdb83826c1b70c433d38f1daa1da0ca2c4dba058c0ca4ee41cc40",
+      "cleanCheckoutSha256": "e44637f6cfafdb83826c1b70c433d38f1daa1da0ca2c4dba058c0ca4ee41cc40",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "frontend/verify-core-integration.mjs",
+      "gitBlob": "8aa7e38e1aea56a7ce9bf448ed68c0b7e2468b13",
+      "workingTreeSha256": "20a278ed7e8befc54578336f5b396df4e717bbc7f4f509c2adbb71daf53a8346",
+      "cleanCheckoutSha256": "20a278ed7e8befc54578336f5b396df4e717bbc7f4f509c2adbb71daf53a8346",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "frontend/verify-face-enrollment.mjs",
+      "gitBlob": "446fd541a38bc7b083ce917ec56a62a4cd75280a",
+      "workingTreeSha256": "337725cf3fd2cfe1002a91455ba37ef21863f994a7115b658653ed37ad88cd49",
+      "cleanCheckoutSha256": "337725cf3fd2cfe1002a91455ba37ef21863f994a7115b658653ed37ad88cd49",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "frontend/verify-member-account-activation.mjs",
+      "gitBlob": "380e052f2b0ccc84387b92a40aa2b155d4a27d22",
+      "workingTreeSha256": "98a89683002e18b1dc9df046d21df0fc70f9e3ab38764629e8307ee02dcb7ae5",
+      "cleanCheckoutSha256": "98a89683002e18b1dc9df046d21df0fc70f9e3ab38764629e8307ee02dcb7ae5",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "frontend/verify-renewal-integration.mjs",
+      "gitBlob": "3cbc3688fe039933706c024d50095ea39cd92b34",
+      "workingTreeSha256": "1cca83822496246d128667bae4efd144a0bf0be9d1e0eacd27e373a41209d81f",
+      "cleanCheckoutSha256": "1cca83822496246d128667bae4efd144a0bf0be9d1e0eacd27e373a41209d81f",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "frontend/web-build-preflight.mjs",
+      "gitBlob": "8b547846da20dec479202f098ace80d669a87722",
+      "workingTreeSha256": "806cfb91ac466405eb1abe12b9b13bd8ea6ba6a419eae49cc5732b5f195a9006",
+      "cleanCheckoutSha256": "806cfb91ac466405eb1abe12b9b13bd8ea6ba6a419eae49cc5732b5f195a9006",
+      "eolOnlyDifference": false
+    },
+    {
+      "path": "frontend/web-build-preflight.test.mjs",
+      "gitBlob": "b6381032d8c64dce01e5e46a570995cf56527ef7",
+      "workingTreeSha256": "fa33672d3b4d5b96fb6605a817c376d19f74b3e4ce8567b4e4ab416b13498867",
+      "cleanCheckoutSha256": "e4b6cf11e918f94886a423f85524c87dca5953d70eb850b1b5da4eb815f05bda",
+      "eolOnlyDifference": true
+    }
+  ],
+  "fullBackendTree": "849a8e08a7d8dcd1b1fdf97330650b10eb3af2bb",
+  "finalBackendTree": "849a8e08a7d8dcd1b1fdf97330650b10eb3af2bb",
+  "flutterAppTrees": {
+    "member": "757e04461e6d9c864ce23a9376b6ac3c374d75e3",
+    "pt": "8e242f29440f519707932840fa7ab6ea7fa4836a",
+    "ad": "70a37bcf8b4efda0d17242a0224c44cec93bb506"
+  }
+}
