@@ -9,11 +9,7 @@ class KioskMembershipInvalidScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 100,
-            color: Colors.orangeAccent,
-          ),
+          Icon(Icons.error_outline, size: 100, color: Colors.orangeAccent),
           SizedBox(height: 24),
           Text(
             'Membership không còn hiệu lực',
@@ -28,10 +24,7 @@ class KioskMembershipInvalidScreen extends StatelessWidget {
           Text(
             'Vui lòng liên hệ nhân viên để được hỗ trợ.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 20,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 20),
           ),
         ],
       ),

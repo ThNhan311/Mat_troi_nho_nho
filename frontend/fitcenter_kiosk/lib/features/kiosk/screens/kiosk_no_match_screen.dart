@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 class KioskNoMatchScreen extends StatelessWidget {
-  const KioskNoMatchScreen({
-    super.key,
-    required this.onRetry,
-  });
+  const KioskNoMatchScreen({super.key, required this.onRetry});
 
   final VoidCallback onRetry;
 
@@ -32,10 +29,7 @@ class KioskNoMatchScreen extends StatelessWidget {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: onRetry,
-            child: const Text(
-              'Thử lại',
-              style: TextStyle(fontSize: 20),
-            ),
+            child: const Text('Thử lại', style: TextStyle(fontSize: 20)),
           ),
         ],
       ),

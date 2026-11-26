@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 class KioskSleepingScreen extends StatelessWidget {
-  const KioskSleepingScreen({
-    super.key,
-    required this.onWake,
-  });
+  const KioskSleepingScreen({super.key, required this.onWake});
 
   final VoidCallback onWake;
 
@@ -19,11 +16,7 @@ class KioskSleepingScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.bedtime_outlined,
-                size: 72,
-                color: Colors.white54,
-              ),
+              Icon(Icons.bedtime_outlined, size: 72, color: Colors.white54),
               SizedBox(height: 20),
               Text(
                 'FitCenter',

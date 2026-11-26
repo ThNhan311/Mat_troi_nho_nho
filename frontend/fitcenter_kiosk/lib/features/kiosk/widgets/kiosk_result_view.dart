@@ -24,11 +24,7 @@ class KioskResultView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 100,
-              color: color,
-            ),
+            Icon(icon, size: 100, color: color),
             const SizedBox(height: 24),
             Text(
               title,
@@ -44,16 +40,10 @@ class KioskResultView extends StatelessWidget {
               Text(
                 message!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 20,
-                ),
+                style: const TextStyle(color: Colors.white70, fontSize: 20),
               ),
             ],
-            if (action != null) ...[
-              const SizedBox(height: 24),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 24), action!],
           ],
         ),
       ),

@@ -9,11 +9,7 @@ class EnrollmentSuccessScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.check_circle,
-            size: 88,
-            color: Colors.greenAccent,
-          ),
+          Icon(Icons.check_circle, size: 88, color: Colors.greenAccent),
           SizedBox(height: 24),
           Text(
             'Đăng ký khuôn mặt thành công',

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 class KioskSuccessScreen extends StatelessWidget {
-  const KioskSuccessScreen({
-    super.key,
-    required this.memberName,
-  });
+  const KioskSuccessScreen({super.key, required this.memberName});
 
   final String memberName;
 
@@ -14,11 +11,7 @@ class KioskSuccessScreen extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.check_circle,
-            size: 100,
-            color: Colors.greenAccent,
-          ),
+          const Icon(Icons.check_circle, size: 100, color: Colors.greenAccent),
           const SizedBox(height: 24),
           Text(
             'Xin chào, $memberName!',

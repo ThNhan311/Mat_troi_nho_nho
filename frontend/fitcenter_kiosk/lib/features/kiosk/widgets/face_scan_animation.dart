@@ -36,21 +36,12 @@ class _FaceScanAnimationState extends State<FaceScanAnimation>
           width: 220,
           height: 280,
           decoration: BoxDecoration(
-            border: Border.all(
-              color: Colors.greenAccent,
-              width: 3,
-            ),
+            border: Border.all(color: Colors.greenAccent, width: 3),
             borderRadius: BorderRadius.circular(24),
           ),
           child: Align(
-            alignment: Alignment(
-              0,
-              -1 + (_controller.value * 2),
-            ),
-            child: Container(
-              height: 3,
-              color: Colors.greenAccent,
-            ),
+            alignment: Alignment(0, -1 + (_controller.value * 2)),
+            child: Container(height: 3, color: Colors.greenAccent),
           ),
         );
       },
