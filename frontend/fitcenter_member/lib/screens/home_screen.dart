@@ -33,8 +33,8 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildBrandHeader(context),
-            ApiStatus(state: state),
-            const SizedBox(height: 32),
+            ApiStatus(state: state, showRefresh: false),
+            const SizedBox(height: 20),
             const Text(
               'Xin chào!',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
@@ -98,20 +98,6 @@ class HomeScreen extends StatelessWidget {
               subtitle: 'Quản lý lịch tập của bạn',
               onTap: onOpenSchedule,
             ),
-            const SizedBox(height: 10),
-            FeatureTile(
-              icon: Icons.fitness_center,
-              title: 'Kế hoạch tập luyện',
-              subtitle: 'Xem và theo dõi chương trình tập',
-              onTap: () => onShowMessage('Chưa khả dụng'),
-            ),
-            const SizedBox(height: 10),
-            FeatureTile(
-              icon: Icons.fact_check_outlined,
-              title: 'Lịch sử điểm danh',
-              subtitle: 'Theo dõi các buổi đã điểm danh',
-              onTap: () => onShowMessage('Chưa khả dụng'),
-            ),
             const SizedBox(height: 20),
           ],
         ),
@@ -157,10 +143,7 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
-          onPressed: () => onShowMessage('Chưa khả dụng'),
-          icon: const Icon(Icons.notifications_none),
-        ),
+        RefreshStateButton(state: state),
       ],
     );
   }

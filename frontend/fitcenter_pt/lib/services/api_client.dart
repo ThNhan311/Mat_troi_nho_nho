@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'session_store.dart';
+
 class ApiError implements Exception {
   final int status;
   final String code, message;
@@ -21,8 +23,10 @@ class ApiError implements Exception {
       '$message [$code]${correlationId == null ? '' : ' • Mã đối chiếu: ${correlationId!}'}';
 }
 
-/// Tokens exist only in this instance. No persistence, dumps or automatic write replay.
+/// Tokens exist only in this instance unless an optional [SessionStore] is
+/// given (local testing only). No dumps or automatic write replay.
 class ApiClient extends ChangeNotifier {
+  final SessionStore? _store;
   static const configuredUrl = String.fromEnvironment('API_BASE_URL');
   final String expectedRole;
   final Uri? baseUri;
@@ -39,8 +43,25 @@ class ApiClient extends ChangeNotifier {
     Uri? baseUri,
     http.Client? client,
     this.timeout = const Duration(seconds: 15),
+    SessionStore? store,
   }) : baseUri = baseUri ?? Uri.tryParse(configuredUrl),
-       _http = client ?? http.Client();
+       _http = client ?? http.Client(),
+       _store = store {
+    _restore();
+  }
+
+  void _restore() {
+    final saved = _store?.read();
+    if (saved == null) return;
+    try {
+      // Same role and token checks as a server response.
+      _acceptTokens(jsonDecode(saved), _generation);
+    } on FormatException {
+      _store?.clear();
+    } on ApiError {
+      _store?.clear();
+    }
+  }
 
   Uri uri(String path, [Map<String, String>? query]) {
     final base = baseUri;
@@ -67,6 +88,7 @@ class ApiClient extends ChangeNotifier {
     _refreshing = null;
     _access = null;
     _refresh = null;
+    _store?.clear();
     notifyListeners();
   }
 
@@ -161,6 +183,13 @@ class ApiClient extends ChangeNotifier {
     }
     _access = body['accessToken'] as String;
     _refresh = body['refreshToken'] as String;
+    _store?.write(
+      jsonEncode({
+        'role': expectedRole,
+        'accessToken': _access,
+        'refreshToken': _refresh,
+      }),
+    );
   }
 
   Future<void> login(String email, String password) async {
@@ -262,6 +291,51 @@ class ApiClient extends ChangeNotifier {
     // DELETE returns an empty 204; do not JSON-decode it.
     if (expectedStatus == 204) return null;
     return _decode(response);
+  }
+
+  /// Authenticated picture call. Returns null when there is no picture (204).
+  /// Replacing or removing one's own picture is idempotent, so it may be sent
+  /// again once after a token refresh.
+  Future<Uint8List?> picture(
+    String method, {
+    String path = '/avatar/me',
+    Uint8List? bytes,
+    String? contentType,
+  }) async {
+    final generation = _generation;
+    final sentToken = _access;
+    if (sentToken == null) {
+      throw const ApiError(401, 'SESSION_EXPIRED', 'Hãy đăng nhập lại.');
+    }
+    Future<http.Response> send(String token) async {
+      final request = http.Request(method, uri(path))
+        ..headers['Authorization'] = 'Bearer $token';
+      if (bytes != null) {
+        request.headers['Content-Type'] = contentType!;
+        request.bodyBytes = bytes;
+      }
+      try {
+        return await (() async => http.Response.fromStream(
+          await _http.send(request),
+        ))().timeout(timeout);
+      } on TimeoutException {
+        throw const ApiError(0, 'NETWORK_TIMEOUT', 'Hết thời gian xử lý ảnh.');
+      } on http.ClientException {
+        throw const ApiError(0, 'NETWORK_ERROR', 'Không kết nối được máy chủ.');
+      }
+    }
+
+    var response = await send(sentToken);
+    if (response.statusCode == 401 && generation == _generation) {
+      if (_access == sentToken) await _refreshOnce();
+      if (generation == _generation) response = await send(_access!);
+    }
+    if (generation != _generation) {
+      throw const ApiError(401, 'SESSION_CHANGED', 'Phiên đã thay đổi.');
+    }
+    if (response.statusCode == 204) return null;
+    if (response.statusCode != 200) throw _error(response);
+    return response.bodyBytes;
   }
 
   @override

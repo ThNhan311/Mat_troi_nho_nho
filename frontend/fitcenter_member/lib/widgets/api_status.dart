@@ -4,25 +4,14 @@ import '../services/booking_state.dart';
 
 class ApiStatus extends StatelessWidget {
   final BookingState state;
-  const ApiStatus({super.key, required this.state});
+  final bool showRefresh;
+  const ApiStatus({super.key, required this.state, this.showRefresh = true});
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Row(
-        children: [
-          const Text('Giờ Việt Nam (UTC+07:00)'),
-          const Spacer(),
-          IconButton(
-            key: const Key('refresh'),
-            tooltip: 'Tải lại',
-            onPressed: state.loading || state.busy
-                ? null
-                : () => state.refresh(manual: true),
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
+      if (showRefresh)
+        Row(children: [const Spacer(), RefreshStateButton(state: state)]),
       if (state.loading) const LinearProgressIndicator(),
       if (state.error != null)
         Padding(
@@ -43,6 +32,20 @@ class ApiStatus extends StatelessWidget {
           'Kết quả chưa rõ. Tải lại và kiểm tra lịch trước khi thử lại.',
         ),
     ],
+  );
+}
+
+class RefreshStateButton extends StatelessWidget {
+  final BookingState state;
+  const RefreshStateButton({super.key, required this.state});
+  @override
+  Widget build(BuildContext context) => IconButton(
+    key: const Key('refresh'),
+    tooltip: 'Tải lại',
+    onPressed: state.loading || state.busy
+        ? null
+        : () => state.refresh(manual: true),
+    icon: const Icon(Icons.refresh),
   );
 }
 

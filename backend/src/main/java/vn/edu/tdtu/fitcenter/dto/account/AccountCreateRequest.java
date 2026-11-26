@@ -8,15 +8,17 @@ import tools.jackson.databind.deser.std.StdDeserializer;
 import java.util.Set;
 
 @JsonDeserialize(using = AccountCreateRequest.Deserializer.class)
-public record AccountCreateRequest(@NotBlank @Email @Size(max=255) String email, @NotBlank String fullName) {
+public record AccountCreateRequest(@NotBlank @Email @Size(max=255) String email, @NotBlank String fullName,
+        @Pattern(regexp=PhoneNumbers.PATTERN, message="phone must be a Vietnamese number") String phone) {
+    public AccountCreateRequest(String email, String fullName) { this(email, fullName, null); }
     @AssertTrue(message="fullName exceeds VARCHAR(150)")
     public boolean isNameWithinStorageLimit() { return fullName==null || fullName.codePointCount(0,fullName.length())<=150; }
     public static final class Deserializer extends StdDeserializer<AccountCreateRequest> {
         public Deserializer(){super(AccountCreateRequest.class);}
         @Override public AccountCreateRequest deserialize(JsonParser p, DeserializationContext c){
             JsonNode n=c.readTree(p);
-            if(!n.isObject() || !Set.of("email","fullName").containsAll(n.propertyNames())) return c.reportInputMismatch(this,"Only email/fullName accepted");
-            return new AccountCreateRequest(text(n,"email",c),text(n,"fullName",c));
+            if(!n.isObject() || !Set.of("email","fullName","phone").containsAll(n.propertyNames())) return c.reportInputMismatch(this,"Only email/fullName/phone accepted");
+            return new AccountCreateRequest(text(n,"email",c),text(n,"fullName",c),text(n,"phone",c));
         }
         private String text(JsonNode n,String key,DeserializationContext c){
             var v=n.get(key);if(v==null||v.isNull())return null;

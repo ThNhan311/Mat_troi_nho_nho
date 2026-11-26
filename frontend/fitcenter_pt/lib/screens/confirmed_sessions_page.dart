@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/booking_state.dart';
 import '../services/vietnam_time.dart';
 import '../widgets/api_status.dart';
+import '../widgets/page_header.dart';
 
 class ConfirmedSessionsPage extends StatefulWidget {
   final BookingState state;
@@ -87,29 +88,19 @@ class _ConfirmedSessionsPageState extends State<ConfirmedSessionsPage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            ApiStatus(state: widget.state),
             Row(
               children: [
-                Icon(Icons.event_note, size: 32, color: colors.primary),
-                const SizedBox(width: 12),
                 const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Buổi tập đã xác nhận',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text('Theo dõi lịch tập với học viên'),
-                    ],
+                  child: PageHeader(
+                    icon: Icons.event_note,
+                    title: 'Buổi tập',
+                    subtitle: 'Theo dõi lịch tập với học viên',
                   ),
                 ),
+                RefreshStateButton(state: widget.state),
               ],
             ),
+            ApiStatus(state: widget.state, showRefresh: false),
             const SizedBox(height: 24),
 
             // Tổng số buổi tập đã xác nhận.
@@ -200,17 +191,6 @@ class _ConfirmedSessionsPageState extends State<ConfirmedSessionsPage> {
               _buildEmptyState(context)
             else
               ...sessions.map((session) => _buildSessionCard(context, session)),
-
-            const SizedBox(height: 16),
-
-            Text(
-              'Giờ Việt Nam (UTC+07:00).',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-            ),
           ],
         ),
       ),

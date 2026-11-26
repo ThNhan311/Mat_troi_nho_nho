@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/page_header.dart';
 import '../services/booking_state.dart';
 import '../widgets/api_status.dart';
+import '../widgets/avatar.dart';
 import 'trainer_detail_page.dart';
 
 class TrainerListPage extends StatelessWidget {
@@ -24,8 +25,6 @@ class TrainerListPage extends StatelessWidget {
           'name': t.fullName,
           'specialty': t.specialization ?? 'Chưa có thông tin',
           'experience': t.experienceSummary ?? 'Chưa có thông tin',
-          'rating': 'Chưa khả dụng',
-          'sessions': 'Chưa khả dụng',
           'initials': t.fullName
               .trim()
               .split(RegExp(r'\s+'))
@@ -152,20 +151,26 @@ class TrainerListPage extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Text(
-                    trainer['initials'] as String,
-                    style: TextStyle(
-                      color: colors.primary,
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold,
+              RemoteAvatar(
+                key: ValueKey('trainer-avatar-${trainer['id']}'),
+                api: state.service.api,
+                path: '/trainers/${trainer['id']}/avatar',
+                size: 64,
+                fallback: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Center(
+                    child: Text(
+                      trainer['initials'] as String,
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontSize: 21,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -204,37 +209,6 @@ class TrainerListPage extends StatelessWidget {
           const SizedBox(height: 16),
           Divider(color: colors.onSurface.withValues(alpha: 0.08), height: 1),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Icon(Icons.star, color: colors.primary, size: 18),
-              const SizedBox(width: 5),
-              Text(
-                trainer['rating'] as String,
-                style: TextStyle(
-                  color: colors.onSurface,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Icon(
-                Icons.fitness_center,
-                color: colors.onSurface.withValues(alpha: 0.55),
-                size: 17,
-              ),
-              const SizedBox(width: 5),
-              Expanded(
-                child: Text(
-                  trainer['sessions'] as String,
-                  style: TextStyle(
-                    color: colors.onSurface.withValues(alpha: 0.65),
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -251,12 +225,15 @@ class TrainerListPage extends StatelessWidget {
                         MaterialPageRoute<void>(
                           builder: (_) => TrainerDetailPage(
                             trainerName: detail.fullName,
+                            avatar: RemoteAvatar(
+                              api: state.service.api,
+                              path: '/trainers/${detail.id}/avatar',
+                              size: 110,
+                            ),
                             specialty:
                                 detail.specialization ?? 'Chưa có thông tin',
                             experience:
                                 detail.experienceSummary ?? 'Chưa có thông tin',
-                            rating: 'Chưa khả dụng',
-                            sessions: 'Chưa khả dụng',
                             bio: detail.bio,
                             onShowMessage: onShowMessage,
                             onBookAppointment: () {

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:fitcenter_ad/main.dart';
+import 'package:fitcenter_ad/screens/home_page.dart';
 import 'package:fitcenter_ad/services/initial_activation_service.dart';
 import 'package:fitcenter_ad/screens/initial_activation_page.dart';
 import 'package:fitcenter_ad/services/api_client.dart';
@@ -99,8 +100,14 @@ Future<void> open(WidgetTester t, ApiClient a, {bool app = false}) async {
   );
   await t.pumpAndSettle();
   if (app) {
-    await t.ensureVisible(find.text('Kích hoạt Gói hội viên'));
-    await t.tap(find.text('Kích hoạt Gói hội viên'));
+    // The page left the menu (packages are handled from the account list); it
+    // is still pushed here to check that logout drops it and its dialogs.
+    Navigator.of(t.element(find.byType(AdminHomePage))).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            InitialActivationPage(service: InitialActivationService(a)),
+      ),
+    );
     await t.pumpAndSettle();
   }
 }

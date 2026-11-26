@@ -436,7 +436,7 @@ class _InitialActivationPageState extends State<InitialActivationPage> {
                       child: SelectableText(result!.paymentId),
                     ),
                     const Text(
-                      'Đây là bản ghi lúc kích hoạt. Tài khoản đăng nhập không thay đổi. Gia hạn và Face: Chưa khả dụng.',
+                      'Đây là bản ghi lúc kích hoạt. Tài khoản đăng nhập không thay đổi.',
                     ),
                   ],
                 ),

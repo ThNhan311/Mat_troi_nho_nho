@@ -12,9 +12,11 @@ class ProfilePage extends StatefulWidget {
   final VoidCallback onOpenBookingHistory;
   final VoidCallback onOpenMembership;
   final VoidCallback onLogout;
+  final Widget? avatar;
 
   const ProfilePage({
     super.key,
+    this.avatar,
     required this.isDark,
     required this.onToggleTheme,
     required this.onShowMessage,
@@ -29,13 +31,10 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String fullName = 'Hội viên';
-  String email = 'Thông tin cá nhân: Chưa khả dụng';
 
   static const Color _lightIconColor = Color(0xFF737B87);
   static const Color _lightIconBackground = Color(0xFFF0F1F3);
   static const Color _lightBorderColor = Color(0xFFE5E7EB);
-  static const Color _lightBadgeTextColor = Color(0xFF626B78);
-  static const Color _lightBadgeBackground = Color(0xFFF1F2F4);
 
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
 
@@ -49,11 +48,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Color get _cardBorderColor => _isDark
       ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.25)
       : _lightBorderColor;
-
-  Color get _badgeTextColor => _isDark ? primaryColor : _lightBadgeTextColor;
-
-  Color get _badgeBackground =>
-      _isDark ? primaryColor.withValues(alpha: 0.12) : _lightBadgeBackground;
 
   @override
   Widget build(BuildContext context) {
@@ -83,13 +77,6 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 12),
 
               _buildMenuItem(
-                icon: Icons.person_outline,
-                title: 'Thông tin cá nhân',
-                subtitle: 'Họ tên, số điện thoại, email',
-                onTap: () => _showEditProfileDialog(context),
-              ),
-
-              _buildMenuItem(
                 icon: Icons.card_membership_outlined,
                 title: 'Gói hội viên',
                 subtitle: 'Xem thông tin gói tập hiện tại',
@@ -101,15 +88,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 title: 'Lịch sử đặt lịch',
                 subtitle: 'Xem các buổi tập PT đã đặt',
                 onTap: widget.onOpenBookingHistory,
-              ),
-
-              _buildMenuItem(
-                icon: Icons.history_toggle_off,
-                title: 'Lịch sử tập luyện',
-                subtitle: 'Theo dõi những buổi tập đã hoàn thành',
-                onTap: () {
-                  widget.onShowMessage('Chưa khả dụng');
-                },
               ),
 
               const SizedBox(height: 28),
@@ -142,15 +120,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     activeThumbColor: primaryColor,
                   ),
                 ),
-              ),
-
-              _buildMenuItem(
-                icon: Icons.notifications_none,
-                title: 'Thông báo',
-                subtitle: 'Nhắc lịch tập và lịch hẹn PT',
-                onTap: () {
-                  widget.onShowMessage('Chưa khả dụng');
-                },
               ),
 
               _buildMenuItem(
@@ -219,15 +188,16 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       child: Column(
         children: [
-          Container(
-            width: 84,
-            height: 84,
-            decoration: BoxDecoration(
-              color: iconBackground,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.person, size: 46, color: iconColor),
-          ),
+          widget.avatar ??
+              Container(
+                width: 84,
+                height: 84,
+                decoration: BoxDecoration(
+                  color: iconBackground,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.person, size: 46, color: iconColor),
+              ),
 
           const SizedBox(height: 14),
 
@@ -240,36 +210,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
 
-          const SizedBox(height: 6),
-
-          Text(
-            email,
-            style: TextStyle(
-              color: colors.onSurface.withValues(alpha: 0.6),
-              fontSize: 13,
-            ),
-          ),
-
-          const SizedBox(height: 14),
-
-          // Huy hiệu trung tính, giảm độ chói trong giao diện sáng.
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            decoration: BoxDecoration(
-              color: _badgeBackground,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _cardBorderColor, width: 0.8),
-            ),
-            child: Text(
-              'Hội viên',
-              style: TextStyle(
-                color: _badgeTextColor,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -368,7 +308,4 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
-
-  void _showEditProfileDialog(BuildContext context) =>
-      widget.onShowMessage('Chưa khả dụng');
 }

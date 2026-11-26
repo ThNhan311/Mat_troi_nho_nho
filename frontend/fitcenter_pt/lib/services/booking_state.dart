@@ -104,7 +104,7 @@ class BookingState extends ChangeNotifier {
 
   Map<String, dynamic> session(Booking b) => {
     'id': b.id,
-    'memberName': 'Member ${shortId(b.memberId)}',
+    'memberName': 'Học viên ${shortId(b.memberId)}',
     'date': vietnamDate(b.startAt),
     'start': vietnamClock(b.startAt),
     'end': vietnamClock(b.endAt),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/booking_service.dart';
 import '../services/booking_state.dart';
 import '../services/membership_service.dart';
+import '../widgets/avatar.dart';
 import 'membership_page.dart';
 import 'home_screen.dart';
 import 'schedule_page.dart';
@@ -81,14 +82,6 @@ class _HomePageState extends State<HomePage> {
             service: MembershipService(widget.service.api),
             active: selectedIndex == 2,
           ),
-          ProfilePage(
-            isDark: Theme.of(context).brightness == Brightness.dark,
-            onToggleTheme: widget.onToggleTheme,
-            onShowMessage: _showMessage,
-            onOpenMembership: () => _selectPage(2),
-            onLogout: widget.onLogout,
-            onOpenBookingHistory: history,
-          ),
           TrainerListPage(
             state: state,
             onShowMessage: _showMessage,
@@ -96,6 +89,20 @@ class _HomePageState extends State<HomePage> {
               _selectPage(1);
               state.selectTrainer(id);
             },
+          ),
+          ProfilePage(
+            avatar: AvatarEditor(
+              api: widget.service.api,
+              size: 96,
+              active: selectedIndex == 4,
+              onMessage: _showMessage,
+            ),
+            isDark: Theme.of(context).brightness == Brightness.dark,
+            onToggleTheme: widget.onToggleTheme,
+            onShowMessage: _showMessage,
+            onOpenMembership: () => _selectPage(2),
+            onLogout: widget.onLogout,
+            onOpenBookingHistory: history,
           ),
         ],
       ),
@@ -137,14 +144,14 @@ class _HomePageState extends State<HomePage> {
               label: 'Gói hội viên',
             ),
             NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Cá nhân',
-            ),
-            NavigationDestination(
               icon: Icon(Icons.fitness_center_outlined),
               selectedIcon: Icon(Icons.fitness_center),
               label: 'PT',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Cá nhân',
             ),
           ],
         ),

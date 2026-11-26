@@ -30,11 +30,13 @@ public class AdminAccountService {
     public AccountResponse create(String actorEmail, Role role, AccountCreateRequest request) {
         UUID admin=actor(actorEmail);
         if(role!=Role.MEMBER && role!=Role.PT)throw new IllegalArgumentException("Only Member/PT creation");
+        // personal_trainers has no phone column.
+        if(role==Role.PT && request.phone()!=null)throw new IllegalArgumentException("Phone is stored for members only");
         byte[] random=new byte[32];new SecureRandom().nextBytes(random);
         var user=users.saveAndFlush(User.builder().email(request.email().trim()).role(role).status(AccountStatus.DISABLED)
                 .passwordHash(encoder.encode(Base64.getUrlEncoder().withoutPadding().encodeToString(random))).build());
         UUID profile=role==Role.MEMBER
-                ? members.saveAndFlush(Member.builder().user(user).fullName(request.fullName()).build()).getId()
+                ? members.saveAndFlush(Member.builder().user(user).fullName(request.fullName()).phone(request.phone()).build()).getId()
                 : pts.saveAndFlush(PersonalTrainer.builder().user(user).fullName(request.fullName()).build()).getId();
         jdbc.update("INSERT INTO audit_logs(actor_user_id,actor_type,action,entity_type,entity_id,details) VALUES(?,'USER','ACCOUNT_CREATED_PENDING_ACTIVATION','USER',?,jsonb_build_object('role',?::text))",admin,user.getId(),role.name());
         return new AccountResponse(user.getId(),profile,user.getEmail(),request.fullName(),role.name(),"DISABLED",true);

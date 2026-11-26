@@ -339,14 +339,6 @@ class _SchedulePageState extends State<SchedulePage> {
                   value: '$trainedCount ngày',
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _statCard(
-                  icon: Icons.event_busy_outlined,
-                  title: 'Tự tập',
-                  value: 'Chưa khả dụng',
-                ),
-              ),
             ],
           ),
 

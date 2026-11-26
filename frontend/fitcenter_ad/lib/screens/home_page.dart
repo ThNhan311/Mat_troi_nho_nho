@@ -1,14 +1,18 @@
+import 'face_enroll_dialog.dart';
+import 'open_kiosk_button.dart';
 import 'face_enrollment_page.dart';
 import '../services/face_enrollment_service.dart';
 import 'payment_simulator_page.dart';
+import 'report_pages.dart';
+import '../services/report_service.dart';
+import '../services/kiosk_desk_service.dart';
 import '../services/payment_simulator_service.dart';
-import 'initial_activation_page.dart';
-import '../services/initial_activation_service.dart';
 import '../services/booking_policy_service.dart';
 
 import 'package:flutter/material.dart';
 
 import 'booking_policy_page.dart';
+import 'desktop_shell.dart';
 import 'membership_page.dart';
 import 'account_page.dart';
 import '../services/admin_account_service.dart';
@@ -32,6 +36,77 @@ class AdminHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          constraints.maxWidth >= adminDesktopBreakpoint
+          ? AdminDesktopShell(
+              sections: _sections(),
+              shortcut: faceKioskEnabled
+                  ? OpenKioskButton(service: KioskDeskService(service.api))
+                  : null,
+              onLogout: onLogout,
+              onToggleTheme: onToggleTheme,
+            )
+          : _compact(context),
+    );
+  }
+
+  List<AdminSection> _sections() => [
+    AdminSection(
+      icon: Icons.calendar_month_outlined,
+      title: 'Lịch tập',
+      maxWidth: 1280,
+      builder: (_) => SchedulePage(service: ReportService(service.api)),
+    ),
+    AdminSection(
+      group: 'Quản lý',
+      icon: Icons.manage_accounts_outlined,
+      title: 'Hội viên & PT',
+      maxWidth: 1280,
+      builder: (_) => AccountsPage(
+        service: AdminAccountService(service.api),
+        onLogout: onLogout,
+        kiosk: _kiosk,
+      ),
+    ),
+    AdminSection(
+      group: 'Quản lý',
+      icon: Icons.card_membership_outlined,
+      title: 'Gói tập',
+      maxWidth: 1280,
+      builder: (_) => MembershipPage(service: plans, onLogout: onLogout),
+    ),
+    AdminSection(
+      group: 'Vận hành',
+      icon: Icons.event_available_outlined,
+      title: 'Chính sách đặt lịch',
+      builder: (_) => BookingPolicyPage(service: service, onLogout: onLogout),
+    ),
+    AdminSection(
+      group: 'Vận hành',
+      icon: Icons.payments_outlined,
+      title: 'Thanh toán mô phỏng',
+      maxWidth: 1000,
+      builder: (_) =>
+          PaymentSimulatorPage(service: PaymentSimulatorService(service.api)),
+    ),
+    // With a camera screen, faces are handled in the account list.
+    if (!faceKioskEnabled)
+      AdminSection(
+        group: 'Vận hành',
+        icon: Icons.face_outlined,
+        title: 'Đăng ký khuôn mặt',
+        builder: (_) => _facePage(),
+      ),
+  ];
+
+  KioskDeskService? get _kiosk =>
+      faceKioskEnabled ? KioskDeskService(service.api) : null;
+
+  Widget _facePage() =>
+      FaceEnrollmentPage(service: FaceEnrollmentService(service.api));
+
+  Widget _compact(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -94,44 +169,30 @@ class AdminHomePage extends StatelessWidget {
               ),
               const SizedBox(height: 28),
 
-              _SectionTitle(title: 'TỔNG QUAN', trailing: 'Chưa khả dụng'),
-              const SizedBox(height: 14),
+              if (faceKioskEnabled) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OpenKioskButton(
+                    service: KioskDeskService(service.api),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
 
-              GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 1.28,
-                children: const [
-                  _SummaryCard(
-                    icon: Icons.people_outline,
-                    title: 'Hội viên',
-                    value: '—',
-                  ),
-                  _SummaryCard(
-                    icon: Icons.fitness_center,
-                    title: 'Huấn luyện viên',
-                    value: '—',
-                  ),
-                  _SummaryCard(
-                    icon: Icons.calendar_month_outlined,
-                    title: 'Lịch đặt',
-                    value: '—',
-                  ),
-                  _SummaryCard(
-                    icon: Icons.payments_outlined,
-                    title: 'Thanh toán',
-                    value: '—',
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 30),
               const _SectionTitle(title: 'QUẢN LÝ HỆ THỐNG'),
               const SizedBox(height: 14),
 
+              _AdminMenuCard(
+                icon: Icons.calendar_month_outlined,
+                title: 'Lịch tập',
+                subtitle: 'Lịch của tất cả PT và hội viên',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        SchedulePage(service: ReportService(service.api)),
+                  ),
+                ),
+              ),
               _AdminMenuCard(
                 icon: Icons.manage_accounts_outlined,
                 title: 'Hội viên & PT',
@@ -143,24 +204,22 @@ class AdminHomePage extends StatelessWidget {
                       builder: (_) => AccountsPage(
                         service: AdminAccountService(service.api),
                         onLogout: onLogout,
+                        kiosk: _kiosk,
                       ),
                     ),
                   );
                 },
               ),
 
-              _AdminMenuCard(
-                icon: Icons.face_outlined,
-                title: 'Đăng ký khuôn mặt',
-                subtitle: 'Xác minh hội viên, consent và quản lý hồ sơ',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => FaceEnrollmentPage(
-                      service: FaceEnrollmentService(service.api),
-                    ),
-                  ),
+              if (!faceKioskEnabled)
+                _AdminMenuCard(
+                  icon: Icons.face_outlined,
+                  title: 'Đăng ký khuôn mặt',
+                  subtitle: 'Xác minh hội viên, consent và quản lý hồ sơ',
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute<void>(builder: (_) => _facePage())),
                 ),
-              ),
               _AdminMenuCard(
                 icon: Icons.card_membership_outlined,
                 title: 'Gói tập',
@@ -171,22 +230,6 @@ class AdminHomePage extends StatelessWidget {
                     MaterialPageRoute<void>(
                       builder: (_) =>
                           MembershipPage(service: plans, onLogout: onLogout),
-                    ),
-                  );
-                },
-              ),
-
-              _AdminMenuCard(
-                icon: Icons.person_add_alt_1_outlined,
-                title: 'Kích hoạt Gói hội viên',
-                subtitle: 'Ghi nhận thanh toán quầy cho Member đã tồn tại',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (_) => InitialActivationPage(
-                        service: InitialActivationService(service.api),
-                      ),
                     ),
                   );
                 },
@@ -221,22 +264,6 @@ class AdminHomePage extends StatelessWidget {
                   ),
                 ),
               ),
-              _AdminMenuCard(
-                icon: Icons.receipt_long_outlined,
-                title: 'Lịch sử hoạt động',
-                subtitle: 'Theo dõi booking, thanh toán và điểm danh',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (_) => const _ComingSoonPage(
-                        title: 'Chưa khả dụng',
-                        description: 'Chức năng chưa khả dụng.',
-                      ),
-                    ),
-                  );
-                },
-              ),
             ],
           ),
         ),
@@ -247,9 +274,8 @@ class AdminHomePage extends StatelessWidget {
 
 class _SectionTitle extends StatelessWidget {
   final String title;
-  final String? trailing;
 
-  const _SectionTitle({required this.title, this.trailing});
+  const _SectionTitle({required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -265,75 +291,7 @@ class _SectionTitle extends StatelessWidget {
             ),
           ),
         ),
-        if (trailing != null)
-          Text(trailing!, style: Theme.of(context).textTheme.bodySmall),
       ],
-    );
-  }
-}
-
-class _SummaryCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String value;
-
-  const _SummaryCard({
-    required this.icon,
-    required this.title,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = theme.colorScheme.primary;
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: theme.dividerColor.withOpacity(0.12)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.13),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: color, size: 23),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall,
-                ),
-                const SizedBox(height: 5),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: 23,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -400,26 +358,6 @@ class _AdminMenuCard extends StatelessWidget {
               const Icon(Icons.chevron_right, size: 22),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ComingSoonPage extends StatelessWidget {
-  final String title;
-  final String description;
-
-  const _ComingSoonPage({required this.title, required this.description});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(description, textAlign: TextAlign.center),
         ),
       ),
     );

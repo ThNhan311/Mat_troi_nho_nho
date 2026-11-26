@@ -20,6 +20,7 @@ class _PtActivationPageState extends State<PtActivationPage> {
       _confirm = TextEditingController();
   int _phase = 0;
   bool _busy = false, _unknown = false;
+  bool _hidePassword = true, _hideConfirm = true;
   String? _error, _grant;
   late final int _epoch = widget.service.session.sessionEpoch;
   bool get _current => mounted && widget.service.session.sessionEpoch == _epoch;
@@ -181,9 +182,22 @@ class _PtActivationPageState extends State<PtActivationPage> {
                         key: const Key('activation-password'),
                         controller: _password,
                         enabled: !_busy && !_unknown,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: _hidePassword,
+                        decoration: InputDecoration(
                           labelText: 'Mật khẩu mới',
+                          suffixIcon: IconButton(
+                            tooltip: _hidePassword
+                                ? 'Hiện mật khẩu'
+                                : 'Ẩn mật khẩu',
+                            onPressed: () => setState(
+                              () => _hidePassword = !_hidePassword,
+                            ),
+                            icon: Icon(
+                              _hidePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
                         ),
                         validator: (v) =>
                             v == null ||
@@ -197,9 +211,22 @@ class _PtActivationPageState extends State<PtActivationPage> {
                         key: const Key('activation-confirm'),
                         controller: _confirm,
                         enabled: !_busy && !_unknown,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: _hideConfirm,
+                        decoration: InputDecoration(
                           labelText: 'Nhập lại mật khẩu',
+                          suffixIcon: IconButton(
+                            tooltip: _hideConfirm
+                                ? 'Hiện mật khẩu nhập lại'
+                                : 'Ẩn mật khẩu nhập lại',
+                            onPressed: () => setState(
+                              () => _hideConfirm = !_hideConfirm,
+                            ),
+                            icon: Icon(
+                              _hideConfirm
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
                         ),
                         validator: (v) =>
                             v != _password.text ? 'Mật khẩu chưa khớp.' : null,

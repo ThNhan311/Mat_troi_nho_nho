@@ -219,9 +219,10 @@ void main() {
     await t.tap(find.byTooltip('Tải lại danh sách'));
     await t.pumpAndSettle();
     expect(find.text('Thời hạn: 37 ngày'), findsOneWidget);
-    await t.tap(find.byTooltip('Sửa gói — Chưa khả dụng'));
-    await t.pump();
-    expect(find.text('Chưa khả dụng'), findsOneWidget);
+    // Actions without a backend are not offered at all.
+    expect(find.byIcon(Icons.edit_outlined), findsWidgets);
+    expect(find.byIcon(Icons.delete_outline), findsWidgets);
+    expect(find.byType(Switch), findsNothing);
     expect(writes, 0);
   });
   testWidgets('GET error/correlation no mock fallback', (t) async {

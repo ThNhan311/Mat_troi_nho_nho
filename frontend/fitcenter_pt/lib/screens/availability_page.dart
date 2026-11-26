@@ -4,6 +4,7 @@ import '../services/booking_state.dart';
 import '../services/booking_models.dart';
 import '../services/vietnam_time.dart';
 import '../widgets/api_status.dart';
+import '../widgets/page_header.dart';
 
 class AvailabilityPage extends StatefulWidget {
   final BookingState state;
@@ -292,37 +293,25 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            ApiStatus(state: widget.state),
             Row(
               children: [
-                Icon(Icons.calendar_month, size: 32, color: colors.primary),
-                const SizedBox(width: 12),
                 const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Quản lý lịch làm',
-                        style: TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text('Các khung giờ nhận học viên'),
-                    ],
+                  child: PageHeader(
+                    icon: Icons.calendar_month,
+                    title: 'Lịch làm',
+                    subtitle: 'Các khung giờ nhận học viên',
                   ),
                 ),
+                RefreshStateButton(state: widget.state),
               ],
             ),
+            ApiStatus(state: widget.state, showRefresh: false),
             const SizedBox(height: 24),
             FilledButton.icon(
               key: const Key('create-slot'),
@@ -376,15 +365,6 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
                 _slots.length,
                 (index) => _buildSlotCard(context, index, _slots[index]),
               ),
-            const SizedBox(height: 16),
-            Text(
-              'Giờ hiển thị theo Việt Nam (UTC+07:00).',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-            ),
           ],
         ),
       ),

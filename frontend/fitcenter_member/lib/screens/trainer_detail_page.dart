@@ -2,22 +2,20 @@ import 'package:flutter/material.dart';
 
 class TrainerDetailPage extends StatelessWidget {
   final String trainerName;
+  final Widget? avatar;
   final String? bio;
   final String specialty;
   final String experience;
-  final String rating;
-  final String sessions;
   final ValueChanged<String> onShowMessage;
   final VoidCallback onBookAppointment;
 
   const TrainerDetailPage({
     super.key,
     required this.trainerName,
+    this.avatar,
     this.bio,
     required this.specialty,
     required this.experience,
-    required this.rating,
-    required this.sessions,
     required this.onShowMessage,
     required this.onBookAppointment,
   });
@@ -36,15 +34,21 @@ class TrainerDetailPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Container(
-                  width: 110,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    color: colors.primary.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.person, size: 65, color: colors.primary),
-                ),
+                child:
+                    avatar ??
+                    Container(
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.person,
+                        size: 65,
+                        color: colors.primary,
+                      ),
+                    ),
               ),
               const SizedBox(height: 18),
               Center(
@@ -69,8 +73,6 @@ class TrainerDetailPage extends StatelessWidget {
               const SizedBox(height: 24),
               Row(
                 children: [
-                  _buildStat(context, 'Đánh giá', rating, Icons.star),
-                  const SizedBox(width: 10),
                   _buildStat(
                     context,
                     'Kinh nghiệm',

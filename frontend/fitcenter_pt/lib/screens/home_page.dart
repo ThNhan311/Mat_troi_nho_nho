@@ -4,6 +4,7 @@ import '../services/booking_service.dart';
 import '../services/booking_state.dart';
 import '../services/vietnam_time.dart';
 import '../widgets/api_status.dart';
+import '../widgets/avatar.dart';
 import 'home_screen.dart';
 import 'availability_page.dart';
 import 'confirmed_sessions_page.dart';
@@ -83,6 +84,7 @@ class _HomePageState extends State<HomePage> {
             HomeScreen(
               state: state,
               onOpenSchedule: () => _selectPage(1),
+              onOpenSessions: () => _selectPage(2),
               onShowMessage: _showMessage,
               sessionCount: state.loaded ? sessions.length : null,
               memberCount: state.loaded
@@ -91,46 +93,66 @@ class _HomePageState extends State<HomePage> {
             ),
             AvailabilityPage(state: state),
             ConfirmedSessionsPage(state: state, onOpenSession: openSession),
-            const UnavailablePage(title: 'Giáo án'),
             ProfilePage(
+              avatar: AvatarEditor(
+                api: widget.service.api,
+                size: 96,
+                active: selectedIndex == 3,
+                onMessage: _showMessage,
+              ),
               isDark: Theme.of(context).brightness == Brightness.dark,
               onToggleTheme: widget.onToggleTheme,
               onShowMessage: _showMessage,
+              onOpenSchedule: () => _selectPage(1),
+              onOpenSessions: () => _selectPage(2),
               onLogout: widget.onLogout,
             ),
           ],
         ),
-        bottomNavigationBar: NavigationBar(
-          height: 72,
-          selectedIndex: selectedIndex,
-          onDestinationSelected: _selectPage,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Trang chủ',
+        bottomNavigationBar: NavigationBarTheme(
+          data: NavigationBarThemeData(
+            iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+              (states) =>
+                  IconThemeData(color: Theme.of(context).colorScheme.primary),
             ),
-            NavigationDestination(
-              icon: Icon(Icons.calendar_month_outlined),
-              selectedIcon: Icon(Icons.calendar_month),
-              label: 'Lịch làm',
+            labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
+              (states) => TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 11,
+              ),
             ),
-            NavigationDestination(
-              icon: Icon(Icons.event_note_outlined),
-              selectedIcon: Icon(Icons.event_note),
-              label: 'Buổi tập',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.fitness_center_outlined),
-              selectedIcon: Icon(Icons.fitness_center),
-              label: 'Giáo án',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Cá nhân',
-            ),
-          ],
+          ),
+          child: NavigationBar(
+            height: 72,
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            indicatorColor: Theme.of(context).colorScheme.primary
+                .withValues(alpha: 0.15),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            selectedIndex: selectedIndex,
+            onDestinationSelected: _selectPage,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'Trang chủ',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.calendar_month_outlined),
+                selectedIcon: Icon(Icons.calendar_month),
+                label: 'Lịch làm',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.event_note_outlined),
+                selectedIcon: Icon(Icons.event_note),
+                label: 'Buổi tập',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person),
+                label: 'Cá nhân',
+              ),
+            ],
+          ),
         ),
       );
     },

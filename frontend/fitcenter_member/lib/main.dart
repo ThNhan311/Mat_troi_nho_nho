@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'services/api_client.dart';
 import 'services/booking_service.dart';
+import 'services/session_store.dart';
 import 'screens/home_page.dart';
 import 'screens/login_page.dart';
 import 'theme/app_theme.dart';
@@ -17,7 +18,12 @@ class FitCenterApp extends StatefulWidget {
 }
 
 class _FitCenterAppState extends State<FitCenterApp> {
-  late final ApiClient api = widget.api ?? ApiClient(expectedRole: 'MEMBER');
+  late final ApiClient api =
+      widget.api ??
+      ApiClient(
+        expectedRole: 'MEMBER',
+        store: keepSessionOnReload ? tabSessionStore() : null,
+      );
   ThemeMode mode = ThemeMode.dark;
   void toggle(bool dark) =>
       setState(() => mode = dark ? ThemeMode.dark : ThemeMode.light);

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'desktop_shell.dart';
+
 import '../services/api_client.dart';
 import '../services/booking_policy_service.dart';
 import '../services/vietnam_time.dart';
@@ -177,7 +179,8 @@ class _BookingPolicyPageState extends State<BookingPolicyPage> {
       appBar: AppBar(
         title: const Text('Chính sách đặt lịch'),
         actions: [
-          IconButton(
+          if (!AdminDesktopScope.isDesktop(context))
+            IconButton(
             tooltip: 'Đăng xuất',
             onPressed: widget.onLogout,
             icon: const Icon(Icons.logout),

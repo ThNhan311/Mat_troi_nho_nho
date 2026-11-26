@@ -222,13 +222,16 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
     final date = _session['date'];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Chi tiết buổi tập')),
+      appBar: AppBar(
+        title: const Text('Chi tiết buổi tập'),
+        actions: [RefreshStateButton(state: widget.state)],
+      ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            ApiStatus(state: widget.state),
+            ApiStatus(state: widget.state, showRefresh: false),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -250,7 +253,7 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
                   const SizedBox(height: 20),
                   _buildInfoRow(
                     context,
-                    'Mã booking',
+                    'Mã lịch đặt',
                     '${_session['id'] ?? 'Chưa có'}',
                   ),
                   _buildInfoRow(
@@ -387,16 +390,6 @@ class _SessionDetailPageState extends State<SessionDetailPage> {
                 icon: Icons.lock_outline,
                 color: Colors.grey,
               ),
-
-            const SizedBox(height: 16),
-            Text(
-              'Giờ Việt Nam (UTC+07:00).',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-            ),
           ],
         ),
       ),

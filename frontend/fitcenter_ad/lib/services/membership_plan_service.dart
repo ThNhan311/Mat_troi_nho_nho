@@ -11,6 +11,40 @@ String? validatePlanName(String? value) {
 
 String? validateDurationDays(String? value) => validatePolicyInteger(value, 1);
 
+/// The server stores days only, so a month and a year are fixed lengths.
+enum DurationUnit {
+  day('Ngày', 1),
+  month('Tháng', 30),
+  year('Năm', 365);
+
+  final String label;
+  final int days;
+  const DurationUnit(this.label, this.days);
+
+  /// The largest unit that divides the number of days exactly.
+  static DurationUnit of(int days) => days % year.days == 0
+      ? year
+      : days % month.days == 0
+      ? month
+      : day;
+}
+
+String? validateDuration(String? value, DurationUnit unit) {
+  final error = validateDurationDays(value);
+  if (error != null) return error;
+  return validateDurationDays('${int.parse(value!.trim()) * unit.days}') == null
+      ? null
+      : 'Thời hạn quá dài.';
+}
+
+/// "1 năm (365 ngày)", "3 tháng (90 ngày)" or "37 ngày".
+String durationText(int days) {
+  final unit = DurationUnit.of(days);
+  return unit == DurationUnit.day
+      ? '$days ngày'
+      : '${days ~/ unit.days} ${unit.label.toLowerCase()} ($days ngày)';
+}
+
 /// Decimal text -> exact cents; no rounding, month conversion or business cap.
 int? priceCents(String text) {
   final value = text.trim();
@@ -27,6 +61,17 @@ String? validatePlanPrice(String? value) => priceCents(value ?? '') == null
     : null;
 String decimalPrice(int cents) =>
     '${cents ~/ 100}.${(cents % 100).toString().padLeft(2, '0')}';
+
+/// For reading: 100000 đ is shown as "100.000 đ"; cents only when there are any.
+String moneyText(int cents) {
+  final whole = '${cents ~/ 100}';
+  final grouped = whole.replaceAllMapped(
+    RegExp(r'(?<=\d)(?=(\d{3})+$)'),
+    (_) => '.',
+  );
+  final rest = cents % 100;
+  return '$grouped${rest == 0 ? '' : ',${rest.toString().padLeft(2, '0')}'} đ';
+}
 
 class MembershipPlan {
   final String id, name;
@@ -89,6 +134,55 @@ class MembershipPlanService {
         'Danh sách gói tập không hợp lệ.',
       );
     return data.map((e) => MembershipPlan.parse(e)).toList();
+  }
+
+  Future<MembershipPlan> update(
+    String id, {
+    required String name,
+    String? description,
+    required int durationDays,
+    required int cents,
+  }) async {
+    final result = MembershipPlan.parse(
+      await api.request(
+        'PUT',
+        '/admin/membership-plans/$id',
+        body: {
+          'name': name,
+          'description': description,
+          'durationDays': durationDays,
+          'price': num.parse(decimalPrice(cents)),
+        },
+      ),
+      write: true,
+    );
+    if (result.id != id ||
+        result.name != name ||
+        result.durationDays != durationDays ||
+        result.cents != cents) {
+      throw const ApiError(
+        0,
+        'INVALID_RESPONSE',
+        'Chưa đối chiếu được kết quả sửa. Hãy tải lại danh sách.',
+        outcomeUnknown: true,
+      );
+    }
+    return result;
+  }
+
+  /// true when the plan was only withdrawn from sale because somebody bought it.
+  Future<bool> delete(String id) async {
+    final data = await api.request('DELETE', '/admin/membership-plans/$id');
+    final result = data is Map ? data['result'] : null;
+    if (result != 'DELETED' && result != 'ARCHIVED') {
+      throw const ApiError(
+        0,
+        'INVALID_RESPONSE',
+        'Chưa đối chiếu được kết quả xóa. Hãy tải lại danh sách.',
+        outcomeUnknown: true,
+      );
+    }
+    return result == 'ARCHIVED';
   }
 
   Future<MembershipPlan> create({
