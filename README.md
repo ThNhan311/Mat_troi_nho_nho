@@ -1,23 +1,83 @@
-# FitCenter — Core Backend và Flutter Web
+# FitCenter
 
-[Trạng thái hiện tại](docs/PROJECT_STATUS.md) · [Setup/demo tích hợp](docs/INTEGRATION_SETUP.md) · [Quyết định nghiệp vụ](docs/DECISIONS.md) · [API](docs/backend-handover/05_API_DOCUMENTATION.md)
+Quản lý phòng gym: backend Spring Boot và ba app Flutter Web. Bản demo chạy trên máy cá nhân.
 
-Ba app Web giữ giao diện gốc: Member, PT và Admin. Đã có các lát cắt Account activation, Membership Plan/initial activation/read/renewal simulator và Booking. Đây chưa phải toàn bộ FitCenter hoặc một bản phát hành production.
-
-| App | Source | Origin demo |
+| App | Thư mục | Địa chỉ |
 |---|---|---|
-| Member | [fitcenter_member](frontend/fitcenter_member/) | http://localhost:3000 |
-| PT | [fitcenter_pt](frontend/fitcenter_pt/) | http://localhost:3001 |
-| Admin | [fitcenter_ad](frontend/fitcenter_ad/) | http://localhost:3002 |
+| Hội viên | `frontend/fitcenter_member` | http://localhost:3000 |
+| PT | `frontend/fitcenter_pt` | http://localhost:3001 |
+| Admin | `frontend/fitcenter_ad` | http://localhost:3002 |
 
-Bắt đầu bằng [hướng dẫn portable](docs/INTEGRATION_SETUP.md). Entrypoint hiện hành là [core-readiness.ps1](backend/scripts/core-readiness.ps1), tạo DB test và authority mới trên máy đích. Không cần container ID, credentials, DPAPI hoặc build của người phát triển trước. Guard cố định Docker Desktop Linux local, JDK21, image17.12 ghim và loopback ports; không bypass khi có collision.
+## Cần cài
 
-Default Backend chỉ dùng V1–V6 và giữ các write gates tắt. **Fresh demo/dev** dùng profile core-demo guarded với exact V1–V6,V8–V13, Account OTP/mail sink, Membership quầy, Booking, renewal và Admin simulator. Không cần V7 để lấp số; V7 legacy/V14/compatibility callback không chạy trên fresh path. [Manifest fresh](database/core-demo-candidate.json), [setup và upgrade riêng](docs/INTEGRATION_SETUP.md#fresh-install-và-upgrade). Chưa nâng cấp DB cũ thực tế (`targetUpgradeVerified=false`); không quảng bá production rollout hoặc mọi DB đều tương thích.
+Windows, JDK 21, Flutter, Node.js, Git, Docker Desktop (để chạy database).
 
-Simulator là thanh toán mô phỏng dev/test, không tiền thật/gateway/refund. Face Core/enrollment/service chỉ có simulated protocol và generated-input inference evidence; **Face thật chưa nghiệm thu**. F03B tooling ready, thu ảnh/dataset/calibration/evaluation người thật đang hoãn, liveness NOT_PERFORMED/admission thật off. Workout, thông báo, profile editing, full Admin reporting và native/mobile không thuộc lát cắt Web đã nghiệm thu; UI chưa có API hiện Chưa khả dụng.
+## Cách chạy
 
-Không đưa `.env`, authority/credential/consent, dataset/ảnh/embedding, SDK/cache/build hoặc raw logs vào Git. Không dùng clean/repair/out-of-order, không sửa migration đã công bố, không thay DB chung. [AGENTS](AGENTS.md) dành cho agent tiếp tục; [R01 readiness](docs/backend-handover/evidence/R01_MAIN_INTEGRATION_READINESS.md) là snapshot trước sửa R02.
+Chạy trong PowerShell tại thư mục gốc. Thư mục `$private` chứa mật khẩu tự sinh: để ngoài Git và đừng xóa.
 
-R02 đã kiểm chứng portable rehearsal từ checkout sạch có dùng cache: [kết quả, suites và giới hạn](docs/backend-handover/evidence/R02_PORTABLE_SETUP.md). Đây không phải cold install hoặc xác nhận production release.
+**1. Khai báo**
 
-Ứng viên tích hợp và kiểm thử mới: [Core main candidate](docs/backend-handover/evidence/CORE_MAIN_CANDIDATE.md). Chưa merge main.
+```powershell
+$jdk = Read-Host 'Thu muc JDK21'
+$private = Join-Path $env:LOCALAPPDATA ('Temp/fitcenter-core-' + [guid]::NewGuid().ToString('N'))
+$runner = 'backend/scripts/core-readiness.ps1'
+git fetch origin
+```
+
+**2. Tạo database, build backend, tạo tài khoản Admin**
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File $runner -Action Provision -JavaHome $jdk -PrivateDirectory $private
+$id = (Get-Content "$private/account-resource.json" -Raw | ConvertFrom-Json).containerId
+powershell.exe -ExecutionPolicy Bypass -File $runner -Action Build -JavaHome $jdk -PrivateDirectory $private -ExpectedContainerId $id
+powershell.exe -ExecutionPolicy Bypass -File $runner -Action PrepareDemo -JavaHome $jdk -PrivateDirectory $private -ExpectedContainerId $id
+```
+
+Email và mật khẩu Admin nằm trong `$private\demo-core\demo-fixture.properties`.
+
+**3. Chạy backend** (cổng 18086, giữ cửa sổ này mở)
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File $runner -Action ServeBackend -JavaHome $jdk -PrivateDirectory $private -ExpectedContainerId $id
+```
+
+**4. Build ba app** (cửa sổ khác)
+
+```powershell
+foreach ($app in 'member','pt','ad') {
+  Push-Location "frontend/fitcenter_$app"
+  flutter pub get
+  flutter build web --no-web-resources-cdn --dart-define=API_BASE_URL=http://localhost:18086/api/v1 --dart-define=KEEP_SESSION_ON_RELOAD=true
+  Pop-Location
+}
+```
+
+**5. Chạy web** (mỗi lệnh một cửa sổ)
+
+```powershell
+node frontend/serve-booking-web.mjs member
+```
+
+```powershell
+node frontend/serve-booking-web.mjs pt
+```
+
+```powershell
+node frontend/serve-booking-web.mjs ad
+```
+
+Mở bằng `localhost`, không dùng `127.0.0.1`.
+
+## Gửi OTP qua mail thật
+
+Đặt trước khi chạy backend, không ghi vào file trong repo: `FITCENTER_MAIL_SMTP_ENABLED=true`, `FITCENTER_SMTP_USER`, `FITCENTER_SMTP_APP_PASSWORD` (Gmail App Password).
+
+## Lưu ý
+
+- Thanh toán là **giả lập** (FitBank và mã QR không có thật).
+- Check-in khuôn mặt mặc định **tắt** và chưa chống được ảnh giả.
+- Số điện thoại và giới tính của PT lưu trong thư mục `.fitcenter` của người dùng, không nằm trong database.
+- Các bước trên chưa được chạy thử trên máy mới. Gặp lỗi, xem [hướng dẫn chi tiết](docs/INTEGRATION_SETUP.md).
+
+Tài liệu khác: [trạng thái](docs/PROJECT_STATUS.md) · [quyết định](docs/DECISIONS.md) · [API](docs/backend-handover/05_API_DOCUMENTATION.md)

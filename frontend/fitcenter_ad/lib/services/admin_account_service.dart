@@ -89,13 +89,19 @@ class AdminAccountService {
     String email,
     String name, {
     String? phone,
+    String? gender,
   }) async {
     final account = AdminAccount.parse(
       await api.request(
         'POST',
         path(role),
         expectedStatus: 201,
-        body: {'email': email.trim(), 'fullName': name.trim(), 'phone': ?phone},
+        body: {
+          'email': email.trim(),
+          'fullName': name.trim(),
+          'phone': ?phone,
+          'gender': ?gender,
+        },
       ),
       write: true,
     );

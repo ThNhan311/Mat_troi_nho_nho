@@ -59,8 +59,27 @@ int exactPaymentCents(dynamic value) {
 
 String paymentDecimal(int cents) =>
     '${cents ~/ 100}.${(cents % 100).toString().padLeft(2, '0')}';
-String paymentTime(DateTime value) =>
-    '${value.toUtc().add(const Duration(hours: 7)).toIso8601String().substring(0, 19).replaceFirst('T', ' ')} (giờ Việt Nam)';
+/// Money as shown to people, for example 100.000 VND.
+String paymentMoney(int cents) {
+  final dong = (cents ~/ 100).toString().replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+$)'),
+    (_) => '.',
+  );
+  final rest = cents % 100;
+  return rest == 0
+      ? '$dong VND'
+      : '$dong,${rest.toString().padLeft(2, '0')} VND';
+}
+
+/// The first block of an id is enough to read out at the desk.
+String shortCode(String id) => id.substring(0, 8).toUpperCase();
+
+/// Vietnam time as dd/mm/yyyy hh:mm.
+String paymentTime(DateTime value) {
+  final t = value.toUtc().add(const Duration(hours: 7)).toIso8601String();
+  return '${t.substring(8, 10)}/${t.substring(5, 7)}/${t.substring(0, 4)} '
+      '${t.substring(11, 16)}';
+}
 
 class RenewalPayment {
   final String id,
@@ -164,8 +183,8 @@ class RenewalPayment {
   }
 
   String get statusLabel => const {
-    'PENDING': 'Chờ kết quả mô phỏng',
-    'SUCCESS': 'Đã ghi nhận SUCCESS',
+    'PENDING': 'Chờ xác nhận thanh toán',
+    'SUCCESS': 'Đã thanh toán',
     'FAILED': 'Thất bại',
     'CANCELLED': 'Đã hủy',
   }[status]!;

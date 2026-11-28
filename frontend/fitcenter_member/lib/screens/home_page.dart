@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../services/booking_service.dart';
@@ -10,6 +12,9 @@ import 'schedule_page.dart';
 import 'profile_page.dart';
 import 'trainer_list_page.dart';
 import 'booking_history_page.dart';
+import '../services/password_service.dart';
+import 'change_password_page.dart';
+import '../widgets/success_popup.dart';
 
 class HomePage extends StatefulWidget {
   final BookingService service;
@@ -30,10 +35,37 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late final BookingState state = BookingState(widget.service);
   int selectedIndex = 0;
+  Uint8List? photo;
+  String? name;
+  String? profileId;
   @override
   void initState() {
     super.initState();
     state.refresh();
+    _loadPhoto();
+    _loadName();
+  }
+
+  Future<void> _loadName() async {
+    final profile = await widget.service.api.myProfile();
+    if (!mounted) return;
+    setState(() {
+      name = profile.name;
+      profileId = profile.profileId;
+    });
+  }
+
+  Future<void> _loadPhoto() async {
+    try {
+      // A decorative picture must never renew or end the session by itself.
+      final image = await widget.service.api.picture(
+        'GET',
+        renewSession: false,
+      );
+      if (mounted) setState(() => photo = image);
+    } catch (_) {
+      // The header keeps the default icon.
+    }
   }
 
   @override
@@ -61,99 +93,116 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: state,
-    builder: (context, _) => Scaffold(
-      body: IndexedStack(
-        index: selectedIndex,
-        children: [
-          HomeScreen(
-            state: state,
-            bookingConfirmed: state.bookings.any(
-              (b) => b.status == 'CONFIRMED',
+    builder: (context, _) => SuccessPopupHost(
+      state: state,
+      child: Scaffold(
+        body: IndexedStack(
+          index: selectedIndex,
+          children: [
+            HomeScreen(
+              state: state,
+              bookingConfirmed: state.bookings.any(
+                (b) => b.status == 'CONFIRMED',
+              ),
+              active: selectedIndex == 0,
+              onOpenSchedule: () => _selectPage(1),
+              onOpenMembership: () => _selectPage(2),
+              onOpenProfile: () => _selectPage(4),
+              photo: photo,
+              name: name,
+              onShowMessage: _showMessage,
             ),
-            bookingCount: state.loaded
-                ? state.bookings.where((b) => b.status == 'CONFIRMED').length
-                : null,
-            onOpenSchedule: () => _selectPage(1),
-            onOpenMembership: () => _selectPage(2),
-            onShowMessage: _showMessage,
-          ),
-          SchedulePage(state: state),
-          MembershipPage(
-            service: MembershipService(widget.service.api),
-            active: selectedIndex == 2,
-          ),
-          TrainerListPage(
-            state: state,
-            onShowMessage: _showMessage,
-            onSelectTrainerForBooking: (id) {
-              _selectPage(1);
-              state.selectTrainer(id);
-            },
-          ),
-          ProfilePage(
-            avatar: AvatarEditor(
-              api: widget.service.api,
-              size: 96,
-              active: selectedIndex == 4,
-              onMessage: _showMessage,
+            SchedulePage(state: state),
+            MembershipPage(
+              service: MembershipService(widget.service.api),
+              active: selectedIndex == 2,
+              memberName: name,
+              memberId: profileId,
             ),
-            isDark: Theme.of(context).brightness == Brightness.dark,
-            onToggleTheme: widget.onToggleTheme,
-            onShowMessage: _showMessage,
-            onOpenMembership: () => _selectPage(2),
-            onLogout: widget.onLogout,
-            onOpenBookingHistory: history,
-          ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBarTheme(
-        data: NavigationBarThemeData(
-          iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
-            (states) =>
-                IconThemeData(color: Theme.of(context).colorScheme.primary),
-          ),
-          labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
-            (states) => TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontSize: 11,
+            TrainerListPage(
+              state: state,
+              active: selectedIndex == 3,
+              onShowMessage: _showMessage,
+              onSelectTrainerForBooking: (id) {
+                _selectPage(1);
+                state.selectTrainer(id);
+              },
             ),
-          ),
-        ),
-        child: NavigationBar(
-          height: 72,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          indicatorColor: Theme.of(context).colorScheme.primary
-              .withValues(alpha: 0.15),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          selectedIndex: selectedIndex,
-          onDestinationSelected: _selectPage,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Trang chủ',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.calendar_month_outlined),
-              selectedIcon: Icon(Icons.calendar_month),
-              label: 'Lịch tập',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.card_membership_outlined),
-              selectedIcon: Icon(Icons.card_membership),
-              label: 'Gói hội viên',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.fitness_center_outlined),
-              selectedIcon: Icon(Icons.fitness_center),
-              label: 'PT',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Cá nhân',
+            ProfilePage(
+              name: name,
+              profileId: profileId,
+              avatar: AvatarEditor(
+                api: widget.service.api,
+                size: 96,
+                active: selectedIndex == 4,
+                onMessage: _showMessage,
+                onChanged: (image) => setState(() => photo = image),
+              ),
+              isDark: Theme.of(context).brightness == Brightness.dark,
+              onToggleTheme: widget.onToggleTheme,
+              onShowMessage: _showMessage,
+              onOpenMembership: () => _selectPage(2),
+              onLogout: widget.onLogout,
+              onChangePassword: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => ChangePasswordPage(
+                    service: PasswordService(widget.service.api),
+                  ),
+                ),
+              ),
+              onOpenBookingHistory: history,
             ),
           ],
+        ),
+        bottomNavigationBar: NavigationBarTheme(
+          data: NavigationBarThemeData(
+            iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+              (states) =>
+                  IconThemeData(color: Theme.of(context).colorScheme.primary),
+            ),
+            labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
+              (states) => TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 11,
+              ),
+            ),
+          ),
+          child: NavigationBar(
+            height: 72,
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            indicatorColor: Theme.of(context).colorScheme.primary
+                .withValues(alpha: 0.15),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            selectedIndex: selectedIndex,
+            onDestinationSelected: _selectPage,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'Trang chủ',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.calendar_month_outlined),
+                selectedIcon: Icon(Icons.calendar_month),
+                label: 'Lịch tập',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.card_membership_outlined),
+                selectedIcon: Icon(Icons.card_membership),
+                label: 'Gói hội viên',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.fitness_center_outlined),
+                selectedIcon: Icon(Icons.fitness_center),
+                label: 'PT',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person),
+                label: 'Cá nhân',
+              ),
+            ],
+          ),
         ),
       ),
     ),

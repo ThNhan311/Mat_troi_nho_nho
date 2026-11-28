@@ -10,6 +10,8 @@ import 'package:fitcenter/services/api_client.dart';
 import 'package:fitcenter/services/membership_service.dart';
 import 'package:fitcenter/screens/membership_page.dart';
 
+import 'pull.dart';
+
 const id = '11111111-1111-4111-8111-111111111111';
 const plan = '22222222-2222-4222-8222-222222222222';
 Map<String, dynamic> row({
@@ -138,20 +140,14 @@ void main() {
       await screen(t, api);
       await t.pump();
       expect(find.byKey(const Key('membership-loading')), findsOneWidget);
-      expect(
-        t
-            .widget<IconButton>(find.byKey(const Key('membership-refresh')))
-            .onPressed,
-        isNull,
-      );
+      expect(find.byIcon(Icons.refresh), findsNothing);
       pending.complete(json([]));
       await t.pumpAndSettle();
       expect(find.text('Bạn chưa có gói hội viên.'), findsOneWidget);
-      await t.tap(find.byKey(const Key('membership-refresh')));
-      await t.pumpAndSettle();
+      await pullToReload(t);
       expect(find.byKey(const ValueKey('membership-$id')), findsOneWidget);
       expect(find.text('23/11/2026'), findsNWidgets(2));
-      expect(find.text('Gia hạn / kỳ sử dụng'), findsOneWidget);
+      expect(find.text('Gia hạn Membership'), findsOneWidget);
       expect(find.text('Gói cao cấp'), findsNothing);
       expect(find.text('Buổi đã tập'), findsNothing);
       expect(find.text('Lịch sử gia hạn'), findsNothing);
@@ -203,8 +199,7 @@ void main() {
       if (!offline) expect(find.textContaining('m04-test'), findsOneWidget);
       expect(find.byKey(const Key('membership-empty')), findsNothing);
       fail = false;
-      await t.tap(find.byKey(const Key('membership-refresh')));
-      await t.pumpAndSettle();
+      await pullToReload(t);
       expect(find.byKey(const Key('membership-empty')), findsOneWidget);
     });
   }
@@ -232,7 +227,8 @@ void main() {
     await t.tap(find.text('Gói hội viên').last);
     await t.pumpAndSettle();
     expect(find.byKey(const Key('login')), findsOneWidget);
-    expect(gets, 1);
+    // One non-renewing read by the home overview, one by the membership page.
+    expect(gets, 2);
     expect(refreshes, 1);
   });
   testWidgets(

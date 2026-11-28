@@ -169,7 +169,6 @@ class _ReportPageState<T> extends State<_ReportPage<T>> {
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search),
               hintText: widget.searchHint,
-              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
@@ -218,6 +217,7 @@ class ReportTable extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     margin: EdgeInsets.zero,
     clipBehavior: Clip.antiAlias,
+    shape: const RoundedRectangleBorder(borderRadius: tableRadius),
     child: LayoutBuilder(
       builder: (context, box) => SingleChildScrollView(
         scrollDirection: Axis.horizontal,

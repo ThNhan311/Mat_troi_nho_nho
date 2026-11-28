@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
+/// Rounded white sheet that keeps a table readable on the backdrop.
+const tableRadius = BorderRadius.all(Radius.circular(18));
+
 /// Full grid and a shaded heading, shared by every Admin table.
 TableBorder tableGrid(BuildContext context) => TableBorder.all(
-  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.55),
+  color: Theme.of(context).colorScheme.outlineVariant,
+  borderRadius: tableRadius,
 );
 
 WidgetStateProperty<Color?> tableHeading(BuildContext context) =>

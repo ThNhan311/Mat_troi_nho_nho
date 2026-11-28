@@ -12,10 +12,16 @@ class ProfilePage extends StatefulWidget {
   final VoidCallback onOpenSchedule;
   final VoidCallback onOpenSessions;
   final VoidCallback onLogout;
+  final VoidCallback? onChangePassword;
+  final VoidCallback? onEditProfile;
   final Widget? avatar;
+  final String? name;
+  final String? profileId;
 
   const ProfilePage({
     super.key,
+    this.name,
+    this.profileId,
     this.avatar,
     required this.isDark,
     required this.onToggleTheme,
@@ -23,6 +29,8 @@ class ProfilePage extends StatefulWidget {
     required this.onOpenSchedule,
     required this.onOpenSessions,
     required this.onLogout,
+    this.onChangePassword,
+    this.onEditProfile,
   });
 
   @override
@@ -30,24 +38,13 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String fullName = 'Huấn luyện viên';
-
-  static const Color _lightIconColor = Color(0xFF737B87);
-  static const Color _lightIconBackground = Color(0xFFF0F1F3);
-  static const Color _lightBorderColor = Color(0xFFE5E7EB);
-
   bool get _isDark => Theme.of(context).brightness == Brightness.dark;
 
   Color get primaryColor => Theme.of(context).colorScheme.primary;
 
-  Color get iconColor => _isDark ? primaryColor : _lightIconColor;
+  Color get iconColor => primaryColor;
 
-  Color get iconBackground =>
-      _isDark ? primaryColor.withValues(alpha: 0.12) : _lightIconBackground;
-
-  Color get _cardBorderColor => _isDark
-      ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.25)
-      : _lightBorderColor;
+  Color get iconBackground => Theme.of(context).colorScheme.primaryContainer;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +52,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final colors = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -76,6 +72,14 @@ class _ProfilePageState extends State<ProfilePage> {
               const SectionTitle('Công việc'),
               const SizedBox(height: 12),
 
+              if (widget.onEditProfile case final open?)
+                _buildMenuItem(
+                  icon: Icons.badge_outlined,
+                  title: 'Hồ sơ huấn luyện viên',
+                  subtitle: 'Chuyên môn, kinh nghiệm, giới thiệu',
+                  onTap: open,
+                ),
+
               _buildMenuItem(
                 icon: Icons.calendar_month_outlined,
                 title: 'Lịch làm',
@@ -95,12 +99,19 @@ class _ProfilePageState extends State<ProfilePage> {
               const SectionTitle('Cài đặt'),
               const SizedBox(height: 12),
 
+              if (widget.onChangePassword case final open?)
+                _buildMenuItem(
+                  icon: Icons.lock_reset,
+                  title: 'Đổi mật khẩu',
+                  subtitle: 'Cập nhật mật khẩu đăng nhập',
+                  onTap: open,
+                ),
+
               Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: colors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: _cardBorderColor),
+                  borderRadius: BorderRadius.circular(22),
                 ),
                 child: Material(
                   type: MaterialType.transparency,
@@ -155,14 +166,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   icon: const Icon(Icons.logout),
                   label: const Text('Đăng xuất'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.redAccent,
+                    foregroundColor: colors.error,
                     side: BorderSide(
-                      color: Colors.redAccent.withValues(alpha: 0.5),
+                      color: colors.error.withValues(alpha: 0.4),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
                   ),
                 ),
               ),
@@ -184,7 +192,6 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _cardBorderColor),
       ),
       child: Column(
         children: [
@@ -202,13 +209,41 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 14),
 
           Text(
-            fullName,
+            // Until the server gives a name, the role stands in for it.
+            widget.name ?? 'Huấn luyện viên',
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: colors.onSurface,
               fontSize: 21,
               fontWeight: FontWeight.bold,
             ),
           ),
+          if (widget.name != null) ...[
+            const SizedBox(height: 3),
+            Text(
+              'Huấn luyện viên',
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
+            ),
+          ],
+          // The first block of the profile id, as the front desk sees it.
+          if (widget.profileId case final id? when id.length >= 8) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: colors.primaryContainer,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: SelectableText(
+                'Mã PT: ${id.substring(0, 8).toUpperCase()}',
+                style: TextStyle(
+                  color: colors.onPrimaryContainer,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -226,8 +261,7 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _cardBorderColor),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Material(
         type: MaterialType.transparency,
@@ -297,10 +331,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.pop(dialogContext);
                 widget.onLogout();
               },
-              child: const Text(
-                'Đăng xuất',
-                style: TextStyle(color: Colors.redAccent),
-              ),
+              child: Text('Đăng xuất', style: TextStyle(color: colors.error)),
             ),
           ],
         );

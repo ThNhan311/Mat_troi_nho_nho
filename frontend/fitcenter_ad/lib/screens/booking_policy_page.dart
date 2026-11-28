@@ -145,7 +145,6 @@ class _BookingPolicyPageState extends State<BookingPolicyPage> {
           decoration: InputDecoration(
             labelText: label,
             suffixText: suffix,
-            border: const OutlineInputBorder(),
           ),
           validator: (value) => validatePolicyInteger(value, minimum),
           onChanged: (_) {
@@ -181,10 +180,10 @@ class _BookingPolicyPageState extends State<BookingPolicyPage> {
         actions: [
           if (!AdminDesktopScope.isDesktop(context))
             IconButton(
-            tooltip: 'Đăng xuất',
-            onPressed: widget.onLogout,
-            icon: const Icon(Icons.logout),
-          ),
+              tooltip: 'Đăng xuất',
+              onPressed: widget.onLogout,
+              icon: const Icon(Icons.logout),
+            ),
         ],
       ),
       body: Form(
@@ -276,7 +275,7 @@ class _BookingPolicyPageState extends State<BookingPolicyPage> {
                       subtitle: Text(
                         _policy == null
                             ? 'Chưa cấu hình'
-                            : vietnamTime(_policy!.effectiveFrom),
+                            : vietnamShortTime(_policy!.effectiveFrom),
                       ),
                     ),
 
@@ -338,7 +337,7 @@ class _BookingPolicyPageState extends State<BookingPolicyPage> {
                       title: 'Bắt đầu áp dụng',
                       value: _policy == null
                           ? 'Chưa cấu hình'
-                          : vietnamTime(_policy!.effectiveFrom),
+                          : vietnamShortTime(_policy!.effectiveFrom),
                     ),
                   ],
                 ),
@@ -351,7 +350,7 @@ class _BookingPolicyPageState extends State<BookingPolicyPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(20),
                   color: _saveMessage!.startsWith('Đã lưu')
                       ? Colors.green.withValues(alpha: 0.10)
                       : Colors.orange.withValues(alpha: 0.10),

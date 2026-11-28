@@ -5,6 +5,10 @@ String vietnamTime(DateTime instant) {
   return '${two(vn.day)}/${two(vn.month)}/${vn.year} ${two(vn.hour)}:${two(vn.minute)} (giờ Việt Nam, UTC+07:00)';
 }
 
+/// For reading on screen: dd/mm/yyyy hh:mm.
+String vietnamShortTime(DateTime instant) =>
+    vietnamTime(instant).substring(0, 16);
+
 DateTime parseVietnamInput(String raw) {
   if (!RegExp(r'^\d{4}-\d\d-\d\d \d\d:\d\d$').hasMatch(raw)) {
     throw const FormatException('Dùng YYYY-MM-DD HH:mm theo giờ Việt Nam.');

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_theme.dart';
+import 'brand_logo.dart';
 
 class PageHeader extends StatelessWidget {
   const PageHeader({
@@ -16,11 +16,7 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final iconBackground = isDark ? AppColors.green : const Color(0xFFF0F1F3);
-
-    final iconColor = isDark ? AppColors.darkText : const Color(0xFF737B87);
+    final colors = Theme.of(context).colorScheme;
 
     return Row(
       children: [
@@ -28,29 +24,42 @@ class PageHeader extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: iconBackground,
-            borderRadius: BorderRadius.circular(14),
+            color: colors.surface,
+            shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: iconColor, size: 27),
+          child: Icon(icon, color: colors.primary, size: 27),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+              // The logo shares the title's line.
+              Row(
+                children: [
+                  Expanded(
+                    // A long title shrinks a little instead of wrapping.
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const BrandLogo(width: 100),
+                ],
               ),
               const SizedBox(height: 4),
               Text(
                 subtitle,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface
-                      .withValues(alpha: 0.65),
+                  color: colors.onSurface.withValues(alpha: 0.65),
                   fontSize: 12,
                 ),
               ),

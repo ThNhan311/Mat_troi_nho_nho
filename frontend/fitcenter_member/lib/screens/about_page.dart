@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../widgets/brand_logo.dart';
+
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
@@ -9,9 +11,7 @@ class AboutPage extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.surface,
       appBar: AppBar(
-        backgroundColor: colors.surface,
         elevation: 0,
         iconTheme: IconThemeData(color: colors.onSurface),
         title: Text(
@@ -27,28 +27,7 @@ class AboutPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: Icon(
-                Icons.fitness_center,
-                color: colors.primary,
-                size: 52,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'FitCenter',
-              style: TextStyle(
-                color: colors.onSurface,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            const BrandLogo(width: 220),
             const SizedBox(height: 8),
             Text(
               'Phiên bản 1.0.0',
@@ -63,7 +42,7 @@ class AboutPage extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: colors.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(22),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

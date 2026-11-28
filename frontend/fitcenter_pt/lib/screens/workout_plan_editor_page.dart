@@ -155,9 +155,9 @@ class _WorkoutPlanEditorPageState
             ),
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text(
+              child: Text(
                 'Xóa',
-                style: TextStyle(color: Colors.redAccent),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
           ],
@@ -256,7 +256,6 @@ class _WorkoutPlanEditorPageState
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -486,7 +485,7 @@ class _WorkoutPlanEditorPageState
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: colors.outline.withValues(alpha: 0.15),
         ),
@@ -571,9 +570,9 @@ class _WorkoutPlanEditorPageState
           IconButton(
             tooltip: 'Xóa bài tập',
             onPressed: _isSaving ? null : () => _removeExercise(index),
-            icon: const Icon(
+            icon: Icon(
               Icons.delete_outline,
-              color: Colors.redAccent,
+              color: Theme.of(context).colorScheme.error,
             ),
           ),
         ],

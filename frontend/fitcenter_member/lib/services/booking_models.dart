@@ -54,13 +54,15 @@ List<T> items<T>(Object? value, T Function(Map<String, dynamic>) parse) {
 
 class Trainer {
   final String id, fullName;
-  final String? bio, specialization, experienceSummary;
+  final String? bio, specialization, experienceSummary, phone, gender;
   Trainer.fromJson(Map<String, dynamic> value)
     : id = uuid(value, 'id'),
       fullName = text(value, 'fullName'),
       bio = value['bio'] as String?,
       specialization = value['specialization'] as String?,
-      experienceSummary = value['experienceSummary'] as String?;
+      experienceSummary = value['experienceSummary'] as String?,
+      phone = value['phone'] as String?,
+      gender = value['gender'] as String?;
 }
 
 class Slot {

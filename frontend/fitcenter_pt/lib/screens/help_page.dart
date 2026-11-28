@@ -31,9 +31,7 @@ class HelpPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: colors.surface,
       appBar: AppBar(
-        backgroundColor: colors.surface,
         elevation: 0,
         iconTheme: IconThemeData(color: colors.onSurface),
         title: Text(
@@ -51,7 +49,7 @@ class HelpPage extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: colors.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(22),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +91,7 @@ class HelpPage extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
                 color: colors.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(22),
               ),
               child: Theme(
                 data: Theme.of(context)

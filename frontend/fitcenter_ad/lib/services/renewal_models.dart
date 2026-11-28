@@ -164,8 +164,8 @@ class RenewalPayment {
   }
 
   String get statusLabel => const {
-    'PENDING': 'Chờ kết quả mô phỏng',
-    'SUCCESS': 'Đã ghi nhận SUCCESS',
+    'PENDING': 'Chờ xác nhận thanh toán',
+    'SUCCESS': 'Đã thanh toán',
     'FAILED': 'Thất bại',
     'CANCELLED': 'Đã hủy',
   }[status]!;

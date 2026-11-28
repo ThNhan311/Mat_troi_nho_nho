@@ -11,6 +11,8 @@ import '../services/booking_policy_service.dart';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/brand_logo.dart';
+
 import 'booking_policy_page.dart';
 import 'desktop_shell.dart';
 import 'membership_page.dart';
@@ -85,7 +87,7 @@ class AdminHomePage extends StatelessWidget {
     AdminSection(
       group: 'Vận hành',
       icon: Icons.payments_outlined,
-      title: 'Thanh toán mô phỏng',
+      title: 'Duyệt thanh toán',
       maxWidth: 1000,
       builder: (_) =>
           PaymentSimulatorPage(service: PaymentSimulatorService(service.api)),
@@ -112,10 +114,7 @@ class AdminHomePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'FITCENTER',
-          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1.2),
-        ),
+        title: const BrandLogo(width: 120),
         actions: [
           IconButton(
             tooltip: 'Đăng xuất',
@@ -253,9 +252,9 @@ class AdminHomePage extends StatelessWidget {
               ),
               _AdminMenuCard(
                 icon: Icons.payments_outlined,
-                title: 'Thanh toán mô phỏng',
+                title: 'Duyệt thanh toán',
                 subtitle:
-                    'Dev/test: xử lý kết quả gia hạn, không thu tiền thật',
+                    'Xác nhận thanh toán gia hạn của hội viên',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => PaymentSimulatorPage(
@@ -315,14 +314,9 @@ class _AdminMenuCard extends StatelessWidget {
     final color = theme.colorScheme.primary;
 
     return Card(
-      elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: theme.dividerColor.withOpacity(0.12)),
-      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(15),
@@ -332,8 +326,8 @@ class _AdminMenuCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.13),
-                  borderRadius: BorderRadius.circular(15),
+                  color: theme.colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 25),
               ),

@@ -194,9 +194,6 @@ class _RenewalPaymentPageState extends State<RenewalPaymentPage> {
                     backgroundColor: colors.primary,
                     foregroundColor: colors.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
                   ),
                   child: const Text(
                     'Xác nhận thanh toán',
@@ -255,7 +252,6 @@ class _RenewalPaymentPageState extends State<RenewalPaymentPage> {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'Gia hạn & thanh toán',
@@ -317,9 +313,6 @@ class _RenewalPaymentPageState extends State<RenewalPaymentPage> {
                     backgroundColor: colors.primary,
                     foregroundColor: colors.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
                   ),
                   child: Text(
                     'Thanh toán ${_formatPrice(selectedPrice)}',
@@ -420,7 +413,7 @@ class _RenewalPaymentPageState extends State<RenewalPaymentPage> {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: isSelected
                 ? colors.primary
@@ -437,7 +430,7 @@ class _RenewalPaymentPageState extends State<RenewalPaymentPage> {
                 color: isSelected
                     ? colors.primary.withValues(alpha: 0.15)
                     : colors.onSurface.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(22),
               ),
               child: Icon(
                 isSelected
@@ -505,7 +498,7 @@ class _RenewalPaymentPageState extends State<RenewalPaymentPage> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: isSelected
                 ? colors.primary
@@ -564,7 +557,7 @@ class _RenewalPaymentPageState extends State<RenewalPaymentPage> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.primary.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: colors.primary.withValues(alpha: 0.18),
         ),

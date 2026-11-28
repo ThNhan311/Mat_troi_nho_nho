@@ -5,6 +5,7 @@ import '../services/admin_account_service.dart';
 import '../services/membership_plan_service.dart';
 import '../services/initial_activation_service.dart';
 import '../services/vietnam_time.dart';
+import '../widgets/selectable_dialog.dart';
 
 class InitialActivationPage extends StatefulWidget {
   final InitialActivationService service;
@@ -80,7 +81,7 @@ class _InitialActivationPageState extends State<InitialActivationPage> {
       final vn = DateTime.now().toUtc().add(const Duration(hours: 7));
       final start = DateTime.utc(vn.year, vn.month, vn.day),
           end = start.add(Duration(days: p.durationDays - 1));
-      return '${showCalendar(start.toIso8601String().substring(0, 10))} – ${showCalendar(end.toIso8601String().substring(0, 10))} (dự kiến, giờ Việt Nam)';
+      return '${showCalendar(start.toIso8601String().substring(0, 10))} – ${showCalendar(end.toIso8601String().substring(0, 10))} (dự kiến)';
     } catch (_) {
       return 'Ngày thực tế sẽ do máy chủ xác định.';
     }
@@ -98,13 +99,13 @@ class _InitialActivationPageState extends State<InitialActivationPage> {
       return;
     }
     setState(() => busy = true);
-    final yes = await showDialog<bool>(
+    final yes = await showSelectableDialog<bool>(
       context: context,
       useRootNavigator: false,
       builder: (c) => AlertDialog(
         title: const Text('Xác nhận kích hoạt Membership'),
         content: Text(
-          'Ghi nhận ${decimalPrice(selected!.cents)} VNĐ đã thu tại quầy. Thao tác không kích hoạt tài khoản đăng nhập.',
+          'Ghi nhận ${moneyText(selected!.cents)} đã thu tại quầy. Thao tác không kích hoạt tài khoản đăng nhập.',
         ),
         actions: [
           TextButton(
@@ -239,7 +240,6 @@ class _InitialActivationPageState extends State<InitialActivationPage> {
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Chọn Member đã tồn tại',
-                        border: OutlineInputBorder(),
                       ),
                       items: members
                           .map(
@@ -282,14 +282,13 @@ class _InitialActivationPageState extends State<InitialActivationPage> {
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Chọn gói hội viên',
-                        border: OutlineInputBorder(),
                       ),
                       items: plans
                           .map(
                             (p) => DropdownMenuItem(
                               value: p.id,
                               child: Text(
-                                '${p.name} • ${p.durationDays} ngày • ${decimalPrice(p.cents)} VNĐ',
+                                '${p.name} • ${p.durationDays} ngày • ${moneyText(p.cents)}',
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -302,7 +301,7 @@ class _InitialActivationPageState extends State<InitialActivationPage> {
                     ),
                     if (selected != null) ...[
                       const SizedBox(height: 12),
-                      Text('Số tiền: ${decimalPrice(selected!.cents)} VNĐ'),
+                      Text('Số tiền: ${moneyText(selected!.cents)}'),
                       Text(preview()),
                       const Text(
                         'Ngày và giá áp dụng do máy chủ xác nhận. Không nhập ngày hoặc giảm giá.',
@@ -334,7 +333,6 @@ class _InitialActivationPageState extends State<InitialActivationPage> {
                       enabled: !locked,
                       decoration: const InputDecoration(
                         labelText: 'Mã chứng từ tại quầy',
-                        border: OutlineInputBorder(),
                       ),
                       validator: (v) =>
                           v == null ||
@@ -351,7 +349,6 @@ class _InitialActivationPageState extends State<InitialActivationPage> {
                       enabled: !locked,
                       decoration: const InputDecoration(
                         labelText: 'Ghi chú (tùy chọn)',
-                        border: OutlineInputBorder(),
                       ),
                       validator: (v) =>
                           v != null &&
@@ -422,9 +419,9 @@ class _InitialActivationPageState extends State<InitialActivationPage> {
                     Text(
                       '${showCalendar(result!.startDate)} – ${showCalendar(result!.endDate)}',
                     ),
-                    Text('Thực thu: ${decimalPrice(result!.cents)} VNĐ'),
+                    Text('Thực thu: ${moneyText(result!.cents)}'),
                     Text('Chứng từ: ${result!.receiptRef}'),
-                    Text('Ghi nhận: ${vietnamTime(result!.confirmedAt)}'),
+                    Text('Ghi nhận: ${vietnamShortTime(result!.confirmedAt)}'),
                     const Text('Mã Membership'),
                     Semantics(
                       label: 'Mã Membership: ${result!.membershipId}',

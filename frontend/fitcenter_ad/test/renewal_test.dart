@@ -149,7 +149,7 @@ void main() {
     await t.ensureVisible(find.byKey(ValueKey('$paymentId-$state')));
     await t.tap(find.byKey(ValueKey('$paymentId-$state')));
     await t.pumpAndSettle();
-    await t.tap(find.text('Xác nhận mô phỏng'));
+    await t.tap(find.widgetWithText(FilledButton, 'Xác nhận'));
     await t.pumpAndSettle();
   }
 
@@ -225,7 +225,7 @@ void main() {
     await screen(t, client);
     await submit(t, 'SUCCESS');
     expect(find.textContaining('ERR_PAYMENT_RESULT_CONFLICT'), findsOneWidget);
-    expect(find.text('Chờ kết quả mô phỏng'), findsOneWidget);
+    expect(find.text('Chờ xác nhận thanh toán'), findsOneWidget);
     expect(find.text('Đã cấp kỳ sử dụng'), findsNothing);
   });
   testWidgets(
@@ -259,7 +259,7 @@ void main() {
         isNull,
       );
       await t.tap(find.byTooltip('Tải lại giao dịch'));
-      await t.pumpAndSettle();
+    await t.pumpAndSettle();
       await t.ensureVisible(find.byKey(const Key('simulator-retry')));
       await t.tap(find.byKey(const Key('simulator-retry')));
       await t.pumpAndSettle();
@@ -281,6 +281,6 @@ void main() {
     wait.complete(response([quote()]));
     await t.pumpAndSettle();
     expect(find.textContaining(paymentId), findsNothing);
-    expect(find.text('Mô phỏng SUCCESS'), findsNothing);
+    expect(find.text('Xác nhận đã nhận tiền'), findsNothing);
   });
 }

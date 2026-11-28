@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import vn.edu.tdtu.fitcenter.domain.enums.AccountStatus;
+import vn.edu.tdtu.fitcenter.repository.BookingRepository;
+import vn.edu.tdtu.fitcenter.repository.MemberRepository;
 import vn.edu.tdtu.fitcenter.repository.PersonalTrainerRepository;
 import vn.edu.tdtu.fitcenter.repository.UserRepository;
 
@@ -30,6 +32,8 @@ public class AvatarController {
     private final AvatarStore store;
     private final UserRepository users;
     private final PersonalTrainerRepository trainers;
+    private final MemberRepository members;
+    private final BookingRepository bookings;
 
     @GetMapping("/api/v1/avatar/me")
     @PreAuthorize("hasAnyRole('MEMBER','PT')")
@@ -59,6 +63,17 @@ public class AvatarController {
         return image(trainers.findByIdAndUser_Status(ptId, AccountStatus.ACTIVE)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Personal trainer not found"))
                 .getUser().getId());
+    }
+
+    /** Only for a member who has booked the signed-in trainer; anyone else is "not found". */
+    @GetMapping("/api/v1/pt/booked-members/{memberId}/avatar")
+    @PreAuthorize("hasRole('PT')")
+    public ResponseEntity<byte[]> bookedMember(Authentication authentication, @PathVariable UUID memberId) {
+        var picture = trainers.findByUser_Id(currentUser(authentication))
+                .filter(trainer -> bookings.existsByPtIdAndMemberId(trainer.getId(), memberId))
+                .flatMap(trainer -> members.findById(memberId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
+        return image(picture.getUser().getId());
     }
 
     private UUID currentUser(Authentication authentication) {

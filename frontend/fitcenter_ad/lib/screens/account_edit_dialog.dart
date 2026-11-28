@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import '../services/account_manage_service.dart';
 import '../services/admin_account_service.dart';
 import '../services/api_client.dart';
+import 'gender.dart';
+import 'person_code.dart';
 import 'phone_number.dart';
 
 class AccountEditDialog extends StatefulWidget {
   final AccountManageService service;
   final AdminAccount account;
-  final String? phone;
+  final String? phone, gender;
   const AccountEditDialog({
     super.key,
     required this.service,
     required this.account,
     this.phone,
+    this.gender,
   });
   @override
   State<AccountEditDialog> createState() => _AccountEditDialogState();
@@ -24,6 +27,7 @@ class _AccountEditDialogState extends State<AccountEditDialog> {
   late final _name = TextEditingController(text: widget.account.fullName),
       _email = TextEditingController(text: widget.account.email),
       _phone = TextEditingController(text: widget.phone ?? '');
+  late String? _gender = widget.gender;
   bool _busy = false;
   String? _error;
 
@@ -46,10 +50,11 @@ class _AccountEditDialogState extends State<AccountEditDialog> {
         widget.account.userId,
         _name.text,
         _email.text,
-        // Older members may have none; leaving it empty keeps it that way.
-        phone: widget.account.role == 'MEMBER' && _phone.text.trim().isNotEmpty
+        // Older accounts may have none; leaving it empty keeps it that way.
+        phone: _phone.text.trim().isNotEmpty
             ? normalizePhone(_phone.text)
             : null,
+        gender: _gender,
       );
       if (mounted) Navigator.pop(context, true);
     } on ApiError catch (e) {
@@ -104,24 +109,28 @@ class _AccountEditDialogState extends State<AccountEditDialog> {
                       ? 'Email chưa hợp lệ.'
                       : null,
                 ),
-                if (widget.account.role == 'MEMBER') ...[
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    key: const Key('edit-phone'),
-                    controller: _phone,
-                    enabled: !_busy,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Số điện thoại',
-                    ),
-                    validator: (v) => v == null || v.trim().isEmpty
-                        ? (widget.phone == null ? null : phoneError(v))
-                        : phoneError(v),
-                  ),
-                ],
+                const SizedBox(height: 12),
+                TextFormField(
+                  key: const Key('edit-phone'),
+                  controller: _phone,
+                  enabled: !_busy,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(labelText: 'Số điện thoại'),
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? (widget.phone == null ? null : phoneError(v))
+                      : phoneError(v),
+                ),
+                const SizedBox(height: 12),
+                GenderField(
+                  key: const Key('edit-gender'),
+                  value: _gender,
+                  onChanged: _busy ? null : (v) => _gender = v,
+                ),
                 const SizedBox(height: 16),
-                SelectableText('Mã tài khoản: ${widget.account.userId}'),
-                SelectableText('Mã hồ sơ: ${widget.account.profileId}'),
+                SelectableText(
+                  '${widget.account.role == 'PT' ? 'Mã PT' : 'Mã hội viên'}: '
+                  '${personCode(widget.account.profileId)}',
+                ),
                 if (_busy) const LinearProgressIndicator(),
                 if (_error != null)
                   Text(

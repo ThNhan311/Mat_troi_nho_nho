@@ -125,7 +125,12 @@ void main() {
         find.widgetWithText(ElevatedButton, 'Xác nhận đặt lịch').last,
       );
       expect(writes, 1);
-      expect(find.textContaining('Đặt lịch thành công'), findsOneWidget);
+      // A one-line pop-up, with no booking code.
+      expect(find.byKey(const Key('success')), findsOneWidget);
+      expect(find.text('Đặt lịch thành công'), findsOneWidget);
+      expect(find.textContaining('Mã đặt lịch'), findsNothing);
+      await tap(t, find.byKey(const Key('success-close')));
+      expect(find.byKey(const Key('success')), findsNothing);
       await tap(t, find.text('Cá nhân').last);
       await tap(t, find.text('Lịch sử đặt lịch'));
       expect(
@@ -187,12 +192,16 @@ void main() {
     'logout during detail read discards old account routes and response',
     (t) async {
       final pending = Completer<http.Response>();
+      var asked = false;
       final api = ApiClient(
         expectedRole: 'MEMBER',
         baseUri: Uri.parse('http://localhost/api/v1'),
         client: MockClient((r) async {
           if (r.url.path.endsWith('/login')) return f.json(auth());
-          if (r.url.path.endsWith('/${f.ptId}')) return pending.future;
+          if (r.url.path.endsWith('/${f.ptId}')) {
+            asked = true;
+            return pending.future;
+          }
           return f.json(
             r.url.path.endsWith('/bookings/me')
                 ? []
@@ -205,8 +214,12 @@ void main() {
       addTearDown(api.dispose);
       await enter(t, api);
       await tap(t, find.text('PT').last);
+      await t.ensureVisible(find.byKey(const ValueKey('trainer-${f.ptId}')));
+      await t.pumpAndSettle();
       await t.tap(find.byKey(const ValueKey('trainer-${f.ptId}')));
       await t.pump();
+      // The detail read must really be waiting, or this proves nothing.
+      expect(asked, isTrue);
       api.logout();
       await t.pumpAndSettle();
       pending.complete(

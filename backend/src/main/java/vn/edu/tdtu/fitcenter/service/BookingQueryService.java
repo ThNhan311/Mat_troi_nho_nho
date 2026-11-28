@@ -14,6 +14,7 @@ import vn.edu.tdtu.fitcenter.domain.entity.User;
 import vn.edu.tdtu.fitcenter.domain.enums.AccountStatus;
 import vn.edu.tdtu.fitcenter.domain.enums.BookingStatus;
 import vn.edu.tdtu.fitcenter.domain.enums.Role;
+import vn.edu.tdtu.fitcenter.dto.booking.BookedMember;
 import vn.edu.tdtu.fitcenter.dto.booking.BookingResponse;
 import vn.edu.tdtu.fitcenter.repository.BookingRepository;
 import vn.edu.tdtu.fitcenter.repository.MemberRepository;
@@ -65,15 +66,7 @@ public class BookingQueryService {
                     "'from' must be earlier than 'to'");
         }
 
-        User user = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new BadCredentialsException("User not found"));
-        if (user.getRole() != Role.PT || user.getStatus() != AccountStatus.ACTIVE) {
-            throw new AccessDeniedException("Only active personal trainers can access this resource");
-        }
-
-        PersonalTrainer trainer = personalTrainerRepository.findByUser_Id(user.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Personal trainer profile not found"));
+        PersonalTrainer trainer = activeTrainer(email);
 
         List<Booking> bookings = status == null
                 ? bookingRepository.findByPtIdAndStartAtGreaterThanEqualAndStartAtLessThanOrderByStartAtAsc(
@@ -82,6 +75,21 @@ public class BookingQueryService {
                         trainer.getId(), status, from, to);
 
         return bookings.stream().map(this::toResponse).toList();
+    }
+
+    public List<BookedMember> getMyBookedMembers(String email) {
+        return memberRepository.findBookedWith(activeTrainer(email).getId());
+    }
+
+    private PersonalTrainer activeTrainer(String email) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new BadCredentialsException("User not found"));
+        if (user.getRole() != Role.PT || user.getStatus() != AccountStatus.ACTIVE) {
+            throw new AccessDeniedException("Only active personal trainers can access this resource");
+        }
+        return personalTrainerRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Personal trainer profile not found"));
     }
 
     private BookingResponse toResponse(Booking booking) {

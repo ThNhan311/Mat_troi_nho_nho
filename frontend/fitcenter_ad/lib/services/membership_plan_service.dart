@@ -62,7 +62,7 @@ String? validatePlanPrice(String? value) => priceCents(value ?? '') == null
 String decimalPrice(int cents) =>
     '${cents ~/ 100}.${(cents % 100).toString().padLeft(2, '0')}';
 
-/// For reading: 100000 đ is shown as "100.000 đ"; cents only when there are any.
+/// For reading: 100000 is shown as "100.000 VND"; cents only when there are any.
 String moneyText(int cents) {
   final whole = '${cents ~/ 100}';
   final grouped = whole.replaceAllMapped(
@@ -70,7 +70,7 @@ String moneyText(int cents) {
     (_) => '.',
   );
   final rest = cents % 100;
-  return '$grouped${rest == 0 ? '' : ',${rest.toString().padLeft(2, '0')}'} đ';
+  return '$grouped${rest == 0 ? '' : ',${rest.toString().padLeft(2, '0')}'} VND';
 }
 
 class MembershipPlan {

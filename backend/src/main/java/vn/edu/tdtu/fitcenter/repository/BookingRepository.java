@@ -24,6 +24,7 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     boolean existsBySlotIdAndStatusAndIdNot(UUID slotId, BookingStatus status, UUID excludedId);
 
     boolean existsBySlotId(UUID slotId);
+    boolean existsByPtIdAndMemberId(UUID ptId, UUID memberId);
     boolean existsBySlotIdAndStatus(UUID slotId, BookingStatus status);
 
     @Query(value = """

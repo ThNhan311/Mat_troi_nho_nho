@@ -46,7 +46,8 @@ Future<ApiClient> admin(MockClientHandler handler) async {
 }
 
 Future<void> show(WidgetTester t, Widget page) async {
-  await t.binding.setSurfaceSize(const Size(1200, 900));
+  // The test font is far wider than Roboto, so the table needs more room here.
+  await t.binding.setSurfaceSize(const Size(1400, 900));
   addTearDown(() => t.binding.setSurfaceSize(null));
   await t.pumpWidget(MaterialApp(home: page));
   await t.pumpAndSettle();

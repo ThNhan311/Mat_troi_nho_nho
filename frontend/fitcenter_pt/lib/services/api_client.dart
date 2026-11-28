@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'booking_models.dart';
 import 'session_store.dart';
 
 class ApiError implements Exception {
@@ -233,6 +234,24 @@ class ApiClient extends ChangeNotifier {
     });
   }
 
+  /// Authenticated picture call. Returns null when there is no picture (204).
+  /// Replacing or removing one's own picture is idempotent, so it may be sent
+  /// again once after a token refresh.
+  /// A signed-in read for summaries. It never renews or ends the session.
+  Future<Object?> peek(String path, {Map<String, String>? query}) async {
+    final generation = _generation;
+    final sentToken = _access;
+    if (sentToken == null) {
+      throw const ApiError(401, 'SESSION_EXPIRED', 'Hãy đăng nhập lại.');
+    }
+    final response = await _send('GET', path, query: query, token: sentToken);
+    if (generation != _generation) {
+      throw const ApiError(401, 'SESSION_CHANGED', 'Phiên đã thay đổi.');
+    }
+    if (response.statusCode != 200) throw _error(response);
+    return _decode(response);
+  }
+
   Future<Object?> request(
     String method,
     String path, {
@@ -296,11 +315,63 @@ class ApiClient extends ChangeNotifier {
   /// Authenticated picture call. Returns null when there is no picture (204).
   /// Replacing or removing one's own picture is idempotent, so it may be sent
   /// again once after a token refresh.
+  /// The signed-in user's own name, or null when the server does not give one.
+  /// Only decorates the greeting, so it never renews or ends the session.
+  Future<({String? name, String? profileId})> myProfile() async {
+    try {
+      final bytes = await picture(
+        'GET',
+        path: '/profile/me',
+        renewSession: false,
+      );
+      final body = bytes == null ? null : jsonDecode(utf8.decode(bytes));
+      String? field(String key) {
+        final value = body is Map ? body[key] : null;
+        return value is String && value.trim().isNotEmpty ? value.trim() : null;
+      }
+
+      return (name: field('fullName'), profileId: field('profileId'));
+    } catch (_) {
+      return (name: null, profileId: null);
+    }
+  }
+
+  /// The members who booked this trainer, keyed by member id, or null when the
+  /// server does not say. Only decorates the cards, so it never renews or ends
+  /// the session.
+  Future<Map<String, BookedMember>?> bookedMembers() async {
+    try {
+      final bytes = await picture(
+        'GET',
+        path: '/pt/booked-members',
+        renewSession: false,
+      );
+      final body = bytes == null ? null : jsonDecode(utf8.decode(bytes));
+      if (body is! List) return null;
+      String? filled(Object? value) =>
+          value is String && value.trim().isNotEmpty ? value.trim() : null;
+      return {
+        for (final row in body)
+          if (row
+              case {'memberId': final String id, 'fullName': final String name}
+              when name.trim().isNotEmpty)
+            id: BookedMember(
+              name.trim(),
+              phone: filled(row['phone']),
+              gender: filled(row['gender']),
+            ),
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<Uint8List?> picture(
     String method, {
     String path = '/avatar/me',
     Uint8List? bytes,
     String? contentType,
+    bool renewSession = true,
   }) async {
     final generation = _generation;
     final sentToken = _access;
@@ -326,7 +397,9 @@ class ApiClient extends ChangeNotifier {
     }
 
     var response = await send(sentToken);
-    if (response.statusCode == 401 && generation == _generation) {
+    if (renewSession &&
+        response.statusCode == 401 &&
+        generation == _generation) {
       if (_access == sentToken) await _refreshOnce();
       if (generation == _generation) response = await send(_access!);
     }

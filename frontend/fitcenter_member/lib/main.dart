@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'services/api_client.dart';
 import 'services/booking_service.dart';
@@ -24,7 +23,7 @@ class _FitCenterAppState extends State<FitCenterApp> {
         expectedRole: 'MEMBER',
         store: keepSessionOnReload ? tabSessionStore() : null,
       );
-  ThemeMode mode = ThemeMode.dark;
+  ThemeMode mode = ThemeMode.light;
   void toggle(bool dark) =>
       setState(() => mode = dark ? ThemeMode.dark : ThemeMode.light);
   @override
@@ -37,16 +36,8 @@ class _FitCenterAppState extends State<FitCenterApp> {
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
     title: 'FitCenter',
-    theme: AppTheme.lightTheme.copyWith(
-      appBarTheme: const AppBarTheme(
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-      ),
-    ),
-    darkTheme: AppTheme.darkTheme.copyWith(
-      appBarTheme: const AppBarTheme(
-        systemOverlayStyle: SystemUiOverlayStyle.light,
-      ),
-    ),
+    theme: AppTheme.lightTheme,
+    darkTheme: AppTheme.darkTheme,
     themeMode: mode,
     home: AnimatedBuilder(
       animation: api,

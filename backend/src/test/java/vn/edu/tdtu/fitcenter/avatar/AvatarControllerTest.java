@@ -48,6 +48,24 @@ class AvatarControllerTest {
     @Autowired JwtService jwt;
     @MockitoBean UserRepository users;
     @MockitoBean PersonalTrainerRepository trainers;
+    @MockitoBean vn.edu.tdtu.fitcenter.repository.MemberRepository members;
+    @MockitoBean vn.edu.tdtu.fitcenter.repository.BookingRepository bookings;
+
+    @Test void trainerSeesOnlyMembersWhoBookedThem() throws Exception {
+        User pt = user(Role.PT), booked = user(Role.MEMBER);
+        var trainer = PersonalTrainer.builder().id(UUID.randomUUID()).user(pt).build();
+        var member = vn.edu.tdtu.fitcenter.domain.entity.Member.builder().id(UUID.randomUUID()).user(booked).build();
+        when(trainers.findByUser_Id(pt.getId())).thenReturn(Optional.of(trainer));
+        when(members.findById(member.getId())).thenReturn(Optional.of(member));
+        String url = "/api/v1/pt/booked-members/" + member.getId() + "/avatar";
+
+        mvc.perform(get(url)).andExpect(status().isUnauthorized());
+        mvc.perform(get(url).header("Authorization", bearer(booked))).andExpect(status().isForbidden());
+        mvc.perform(get(url).header("Authorization", bearer(pt))).andExpect(status().isNotFound());
+
+        when(bookings.existsByPtIdAndMemberId(trainer.getId(), member.getId())).thenReturn(true);
+        mvc.perform(get(url).header("Authorization", bearer(pt))).andExpect(status().isNoContent());
+    }
 
     private User user(Role role) {
         User user = User.builder().id(UUID.randomUUID()).email(UUID.randomUUID() + "@example.test")

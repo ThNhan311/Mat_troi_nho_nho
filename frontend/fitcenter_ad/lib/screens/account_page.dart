@@ -11,9 +11,13 @@ import 'attendance_history_dialog.dart';
 import 'account_edit_dialog.dart';
 import 'desktop_shell.dart';
 import 'face_enroll_dialog.dart';
+import 'gender.dart';
+import 'person_code.dart';
 import 'phone_number.dart';
+import 'payment_method.dart';
 import 'plan_form.dart';
 import 'table_style.dart';
+import '../widgets/selectable_dialog.dart';
 
 enum _Action { edit, plan, face, removeFace, history, delete }
 
@@ -112,7 +116,7 @@ class _AccountsPageState extends State<AccountsPage> {
   Future<T?> _dialog<T>(Widget Function(BuildContext) builder) async {
     if (_modal || !_current) return null;
     setState(() => _modal = true);
-    final result = await showDialog<T>(
+    final result = await showSelectableDialog<T>(
       context: context,
       useRootNavigator: false,
       barrierDismissible: false,
@@ -212,6 +216,7 @@ class _AccountsPageState extends State<AccountsPage> {
             service: _manage,
             account: a,
             phone: _details?[a.profileId]?.phone,
+            gender: _details?[a.profileId]?.gender,
           ),
         );
         if (saved == true && _current) {
@@ -272,6 +277,7 @@ class _AccountsPageState extends State<AccountsPage> {
       final phone = _details?[a.profileId]?.phone ?? '';
       return (a.fullName.toLowerCase().contains(_query) ||
               a.email.toLowerCase().contains(_query) ||
+              personCode(a.profileId).toLowerCase().contains(_query) ||
               phone.contains(_query)) &&
           (_status == 'Tất cả' || a.statusLabel == _status);
     }).toList();
@@ -338,14 +344,8 @@ class _AccountsPageState extends State<AccountsPage> {
               search: TextField(
                 onChanged: (v) => setState(() => _query = v.toLowerCase()),
                 decoration: InputDecoration(
-                  hintText: 'Tìm theo tên, email hoặc số điện thoại...',
+                  hintText: 'Tìm theo tên, mã, email hoặc số điện thoại...',
                   prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: theme.cardTheme.color,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
                 ),
               ),
               status: DropdownButtonFormField<String>(
@@ -353,9 +353,6 @@ class _AccountsPageState extends State<AccountsPage> {
                 decoration: InputDecoration(
                   labelText: 'Lọc theo trạng thái',
                   prefixIcon: const Icon(Icons.filter_list),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
                 ),
                 items: [
                   for (final s in [
@@ -488,6 +485,9 @@ class _RowView {
       onPressed: list == null || onAction == null
           ? null
           : () => onAction!(_Action.history),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+      ),
       icon: const Icon(Icons.history, size: 18),
       label: Text(
         list == null
@@ -515,6 +515,7 @@ class _RowView {
   }) => IconButton(
     key: ValueKey('$key-${account.profileId}'),
     tooltip: tooltip,
+    visualDensity: VisualDensity.compact,
     onPressed: !enabled || onAction == null ? null : () => onAction!(action),
     icon: Icon(icon, size: 20),
   );
@@ -548,6 +549,34 @@ class _RowView {
   ];
 }
 
+/// The same code a member or trainer reads in their own app.
+class _CodeChip extends StatelessWidget {
+  final AdminAccount account;
+  const _CodeChip(this.account);
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: account.role == 'PT' ? 'Mã PT' : 'Mã hội viên',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: colors.primaryContainer,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          personCode(account.profileId),
+          style: TextStyle(
+            color: colors.onPrimaryContainer,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Desktop view of the same server data as the cards.
 class _AccountTable extends StatelessWidget {
   final String role;
@@ -568,58 +597,72 @@ class _AccountTable extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: box.maxWidth - 40),
-            child: DataTable(
-              border: tableGrid(context),
-              headingRowColor: tableHeading(context),
-              headingTextStyle: tableHeadingStyle,
-              columnSpacing: 24,
-              horizontalMargin: 12,
-              dataRowMaxHeight: 68,
-              columns: [
-                DataColumn(
-                  label: Text(member ? 'Hội viên' : 'Huấn luyện viên'),
+            // The shaded heading must follow the rounded corners too.
+            child: ClipRRect(
+              borderRadius: tableRadius,
+              child: DataTable(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: tableRadius,
                 ),
-                if (member) const DataColumn(label: Text('Số điện thoại')),
-                if (member) const DataColumn(label: Text('Gói tập')),
-                if (camera) const DataColumn(label: Text('Khuôn mặt')),
-                const DataColumn(label: Text('Check-in gần nhất')),
-                const DataColumn(label: Text('Thao tác')),
-              ],
-              rows: [
-                for (final row in rows)
-                  DataRow(
-                    cells: [
-                      DataCell(
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              row.account.fullName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              row.account.email,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (member) DataCell(Text(row.detail?.phone ?? '—')),
-                      if (member) DataCell(Text(row.planText)),
-                      if (camera) DataCell(Text(row.faceText)),
-                      DataCell(row.historyButton),
-                      DataCell(
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: row.buttons,
-                        ),
-                      ),
-                    ],
+                border: tableGrid(context),
+                headingRowColor: tableHeading(context),
+                headingTextStyle: tableHeadingStyle,
+                // Only a narrow window closes the gaps, so that every column
+                // still fits a 1366 wide laptop.
+                columnSpacing: box.maxWidth < 1200 ? 10 : 16,
+                horizontalMargin: box.maxWidth < 1200 ? 8 : 12,
+                dataRowMaxHeight: 68,
+                columns: [
+                  DataColumn(
+                    label: Text(member ? 'Hội viên' : 'Huấn luyện viên'),
                   ),
-              ],
+                  DataColumn(label: Text(member ? 'Mã hội viên' : 'Mã PT')),
+                  const DataColumn(label: Text('Giới tính')),
+                  const DataColumn(label: Text('Số điện thoại')),
+                  if (member) const DataColumn(label: Text('Gói tập')),
+                  if (camera) const DataColumn(label: Text('Khuôn mặt')),
+                  const DataColumn(label: Text('Check-in gần nhất')),
+                  const DataColumn(label: Text('Thao tác')),
+                ],
+                rows: [
+                  for (final row in rows)
+                    DataRow(
+                      cells: [
+                        DataCell(
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                row.account.fullName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                row.account.email,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        DataCell(_CodeChip(row.account)),
+                        DataCell(Text(genderLabels[row.detail?.gender] ?? '—')),
+                        DataCell(Text(row.detail?.phone ?? '—')),
+                        if (member) DataCell(Text(row.planText)),
+                        if (camera) DataCell(Text(row.faceText)),
+                        DataCell(row.historyButton),
+                        DataCell(
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: row.buttons,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -636,12 +679,7 @@ class _AccountCard extends StatelessWidget {
     final theme = Theme.of(context), primary = theme.colorScheme.primary;
     final a = row.account;
     return Card(
-      elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.12)),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -669,8 +707,12 @@ class _AccountCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
+                  _CodeChip(a),
+                  const SizedBox(height: 5),
                   Text(a.email, style: theme.textTheme.bodySmall),
                   if (row.detail?.phone != null) Text(row.detail!.phone!),
+                  if (genderLabels[row.detail?.gender] case final label?)
+                    Text('Giới tính: $label'),
                   const SizedBox(height: 8),
                   Text(a.statusLabel),
                   if (a.role == 'MEMBER' && row.detail != null)
@@ -718,9 +760,10 @@ class _AccountDialogState extends State<_AccountDialog> {
       _phone = TextEditingController(),
       _receipt = TextEditingController();
   late String _role = widget.role;
+  String? _gender;
   List<MembershipPlan> _plans = [];
   String? _planId;
-  bool _busy = false, _unknown = false;
+  bool _busy = false, _unknown = false, _transfer = false;
   String? _error;
   late final int _epoch = widget.service.api.sessionEpoch;
   bool get _current =>
@@ -759,7 +802,17 @@ class _AccountDialogState extends State<_AccountDialog> {
     }
     final member = _role == 'MEMBER';
     final plan = member ? _plan : null;
-    final request = plan == null ? null : PlanRequest(plan, _receipt.text);
+    var receipt = _receipt.text;
+    // Take the money first: closing the QR leaves nothing created.
+    if (plan != null && _transfer) {
+      final reference = await collectByTransfer(
+        context,
+        decimalPrice(plan.cents),
+      );
+      if (reference == null || !_current) return;
+      receipt = reference;
+    }
+    final request = plan == null ? null : PlanRequest(plan, receipt);
     setState(() {
       _busy = true;
       _error = null;
@@ -770,7 +823,8 @@ class _AccountDialogState extends State<_AccountDialog> {
         _role,
         _email.text,
         _name.text,
-        phone: member ? normalizePhone(_phone.text) : null,
+        phone: normalizePhone(_phone.text),
+        gender: _gender,
       );
     } on ApiError catch (e) {
       if (_current) {
@@ -864,19 +918,25 @@ class _AccountDialogState extends State<_AccountDialog> {
                         ? 'Email chưa hợp lệ.'
                         : null,
                   ),
-                  if (member) ...[
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      key: const Key('add-phone'),
-                      controller: _phone,
-                      enabled: !locked,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Số điện thoại',
-                        prefixIcon: Icon(Icons.phone_outlined),
-                      ),
-                      validator: phoneError,
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    key: const Key('add-phone'),
+                    controller: _phone,
+                    enabled: !locked,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Số điện thoại',
+                      prefixIcon: Icon(Icons.phone_outlined),
                     ),
+                    validator: phoneError,
+                  ),
+                  const SizedBox(height: 12),
+                  GenderField(
+                    key: const Key('add-gender'),
+                    value: _gender,
+                    onChanged: locked ? null : (v) => _gender = v,
+                  ),
+                  if (member) ...[
                     if (_plans.isEmpty) ...[
                       const SizedBox(height: 12),
                       const Align(
@@ -913,22 +973,33 @@ class _AccountDialogState extends State<_AccountDialog> {
                     ],
                     if (_plan != null) ...[
                       const SizedBox(height: 12),
-                      TextFormField(
-                        key: const Key('add-receipt'),
-                        controller: _receipt,
-                        enabled: !locked,
-                        decoration: const InputDecoration(
-                          labelText: 'Mã chứng từ thu tiền tại quầy',
-                          prefixIcon: Icon(Icons.receipt_long_outlined),
-                        ),
-                        validator: receiptError,
+                      PaymentMethodField(
+                        transfer: _transfer,
+                        onChanged: locked
+                            ? null
+                            : (v) => setState(() => _transfer = v),
                       ),
+                      if (!_transfer) ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          key: const Key('add-receipt'),
+                          controller: _receipt,
+                          enabled: !locked,
+                          decoration: const InputDecoration(
+                            labelText: 'Mã chứng từ thu tiền tại quầy',
+                            helperText: receiptHelp,
+                            helperMaxLines: 2,
+                            prefixIcon: Icon(Icons.receipt_long_outlined),
+                          ),
+                          validator: receiptError,
+                        ),
+                      ],
                     ],
                   ],
                   const SizedBox(height: 12),
                   Text(
                     [
-                      if (member && _plan != null)
+                      if (member && _plan != null && !_transfer)
                         'Bấm nút bên dưới là xác nhận đã thu đủ tiền tại quầy.',
                       'Người dùng tự kích hoạt đăng nhập bằng email.',
                       if (widget.takesFace)
@@ -954,7 +1025,11 @@ class _AccountDialogState extends State<_AccountDialog> {
           ),
           FilledButton(
             onPressed: locked ? null : _save,
-            child: Text(member && _plan != null ? 'Thêm và thu tiền' : 'Thêm'),
+            child: Text(
+              member && _plan != null
+                  ? (_transfer ? 'Thêm và hiện mã QR' : 'Thêm và thu tiền')
+                  : 'Thêm',
+            ),
           ),
         ],
       ),

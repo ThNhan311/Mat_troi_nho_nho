@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/brand_logo.dart';
+
 /// Windows at least this wide get the desktop layout; narrower ones keep the
 /// menu-and-back-button layout.
 const adminDesktopBreakpoint = 1100.0;
@@ -73,8 +75,8 @@ class _AdminDesktopShellState extends State<AdminDesktopShell> {
       titleSpacing: 20,
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: theme.scaffoldBackgroundColor,
       titleTextStyle: TextStyle(
+        fontFamily: 'Roboto',
         fontSize: 26,
         fontWeight: FontWeight.w800,
         color: theme.colorScheme.onSurface,
@@ -158,10 +160,9 @@ class _AdminDesktopShellState extends State<AdminDesktopShell> {
             key: ValueKey('admin-menu-$i'),
             dense: true,
             selected: i == _selected,
-            selectedTileColor: colors.primary.withValues(alpha: 0.16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            selectedTileColor: colors.primaryContainer,
+            selectedColor: colors.onPrimaryContainer,
+            shape: const StadiumBorder(),
             leading: Icon(item.icon, size: 20),
             title: Text(item.title, style: const TextStyle(fontSize: 14)),
             onTap: () => _select(i),
@@ -177,19 +178,17 @@ class _AdminDesktopShellState extends State<AdminDesktopShell> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(22, 22, 16, 10),
-              child: Row(
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.fitness_center, color: colors.primary, size: 28),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'FITCENTER\nQuản trị',
-                      style: TextStyle(
-                        fontSize: 15,
-                        height: 1.4,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                      ),
+                  BrandLogo(width: 150),
+                  SizedBox(height: 10),
+                  Text(
+                    'Quản trị',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
                     ),
                   ),
                 ],

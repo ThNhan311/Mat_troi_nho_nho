@@ -65,7 +65,10 @@ public class SecurityConfig {
                                 "/api/v1/auth/pt-activation/password",
                                 "/api/v1/auth/member-activation/request-otp",
                                 "/api/v1/auth/member-activation/verify-otp",
-                                "/api/v1/auth/member-activation/password"
+                                "/api/v1/auth/member-activation/password",
+                                "/api/v1/auth/password-reset/request-otp",
+                                "/api/v1/auth/password-reset/verify-otp",
+                                "/api/v1/auth/password-reset/password"
                         ).permitAll()
 
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

@@ -4,6 +4,7 @@ import '../services/admin_account_service.dart';
 import '../services/api_client.dart';
 import '../services/initial_activation_service.dart';
 import '../services/membership_plan_service.dart';
+import 'payment_method.dart';
 
 /// One activation attempt. A retry must reuse the same key and payload, so the
 /// server cannot record the same counter payment twice.
@@ -33,6 +34,8 @@ class PlanFailure {
       uncertain = e.outcomeUnknown || e.status == 0 || e.status >= 500;
 }
 
+const receiptHelp = 'Số phiếu thu đưa cho khách, dùng để đối chiếu tiền.';
+
 String? receiptError(String? value) =>
     value == null || value.trim().isEmpty || value.runes.length > 100
     ? 'Nhập mã chứng từ, tối đa 100 ký tự.'
@@ -60,7 +63,7 @@ class _PlanDialogState extends State<PlanDialog> {
   List<MembershipPlan>? _plans;
   String? _planId, _error;
   late PlanFailure? _failure = widget.failure;
-  bool _busy = false, _checked = false;
+  bool _busy = false, _checked = false, _transfer = false;
   late final int _epoch = widget.api.sessionEpoch;
   bool get _current => mounted && widget.api.sessionEpoch == _epoch;
   late final _service = InitialActivationService(widget.api);
@@ -93,7 +96,13 @@ class _PlanDialogState extends State<PlanDialog> {
   Future<void> _submit() async {
     if (_busy || _unresolved || !_form.currentState!.validate()) return;
     final plan = _plans!.firstWhere((p) => p.id == _planId);
-    await _send(PlanRequest(plan, _receipt.text));
+    var receipt = _receipt.text;
+    if (_transfer) {
+      final reference = await collectByTransfer(context, decimalPrice(plan.cents));
+      if (reference == null || !_current) return;
+      receipt = reference;
+    }
+    await _send(PlanRequest(plan, receipt));
   }
 
   Future<void> _send(PlanRequest request) async {
@@ -184,20 +193,31 @@ class _PlanDialogState extends State<PlanDialog> {
                       validator: (v) => v == null ? 'Chọn gói.' : null,
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
-                      key: const Key('plan-receipt'),
-                      controller: _receipt,
-                      enabled: !_busy,
-                      decoration: const InputDecoration(
-                        labelText: 'Mã chứng từ thu tiền tại quầy',
+                    PaymentMethodField(
+                      transfer: _transfer,
+                      onChanged: _busy
+                          ? null
+                          : (v) => setState(() => _transfer = v),
+                    ),
+                    if (!_transfer) ...[
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        key: const Key('plan-receipt'),
+                        controller: _receipt,
+                        enabled: !_busy,
+                        decoration: const InputDecoration(
+                          labelText: 'Mã chứng từ thu tiền tại quầy',
+                          helperText: receiptHelp,
+                          helperMaxLines: 2,
+                        ),
+                        validator: receiptError,
                       ),
-                      validator: receiptError,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Bấm "Đã thu tiền, kích hoạt" là xác nhận đã thu đủ tiền '
-                      'tại quầy.',
-                    ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Bấm "Đã thu tiền, kích hoạt" là xác nhận đã thu đủ tiền '
+                        'tại quầy.',
+                      ),
+                    ],
                   ],
                   if (_error != null) ...[
                     const SizedBox(height: 12),
@@ -238,7 +258,9 @@ class _PlanDialogState extends State<PlanDialog> {
               onPressed: _busy || plans == null || plans.isEmpty
                   ? null
                   : _submit,
-              child: const Text('Đã thu tiền, kích hoạt'),
+              child: Text(
+                _transfer ? 'Hiện mã QR' : 'Đã thu tiền, kích hoạt',
+              ),
             ),
         ],
       ),

@@ -32,6 +32,13 @@ Future<void> tap(WidgetTester t, Finder finder) async {
   await t.pumpAndSettle();
 }
 
+/// A confirmed session that finished long ago.
+Map<String, dynamic> ended() => {
+  ...f.booking(),
+  'startAt': '2020-01-02T03:00:00Z',
+  'endAt': '2020-01-02T04:30:00Z',
+};
+
 void main() {
   testWidgets(
     'original Home -> Availability PATCH replacement ID -> DELETE 204',
@@ -69,7 +76,7 @@ void main() {
       );
       addTearDown(api.dispose);
       await enter(t, api);
-      expect(find.text('FitCenter PT'), findsOneWidget);
+      expect(find.byKey(const Key('home-logo')), findsOneWidget);
       await tap(t, find.text('Lịch làm').last);
       await tap(t, find.byKey(const ValueKey('slot-menu-${f.slotId}')));
       await tap(t, find.text('Chỉnh sửa'));
@@ -141,26 +148,28 @@ void main() {
     },
   );
   testWidgets(
-    'eligibility false is fresh snapshot; complete has no eligibility precondition',
+    'an ended session shows the student and can be completed, not cancelled',
     (t) async {
-      var eligibleReads = 0, writes = 0, complete = false;
+      var writes = 0, complete = false;
       final next = {
-        ...f.booking(),
+        ...ended(),
         'status': 'COMPLETED',
-        'completedAt': '2030-01-02T04:30:00Z',
+        'completedAt': '2020-01-02T04:30:00Z',
       };
       final api = ApiClient(
         expectedRole: 'PT',
         baseUri: Uri.parse('http://localhost/api/v1'),
         client: MockClient((r) async {
           if (r.url.path.endsWith('/login')) return f.json(auth());
-          if (r.url.path.endsWith('/service-eligibility')) {
-            eligibleReads++;
-            return f.json({
-              'eligible': false,
-              'checkedAt': '2030-01-02T04:30:00Z',
-              'reasonCodes': ['SESSION_ENDED'],
-            });
+          if (r.url.path.endsWith('/pt/booked-members')) {
+            return f.json([
+              {
+                'memberId': f.memberId,
+                'fullName': 'Tran Thi Hoa',
+                'phone': '0901234567',
+                'gender': 'FEMALE',
+              },
+            ]);
           }
           if (r.method == 'POST') {
             writes++;
@@ -169,9 +178,7 @@ void main() {
             return f.json(next);
           }
           return f.json(
-            r.url.path.endsWith('/bookings')
-                ? [complete ? next : f.booking()]
-                : [],
+            r.url.path.endsWith('/bookings') ? [complete ? next : ended()] : [],
           );
         }),
       );
@@ -179,20 +186,40 @@ void main() {
       await enter(t, api);
       await tap(t, find.text('Buổi tập').last);
       await tap(t, find.byKey(const ValueKey('session-${f.bookingId}')));
-      await tap(t, find.byKey(const Key('eligibility')));
-      expect(find.text('Chưa đủ điều kiện'), findsOneWidget);
-      expect(find.textContaining('SESSION_ENDED'), findsOneWidget);
-      expect(find.textContaining('2030-01-02T04:30:00.000Z'), findsOneWidget);
-      await tap(t, find.byKey(const Key('close-eligibility')));
-      await tap(t, find.byKey(const Key('eligibility')));
-      expect(eligibleReads, 2);
-      await tap(t, find.byKey(const Key('close-eligibility')));
+      expect(find.text('Tran Thi Hoa'), findsOneWidget);
+      expect(find.text('Nữ'), findsOneWidget);
+      expect(find.text('0901234567'), findsOneWidget);
+      expect(find.byKey(const Key('student-avatar')), findsOneWidget);
+      expect(find.text('Kiểm tra điều kiện'), findsNothing);
+      expect(find.byKey(const Key('pt-cancel')), findsNothing);
       await tap(t, find.byKey(const Key('complete')));
       await tap(t, find.byKey(const Key('confirm-complete')));
       expect(writes, 1);
       expect(find.text('Đã hoàn tất'), findsOneWidget);
     },
   );
+  testWidgets('a session still ahead can be cancelled but not completed', (
+    t,
+  ) async {
+    final api = ApiClient(
+      expectedRole: 'PT',
+      baseUri: Uri.parse('http://localhost/api/v1'),
+      client: MockClient((r) async {
+        if (r.url.path.endsWith('/login')) return f.json(auth());
+        return f.json(r.url.path.endsWith('/bookings') ? [f.booking()] : []);
+      }),
+    );
+    addTearDown(api.dispose);
+    await enter(t, api);
+    await tap(t, find.text('Buổi tập').last);
+    await tap(t, find.byKey(const ValueKey('session-${f.bookingId}')));
+    expect(
+      t.widget<FilledButton>(find.byKey(const Key('complete'))).onPressed,
+      isNull,
+    );
+    expect(find.textContaining('Hoàn tất được sau 11:30'), findsOneWidget);
+    expect(find.byKey(const Key('pt-cancel')), findsOneWidget);
+  });
   for (final failure in ['conflict', 'network'])
     test(
       'navigation state locks ambiguous $failure without replay and reconciles on explicit reload',
@@ -238,37 +265,42 @@ void main() {
       },
     );
   testWidgets(
-    'logout removes pushed session detail even if eligibility response arrives late',
+    'logout removes pushed session detail even if a write answers late',
     (t) async {
       final pending = Completer<http.Response>();
+      var asked = false;
       final api = ApiClient(
         expectedRole: 'PT',
         baseUri: Uri.parse('http://localhost/api/v1'),
         client: MockClient((r) async {
           if (r.url.path.endsWith('/login')) return f.json(auth());
-          if (r.url.path.endsWith('/service-eligibility'))
+          if (r.method == 'POST') {
+            asked = true;
             return pending.future;
-          return f.json(r.url.path.endsWith('/bookings') ? [f.booking()] : []);
+          }
+          return f.json(r.url.path.endsWith('/bookings') ? [ended()] : []);
         }),
       );
       addTearDown(api.dispose);
       await enter(t, api);
       await tap(t, find.text('Buổi tập').last);
       await tap(t, find.byKey(const ValueKey('session-${f.bookingId}')));
-      await t.tap(find.byKey(const Key('eligibility')));
+      await tap(t, find.byKey(const Key('complete')));
+      await t.tap(find.byKey(const Key('confirm-complete')));
       await t.pump();
+      expect(asked, isTrue);
       api.logout();
       await t.pumpAndSettle();
       pending.complete(
         f.json({
-          'eligible': true,
-          'checkedAt': '2030-01-02T03:00:00Z',
-          'reasonCodes': [],
+          ...ended(),
+          'status': 'COMPLETED',
+          'completedAt': '2020-01-02T04:30:00Z',
         }),
       );
       await t.pumpAndSettle();
       expect(find.byKey(const Key('login')), findsOneWidget);
-      expect(find.textContaining('Đủ điều kiện tại'), findsNothing);
+      expect(find.text('Đã hoàn tất'), findsNothing);
       expect(t.takeException(), isNull);
     },
   );

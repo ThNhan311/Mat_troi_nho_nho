@@ -4,6 +4,8 @@ import 'desktop_shell.dart';
 
 import '../services/api_client.dart';
 import '../services/membership_plan_service.dart';
+import 'person_code.dart';
+import '../widgets/selectable_dialog.dart';
 
 class MembershipPage extends StatefulWidget {
   final MembershipPlanService service;
@@ -60,7 +62,7 @@ class _MembershipPageState extends State<MembershipPage> {
   Future<void> _add() async {
     if (_dialog || !_current) return;
     setState(() => _dialog = true);
-    final plan = await showDialog<MembershipPlan>(
+    final plan = await showSelectableDialog<MembershipPlan>(
       context: context,
       useRootNavigator: false,
       barrierDismissible: false,
@@ -74,7 +76,7 @@ class _MembershipPageState extends State<MembershipPage> {
     if (plan != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đã thêm gói tập từ máy chủ. Mã gói: ${plan.id}'),
+          content: const Text('Đã thêm gói tập từ máy chủ.'),
         ),
       );
       await _load();
@@ -92,7 +94,7 @@ class _MembershipPageState extends State<MembershipPage> {
   Future<void> _edit(MembershipPlan plan) async {
     if (_dialog || !_current) return;
     setState(() => _dialog = true);
-    final saved = await showDialog<MembershipPlan>(
+    final saved = await showSelectableDialog<MembershipPlan>(
       context: context,
       useRootNavigator: false,
       barrierDismissible: false,
@@ -111,7 +113,7 @@ class _MembershipPageState extends State<MembershipPage> {
   Future<void> _delete(MembershipPlan plan) async {
     if (_dialog || !_current) return;
     setState(() => _dialog = true);
-    final yes = await showDialog<bool>(
+    final yes = await showSelectableDialog<bool>(
       context: context,
       useRootNavigator: false,
       builder: (dialog) => AlertDialog(
@@ -207,7 +209,7 @@ class _MembershipPageState extends State<MembershipPage> {
             Text('Các gói đang hoạt động.', style: theme.textTheme.bodyMedium),
             const SizedBox(height: 24),
             if (_createdId != null)
-              SelectableText('Mã gói vừa tạo: $_createdId'),
+              SelectableText('Mã gói vừa tạo: ${personCode(_createdId!)}'),
             if (_loading) const Center(child: CircularProgressIndicator()),
             if (_error != null) ...[
               Text(_error!, key: const Key('plan-error')),
@@ -219,14 +221,7 @@ class _MembershipPageState extends State<MembershipPage> {
               children: [
                 for (final plan in _plans)
                   Card(
-                    elevation: 0,
                     margin: const EdgeInsets.only(bottom: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        color: theme.dividerColor.withValues(alpha: 0.12),
-                      ),
-                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -238,8 +233,10 @@ class _MembershipPageState extends State<MembershipPage> {
                                 width: 48,
                                 height: 48,
                                 decoration: BoxDecoration(
-                                  color: primary.withValues(alpha: 0.13),
-                                  borderRadius: BorderRadius.circular(15),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                                  shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.card_membership_outlined,
@@ -276,7 +273,7 @@ class _MembershipPageState extends State<MembershipPage> {
                               const Icon(
                                 Icons.check_circle_outline,
                                 size: 19,
-                                color: Colors.green,
+                                color: Color(0xFF2E9E44),
                               ),
                               const SizedBox(width: 7),
                               const Expanded(
@@ -449,7 +446,7 @@ class _CreatePlanDialogState extends State<_CreatePlanDialog> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  decoration: const InputDecoration(labelText: 'Giá (VNĐ)'),
+                  decoration: const InputDecoration(labelText: 'Giá (VND)'),
                   validator: validatePlanPrice,
                 ),
                 const SizedBox(height: 12),
@@ -470,10 +467,11 @@ class _CreatePlanDialogState extends State<_CreatePlanDialog> {
                     ),
                     const SizedBox(width: 12),
                     SizedBox(
-                      width: 130,
+                      width: 150,
                       child: DropdownButtonFormField<DurationUnit>(
                         key: const Key('plan-unit'),
                         initialValue: _unit,
+                        isExpanded: true,
                         decoration: const InputDecoration(labelText: 'Đơn vị'),
                         items: [
                           for (final unit in DurationUnit.values)

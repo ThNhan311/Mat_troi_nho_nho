@@ -117,6 +117,10 @@ void main() {
         },
       );
       expect(find.text('0901234567'), findsOneWidget);
+      // The code has a column of its own, right after the name.
+      final columns = t.widget<DataTable>(find.byType(DataTable)).columns;
+      expect((columns[1].label as Text).data, 'Mã hội viên');
+      expect(find.text('10000000'), findsOneWidget);
       expect(find.text('Goi thang\nCòn hạn đến 02/03/2030'), findsOneWidget);
       expect(find.byKey(const ValueKey('plan-$profile')), findsNothing);
     },
@@ -156,6 +160,38 @@ void main() {
     expect(find.byKey(const ValueKey('plan-$profile')), findsOneWidget);
   });
 
+  testWidgets('the table shows the gender the server gives', (t) async {
+    await open(t, detail: {'gender': 'FEMALE'});
+    expect(find.widgetWithText(DataTable, 'Giới tính'), findsOneWidget);
+    expect(find.text('Nữ'), findsOneWidget);
+  });
+
+  testWidgets('a chosen gender is sent when adding and editing', (t) async {
+    final writes = await open(
+      t,
+      onWrite: (r) async => r.method == 'PATCH'
+          ? http.Response('', 204)
+          : json({...account('An'), 'role': 'MEMBER'}, 201),
+    );
+    await tap(t, find.byKey(const ValueKey('edit-$profile')));
+    await tap(t, find.byKey(const Key('edit-gender')));
+    await tap(t, find.text('Nam').last);
+    await tap(t, find.text('Lưu'));
+    expect(jsonDecode(writes.last.body)['gender'], 'MALE');
+
+    await tap(t, find.text('Thêm tài khoản'));
+    await t.enterText(find.byKey(const Key('add-name')), 'An');
+    await t.enterText(
+      find.byKey(const Key('add-email')),
+      'an@example.invalid',
+    );
+    await t.enterText(find.byKey(const Key('add-phone')), '0901234567');
+    await tap(t, find.byKey(const Key('add-gender')));
+    await tap(t, find.text('Nữ').last);
+    await tap(t, find.widgetWithText(FilledButton, 'Thêm'));
+    expect(jsonDecode(writes.last.body)['gender'], 'FEMALE');
+  });
+
   testWidgets('edit sends name, email and phone', (t) async {
     final writes = await open(t, onWrite: (_) async => http.Response('', 204));
     await tap(t, find.byKey(const ValueKey('edit-$profile')));
@@ -188,13 +224,30 @@ void main() {
     expect(find.text('Đã xóa tài khoản.'), findsNothing);
   });
 
-  testWidgets('a trainer has no phone or package fields', (t) async {
-    await open(t);
+  testWidgets('a trainer needs a phone number and has no package field', (
+    t,
+  ) async {
+    final writes = await open(
+      t,
+      onWrite: (r) async => json({...account('An'), 'role': 'PT'}, 201),
+    );
     await tap(t, find.text('Thêm tài khoản'));
     await tap(t, find.text('Hội viên').last);
     await tap(t, find.text('Huấn luyện viên').last);
-    expect(find.byKey(const Key('add-phone')), findsNothing);
     expect(find.byKey(const Key('add-plan')), findsNothing);
+    await t.enterText(find.byKey(const Key('add-name')), 'An');
+    await t.enterText(
+      find.byKey(const Key('add-email')),
+      'an@example.invalid',
+    );
+    final submit = find.widgetWithText(FilledButton, 'Thêm');
+    await tap(t, submit);
+    expect(find.text('Số điện thoại gồm 10 số, bắt đầu bằng 0.'), findsOneWidget);
+    expect(writes, isEmpty);
+    await t.enterText(find.byKey(const Key('add-phone')), '0901 234 567');
+    await tap(t, submit);
+    expect(writes.single.url.path, endsWith('/admin/personal-trainers'));
+    expect(jsonDecode(writes.single.body)['phone'], '0901234567');
   });
 
   testWidgets('unclear payment is checked first and resent with the same key', (

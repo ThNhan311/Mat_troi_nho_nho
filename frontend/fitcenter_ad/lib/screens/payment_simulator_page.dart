@@ -3,6 +3,17 @@ import 'package:flutter/material.dart';
 import '../services/api_client.dart';
 import '../services/payment_simulator_service.dart';
 import '../services/renewal_models.dart';
+import 'transfer_info.dart';
+import '../services/membership_plan_service.dart';
+import '../widgets/record_card.dart';
+import 'person_code.dart';
+import '../widgets/selectable_dialog.dart';
+
+const _actions = {
+  'SUCCESS': 'Xác nhận đã nhận tiền',
+  'FAILED': 'Báo thất bại',
+  'CANCELLED': 'Hủy giao dịch',
+};
 
 class PaymentSimulatorPage extends StatefulWidget {
   final PaymentSimulatorService service;
@@ -79,13 +90,36 @@ class _PaymentSimulatorPageState extends State<PaymentSimulatorPage> {
   Future<void> confirm(RenewalPayment p, String state) async {
     if (!current || busy || loading || pending != null) return;
     setState(() => busy = true);
-    final yes = await showDialog<bool>(
+    final yes = await showSelectableDialog<bool>(
       context: context,
       useRootNavigator: false,
       builder: (c) => AlertDialog(
-        title: const Text('Xác nhận thanh toán mô phỏng'),
-        content: Text(
-          'Giao dịch ${p.id}\n${paymentDecimal(p.cents)} VNĐ • Kết quả $state\nĐây là mô phỏng, không thu tiền thật. SUCCESS chỉ cấp quyền nếu máy chủ xác nhận đủ điều kiện.',
+        title: Text(_actions[state]!),
+        content: SizedBox(
+          width: 420,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RecordCard(
+                  color: Theme.of(c).colorScheme.surfaceContainer,
+                  icon: Icons.receipt_long_outlined,
+                  title: 'Giao dịch ${personCode(p.id)}',
+                  rows: [
+                    RecordRow('Nội dung chuyển khoản', transferCode(p.id)),
+                    RecordRow('Mã hội viên', personCode(p.memberId)),
+                    RecordRow('Gói', p.planName),
+                    RecordRow('Số tiền', moneyText(p.cents), strong: true),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Kiểm tra đúng khoản tiền trước khi xác nhận. Không thể đổi lại sau khi gửi.',
+                  style: TextStyle(fontSize: 13),
+                ),
+              ],
+            ),
+          ),
         ),
         actions: [
           TextButton(
@@ -94,7 +128,7 @@ class _PaymentSimulatorPageState extends State<PaymentSimulatorPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(c, true),
-            child: const Text('Xác nhận mô phỏng'),
+            child: const Text('Xác nhận'),
           ),
         ],
       ),
@@ -150,7 +184,7 @@ class _PaymentSimulatorPageState extends State<PaymentSimulatorPage> {
     if (!current) return const SizedBox.shrink();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thanh toán mô phỏng'),
+        title: const Text('Duyệt thanh toán'),
         actions: [
           IconButton(
             tooltip: 'Tải lại giao dịch',
@@ -165,11 +199,7 @@ class _PaymentSimulatorPageState extends State<PaymentSimulatorPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Chỉ dùng trong môi trường dev/test. Không thu tiền thật.',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Text(
-              'Kết quả do ADMIN gửi và máy chủ xử lý. SUCCESS cần đối soát không tự mở khóa Membership hoặc cấp kỳ sử dụng.',
+              'Giao dịch gia hạn của hội viên. Xác nhận sau khi đã kiểm tra tiền về; giao dịch cần đối soát sẽ không tự cộng thời hạn.',
             ),
             if (loading)
               const LinearProgressIndicator(key: Key('simulator-loading')),
@@ -199,46 +229,49 @@ class _PaymentSimulatorPageState extends State<PaymentSimulatorPage> {
                 container: true,
                 explicitChildNodes: true,
                 label: 'Mã giao dịch: ${p.id}',
-                child: Card(
+                child: ConstrainedBox(
                   key: ValueKey('simulator-${p.id}'),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SelectableText('Mã giao dịch: ${p.id}'),
-                        Text('Member: ${p.memberId}'),
-                        Text('Membership: ${p.membershipId}'),
-                        Text(
-                          '${p.planName} • ${p.days} ngày • ${paymentDecimal(p.cents)} VNĐ',
-                        ),
-                        Text(p.statusLabel),
-                        Text(p.fulfillmentLabel),
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: SelectionArea(
+                    child: RecordCard(
+                      icon: Icons.receipt_long_outlined,
+                      title: 'Giao dịch ${personCode(p.id)}',
+                      rows: [
+                        RecordRow('Nội dung chuyển khoản', transferCode(p.id)),
+                        RecordRow('Mã hội viên', personCode(p.memberId)),
+                        RecordRow('Gói', p.planName),
+                        RecordRow('Thời hạn', '${p.days} ngày'),
+                        RecordRow('Số tiền', moneyText(p.cents), strong: true),
+                        RecordRow('Trạng thái', p.statusLabel),
+                        RecordRow('Kỳ sử dụng', p.fulfillmentLabel),
                         if (p.reason != null)
-                          Text('Lý do đối soát: ${p.reason}'),
+                          RecordRow('Lý do đối soát', p.reason!),
                         if (p.start != null && p.end != null)
-                          Text(
+                          RecordRow(
+                            'Thời gian sử dụng',
                             '${showPaidDate(p.start!)} – ${showPaidDate(p.end!)}',
                           ),
-                        if (p.status == 'PENDING')
-                          Wrap(
-                            spacing: 8,
-                            children: [
-                              for (final state in [
-                                'SUCCESS',
-                                'FAILED',
-                                'CANCELLED',
-                              ])
-                                FilledButton(
-                                  key: ValueKey('${p.id}-$state'),
-                                  onPressed: busy || loading || pending != null
-                                      ? null
-                                      : () => confirm(p, state),
-                                  child: Text('Mô phỏng $state'),
-                                ),
-                            ],
-                          ),
                       ],
+                      action: p.status != 'PENDING'
+                          ? null
+                          : Wrap(
+                              spacing: 8,
+                              children: [
+                                for (final state in [
+                                  'SUCCESS',
+                                  'FAILED',
+                                  'CANCELLED',
+                                ])
+                                  FilledButton(
+                                    key: ValueKey('${p.id}-$state'),
+                                    onPressed:
+                                        busy || loading || pending != null
+                                        ? null
+                                        : () => confirm(p, state),
+                                    child: Text(_actions[state]!),
+                                  ),
+                              ],
+                            ),
                     ),
                   ),
                 ),

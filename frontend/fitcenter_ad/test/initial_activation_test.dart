@@ -219,7 +219,7 @@ void main() {
       addTearDown(a.dispose);
       await open(t, a, app: true);
       await fill(t);
-      expect(find.textContaining('Số tiền: 0.00'), findsOneWidget);
+      expect(find.textContaining('Số tiền: 0 VND'), findsOneWidget);
       await t.tap(find.byKey(const Key('initial-submit')));
       await t.pumpAndSettle();
       expect(writes, 0);

@@ -30,9 +30,7 @@ class NotificationPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: colors.surface,
       appBar: AppBar(
-        backgroundColor: colors.surface,
         elevation: 0,
         iconTheme: IconThemeData(color: colors.onSurface),
         title: Text(
@@ -54,7 +52,7 @@ class NotificationPage extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: colors.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(22),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,

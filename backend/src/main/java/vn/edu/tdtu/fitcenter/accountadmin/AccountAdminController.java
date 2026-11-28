@@ -10,6 +10,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import vn.edu.tdtu.fitcenter.dto.account.Genders;
 import vn.edu.tdtu.fitcenter.dto.account.PhoneNumbers;
 
 import java.util.List;
@@ -23,7 +24,8 @@ public class AccountAdminController {
     private final AccountAdminService service;
 
     public record Update(@NotBlank @Size(max = 150) String fullName, @NotBlank @Email @Size(max = 255) String email,
-            @Pattern(regexp = PhoneNumbers.PATTERN) String phone) {
+            @Pattern(regexp = PhoneNumbers.PATTERN) String phone,
+            @Pattern(regexp = Genders.PATTERN) String gender) {
     }
 
     @GetMapping("/account-details")
@@ -34,7 +36,8 @@ public class AccountAdminController {
     @PatchMapping("/accounts/{userId}")
     public ResponseEntity<Void> update(Authentication admin, @PathVariable UUID userId,
             @Valid @RequestBody Update request) {
-        service.update(admin.getName(), userId, request.fullName(), request.email(), request.phone());
+        service.update(admin.getName(), userId, request.fullName(), request.email(), request.phone(),
+                request.gender());
         return ResponseEntity.noContent().build();
     }
 

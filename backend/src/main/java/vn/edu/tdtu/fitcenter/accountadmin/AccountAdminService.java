@@ -34,10 +34,12 @@ public class AccountAdminService {
     private final Clock clock;
     private final ObjectProvider<KioskFaces> faces;
     private final ObjectProvider<AvatarStore> avatars;
+    private final TrainerPhones trainerPhones;
+    private final TrainerGenders trainerGenders;
 
     /** planState: ACTIVE, EXPIRED, UPCOMING, INACTIVE or null when there is no package. */
     public record Detail(UUID profileId, String phone, String planName, LocalDate validUntil, String planState,
-            String face) {
+            String face, String gender) {
     }
 
     public record Deleted(UUID userId, UUID profileId) {
@@ -53,7 +55,7 @@ public class AccountAdminService {
         var registry = faces.getIfAvailable();
         var result = new ArrayList<Detail>();
         jdbc.query("""
-                SELECT p.id profile_id, p.phone, m.id membership_id, m.status, m.start_date, m.expiry_date, mp.name plan_name
+                SELECT p.id profile_id, p.phone, p.gender, m.id membership_id, m.status, m.start_date, m.expiry_date, mp.name plan_name
                 FROM members p
                 LEFT JOIN memberships m ON m.member_id = p.id AND m.status <> 'CANCELLED'
                 LEFT JOIN membership_plans mp ON mp.id = m.plan_id
@@ -81,17 +83,20 @@ public class AccountAdminService {
                     }
                 }
             }
-            result.add(new Detail(profile, row.getString("phone"), name, expiry, state, face(registry, profile)));
+            result.add(new Detail(profile, row.getString("phone"), name, expiry, state, face(registry, profile),
+                    row.getString("gender")));
         });
         jdbc.query("SELECT id FROM personal_trainers", row -> {
             var profile = row.getObject("id", UUID.class);
-            result.add(new Detail(profile, null, null, null, null, face(registry, profile)));
+            result.add(new Detail(profile, trainerPhones.find(profile).orElse(null), null, null, null,
+                    face(registry, profile), trainerGenders.find(profile).orElse(null)));
         });
         return result;
     }
 
     @Transactional(timeout = 10)
-    public void update(String actorEmail, UUID userId, String fullName, String email, String phone) {
+    public void update(String actorEmail, UUID userId, String fullName, String email, String phone,
+            String gender) {
         var admin = actor(actorEmail);
         var target = target(userId);
         var name = fullName.trim();
@@ -114,13 +119,20 @@ public class AccountAdminService {
             deleteActivation(target);
         }
         jdbc.update("UPDATE " + table(target.role()) + " SET full_name = ? WHERE id = ?", name, target.profileId());
-        if (phone != null) {
-            if (target.role() != Role.MEMBER) {
-                throw new IllegalArgumentException("Phone is stored for members only");
-            }
+        if (phone != null && target.role() == Role.MEMBER) {
             jdbc.update("UPDATE members SET phone = ? WHERE id = ?", phone, target.profileId());
         }
+        if (gender != null && target.role() == Role.MEMBER) {
+            jdbc.update("UPDATE members SET gender = ? WHERE id = ?", gender, target.profileId());
+        }
         audit(admin, "ACCOUNT_UPDATED", userId);
+        // The files are written after every database step has passed.
+        if (gender != null && target.role() == Role.PT) {
+            trainerGenders.save(target.profileId(), gender);
+        }
+        if (phone != null && target.role() == Role.PT) {
+            trainerPhones.save(target.profileId(), phone);
+        }
     }
 
     /**
@@ -152,6 +164,8 @@ public class AccountAdminService {
         if (store != null) {
             store.delete(deleted.userId());
         }
+        trainerPhones.remove(deleted.profileId());
+        trainerGenders.remove(deleted.profileId());
     }
 
     private static String face(KioskFaces registry, UUID profile) {

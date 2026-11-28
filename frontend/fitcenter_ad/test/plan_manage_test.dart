@@ -67,9 +67,9 @@ Future<void> tap(WidgetTester t, Finder finder) async {
 
 void main() {
   test('money is grouped for reading', () {
-    expect(moneyText(10000000), '100.000 đ');
-    expect(moneyText(123456789), '1.234.567,89 đ');
-    expect(moneyText(0), '0 đ');
+    expect(moneyText(10000000), '100.000 VND');
+    expect(moneyText(123456789), '1.234.567,89 VND');
+    expect(moneyText(0), '0 VND');
   });
 
   test('days are shown in the largest exact unit', () {
@@ -104,7 +104,7 @@ void main() {
       t,
       (r) async => json({...plan(), ...jsonDecode(r.body)}),
     );
-    expect(find.text('100.000 đ'), findsOneWidget);
+    expect(find.text('100.000 VND'), findsOneWidget);
     expect(find.textContaining('Mã gói:'), findsNothing);
     await tap(t, find.byKey(const ValueKey('edit-plan-$id')));
     expect(find.text('100000'), findsOneWidget);

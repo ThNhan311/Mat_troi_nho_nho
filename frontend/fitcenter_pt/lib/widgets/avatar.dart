@@ -94,6 +94,9 @@ class AvatarEditor extends StatefulWidget {
   final ValueChanged<String> onMessage;
   final PhotoPicker? picker;
 
+  /// Reports the picture after every successful change.
+  final ValueChanged<Uint8List?>? onChanged;
+
   /// The picture is requested only once the editor is actually on screen.
   final bool active;
   const AvatarEditor({
@@ -102,6 +105,7 @@ class AvatarEditor extends StatefulWidget {
     required this.size,
     required this.onMessage,
     this.picker,
+    this.onChanged,
     this.active = true,
   });
   @override
@@ -175,6 +179,7 @@ class _AvatarEditorState extends State<AvatarEditor> {
     try {
       await send();
       await _load();
+      widget.onChanged?.call(_image);
       if (mounted) widget.onMessage(done);
     } on ApiError catch (error) {
       if (mounted) {

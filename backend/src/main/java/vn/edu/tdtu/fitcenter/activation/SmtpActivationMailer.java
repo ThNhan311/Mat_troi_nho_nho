@@ -50,10 +50,19 @@ public class SmtpActivationMailer implements ActivationMailer {
         }
         return String.join(" <- ",parts);
     }
-    @Override public void send(String email,String otp){
+    SimpleMailMessage resetMessage(String email,String otp){
+        var message=new SimpleMailMessage();message.setFrom(sender.getUsername());message.setTo(email);
+        message.setSubject("FitCenter - Mã đặt lại mật khẩu");
+        message.setText("Xin chào,\n\nMã đặt lại mật khẩu FitCenter của bạn là: "+otp
+                +"\n\nMã có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này cho bất kỳ ai."
+                +"\nNếu bạn không yêu cầu mã này, hãy bỏ qua email, mật khẩu của bạn không thay đổi.\n\nFitCenter");
+        return message;
+    }
+    @Override public void send(String email,String otp){deliver(email,message(email,otp));}
+    @Override public void sendPasswordReset(String email,String otp){deliver(email,resetMessage(email,otp));}
+    private void deliver(String email,SimpleMailMessage message){
         String lower=email.toLowerCase(Locale.ROOT);
         if(lower.endsWith(".invalid")||email.contains("\r")||email.contains("\n"))throw new ActivationFailure(503,"ERR_MAIL_RECIPIENT","Recipient address cannot receive mail");
-        var message=message(email,otp);
         try{sender.send(message);}
         catch(org.springframework.mail.MailException e){
             log.warn("Activation mail delivery failed: {} cause={}",e.getClass().getSimpleName(),describe(e)); // never log recipient, code or SMTP dialogue

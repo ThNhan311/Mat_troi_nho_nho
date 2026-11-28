@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'services/api_client.dart';
 import 'services/booking_service.dart';
@@ -24,7 +24,7 @@ class _FitCenterAppState extends State<FitCenterApp> {
         expectedRole: 'PT',
         store: keepSessionOnReload ? tabSessionStore() : null,
       );
-  ThemeMode mode = ThemeMode.dark;
+  ThemeMode mode = ThemeMode.light;
   void toggle(bool dark) =>
       setState(() => mode = dark ? ThemeMode.dark : ThemeMode.light);
   @override
@@ -37,16 +37,12 @@ class _FitCenterAppState extends State<FitCenterApp> {
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
     title: 'FitCenter PT',
-    theme: AppTheme.lightTheme.copyWith(
-      appBarTheme: const AppBarTheme(
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-      ),
-    ),
-    darkTheme: AppTheme.darkTheme.copyWith(
-      appBarTheme: const AppBarTheme(
-        systemOverlayStyle: SystemUiOverlayStyle.light,
-      ),
-    ),
+    // The date picker and other built-in texts speak Vietnamese.
+    locale: const Locale('vi'),
+    supportedLocales: const [Locale('vi')],
+    localizationsDelegates: GlobalMaterialLocalizations.delegates,
+    theme: AppTheme.lightTheme,
+    darkTheme: AppTheme.darkTheme,
     themeMode: mode,
     home: AnimatedBuilder(
       animation: api,

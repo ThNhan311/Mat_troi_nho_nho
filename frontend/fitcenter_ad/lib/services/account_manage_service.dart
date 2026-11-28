@@ -2,13 +2,14 @@ import 'api_client.dart';
 
 /// What the account table shows besides the account itself.
 class AccountDetail {
-  final String? phone, planName, validUntil, planState, face;
+  final String? phone, planName, validUntil, planState, face, gender;
   const AccountDetail({
     this.phone,
     this.planName,
     this.validUntil,
     this.planState,
     this.face,
+    this.gender,
   });
 }
 
@@ -34,6 +35,7 @@ class AccountManageService {
           validUntil: text('validUntil'),
           planState: text('planState'),
           face: text('face'),
+          gender: text('gender'),
         );
       }
       return result;
@@ -47,10 +49,12 @@ class AccountManageService {
     String fullName,
     String email, {
     String? phone,
+    String? gender,
   }) => _send('PATCH', '/admin/accounts/$userId', {
     'fullName': fullName.trim(),
     'email': email.trim(),
     'phone': ?phone,
+    'gender': ?gender,
   });
 
   Future<void> delete(String userId) =>

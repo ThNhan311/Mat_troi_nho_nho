@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import vn.edu.tdtu.fitcenter.accountadmin.TrainerGenders;
+import vn.edu.tdtu.fitcenter.accountadmin.TrainerPhones;
 import vn.edu.tdtu.fitcenter.domain.entity.PersonalTrainer;
 import vn.edu.tdtu.fitcenter.domain.enums.SlotStatus;
 import vn.edu.tdtu.fitcenter.domain.enums.AccountStatus;
@@ -28,6 +30,8 @@ public class PersonalTrainerService {
     private final PersonalTrainerRepository personalTrainerRepository;
     private final AvailabilitySlotRepository availabilitySlotRepository;
     private final Clock clock;
+    private final TrainerPhones phones;
+    private final TrainerGenders genders;
 
     public List<PersonalTrainerResponse> getAllTrainers() {
         return personalTrainerRepository
@@ -87,7 +91,9 @@ public class PersonalTrainerService {
                 trainer.getFullName(),
                 trainer.getBio(),
                 trainer.getSpecialization(),
-                trainer.getExperienceSummary()
+                trainer.getExperienceSummary(),
+                phones.find(trainer.getId()).orElse(null),
+                genders.find(trainer.getId()).orElse(null)
         );
     }
 }
