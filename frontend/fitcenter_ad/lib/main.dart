@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'theme/app_theme.dart';
 import 'screens/home_page.dart';
@@ -28,7 +27,7 @@ class _FitCenterAdminAppState extends State<FitCenterAdminApp> {
     super.dispose();
   }
 
-  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode _themeMode = ThemeMode.light;
 
   void _toggleTheme(bool isDark) {
     setState(() {
@@ -42,17 +41,8 @@ class _FitCenterAdminAppState extends State<FitCenterAdminApp> {
       debugShowCheckedModeBanner: false,
       title: 'FitCenter Admin',
 
-      theme: AppTheme.lightTheme.copyWith(
-        appBarTheme: const AppBarTheme(
-          systemOverlayStyle: SystemUiOverlayStyle.dark,
-        ),
-      ),
-
-      darkTheme: AppTheme.darkTheme.copyWith(
-        appBarTheme: const AppBarTheme(
-          systemOverlayStyle: SystemUiOverlayStyle.light,
-        ),
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
 
       themeMode: _themeMode,
 

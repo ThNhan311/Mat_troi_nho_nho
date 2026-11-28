@@ -10,6 +10,9 @@ import 'package:fitcenter/services/renewal_models.dart';
 import 'package:fitcenter/services/renewal_service.dart';
 import 'package:fitcenter/screens/renewal_page.dart';
 
+import 'pull.dart';
+import 'package:fitcenter/screens/transfer_dialog.dart';
+
 const paymentId = '10000000-0000-4000-8000-000000000001',
     membershipId = '10000000-0000-4000-8000-000000000002',
     memberId = '10000000-0000-4000-8000-000000000003',
@@ -159,7 +162,7 @@ void main() {
     await t.ensureVisible(find.byKey(const Key('renewal-create')));
     await t.tap(find.byKey(const Key('renewal-create')));
     await t.pumpAndSettle();
-    await t.tap(find.text('Tạo giao dịch'));
+    await t.tap(find.text('Xác nhận'));
     await t.pumpAndSettle();
   }
 
@@ -255,7 +258,10 @@ void main() {
     final client = api((r) async {
       if (r.method == 'POST') {
         writes++;
-        rows.add(quote(key: r.headers['idempotency-key']!));
+        rows.add({
+          ...quote(key: r.headers['idempotency-key']!),
+          'amount': '100000.00',
+        });
         return response(rows.single, 201);
       }
       return reads(r, rows);
@@ -264,7 +270,11 @@ void main() {
     await select(t);
     await submit(t);
     expect(writes, 1);
-    expect(find.text('Chờ kết quả mô phỏng'), findsOneWidget);
+    // The payment screen opens by itself; close it to see the list.
+    expect(find.byType(TransferDialog), findsOneWidget);
+    await t.tap(find.text('Đóng'));
+    await t.pumpAndSettle();
+    expect(find.text('Chờ xác nhận thanh toán'), findsOneWidget);
     expect(find.text('Đã cấp kỳ sử dụng'), findsNothing);
   });
   testWidgets('409 shows code and does not create a local payment', (t) async {
@@ -307,13 +317,14 @@ void main() {
         t.widget<TextButton>(find.byKey(const Key('renewal-retry'))).onPressed,
         isNull,
       );
-      await t.tap(find.byTooltip('Tải lại gia hạn'));
-      await t.pumpAndSettle();
+      await pullToReload(t);
       await t.ensureVisible(find.byKey(const Key('renewal-retry')));
       await t.tap(find.byKey(const Key('renewal-retry')));
       await t.pumpAndSettle();
       expect(keys.length, 2);
       expect(keys[0], keys[1]);
+      // A free renewal has nothing to pay, so no payment screen opens.
+      expect(find.byType(TransferDialog), findsNothing);
     },
   );
   testWidgets('old read response after logout is discarded', (t) async {

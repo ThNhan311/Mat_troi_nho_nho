@@ -3,15 +3,25 @@ import '../services/renewal_service.dart';
 
 import 'package:flutter/material.dart';
 
+import '../services/booking_models.dart';
 import '../services/membership_service.dart';
 import '../widgets/detail_row.dart';
 import '../widgets/page_header.dart';
-import '../widgets/section_title.dart';
+import '../widgets/pull_to_reload.dart';
 
 class MembershipPage extends StatefulWidget {
   final MembershipService service;
   final bool active;
-  const MembershipPage({super.key, required this.service, this.active = true});
+
+  /// The signed-in member, shown on the package card when known.
+  final String? memberName, memberId;
+  const MembershipPage({
+    super.key,
+    required this.service,
+    this.active = true,
+    this.memberName,
+    this.memberId,
+  });
   @override
   State<MembershipPage> createState() => _MembershipPageState();
 }
@@ -86,91 +96,49 @@ class _MembershipPageState extends State<MembershipPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     body: SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const PageHeader(
-              icon: Icons.card_membership,
-              title: 'Gói hội viên',
-              subtitle: 'Quản lý gói tập của bạn',
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                const Expanded(child: SectionTitle('Danh sách gói hội viên')),
-                IconButton(
-                  key: const Key('membership-refresh'),
-                  tooltip: 'Tải lại gói hội viên',
-                  onPressed: loading ? null : load,
-                  icon: const Icon(Icons.refresh),
-                ),
-              ],
-            ),
-            const Text(
-              'Ngày sử dụng theo giờ Việt Nam. Trạng thái do hệ thống xác định.',
-            ),
-            const SizedBox(height: 12),
-            if (loading)
-              const LinearProgressIndicator(key: Key('membership-loading')),
-            if (error != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  error!,
-                  key: const Key('membership-error'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+      child: PullToReload(
+        onReload: () async {
+          if (!loading) await load();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const PageHeader(
+                icon: Icons.card_membership,
+                title: 'Gói hội viên',
+                subtitle: 'Quản lý gói tập của bạn',
               ),
-            if (!loading && error == null && memberships.isEmpty)
-              const Text(
-                'Bạn chưa có gói hội viên.',
-                key: Key('membership-empty'),
-              ),
-            for (final row in memberships)
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: card(context, row),
+              const SizedBox(height: 24),
+              if (loading)
+                const LinearProgressIndicator(key: Key('membership-loading')),
+              if (error != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    error!,
+                    key: const Key('membership-error'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
-                  FilledButton(
-                    onPressed: () => Navigator.of(context)
-                        .push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => RenewalPage(
-                              service: RenewalService(widget.service.api),
-                              membershipId: row.id,
-                            ),
-                          ),
-                        )
-                        .then((_) {
-                          if (mounted && widget.service.api.authenticated)
-                            load();
-                        }),
-                    child: const Text('Gia hạn / kỳ sử dụng'),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            const SizedBox(height: 28),
-            const SectionTitle('Gia hạn gói hội viên'),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: const Text(
-                'Chọn Membership để xem kỳ sử dụng và tạo giao dịch gia hạn. Thanh toán mô phỏng, không thu tiền thật.',
-              ),
-            ),
-          ],
+                ),
+              if (!loading && error == null && memberships.isEmpty)
+                const Text(
+                  'Bạn chưa có gói hội viên.',
+                  key: Key('membership-empty'),
+                ),
+              for (final row in memberships)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: card(context, row),
+                ),
+            ],
+          ),
         ),
       ),
     ),
@@ -197,7 +165,7 @@ class _MembershipPageState extends State<MembershipPage> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary
                     .withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(22),
               ),
               child: Icon(
                 Icons.card_membership,
@@ -206,9 +174,25 @@ class _MembershipPageState extends State<MembershipPage> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                row.planName,
-                style: Theme.of(context).textTheme.titleLarge,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Only an active package is the current one.
+                  if (row.status == 'ACTIVE') ...[
+                    Text(
+                      'Gói hiện tại',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                  ],
+                  Text(
+                    row.planName,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ],
               ),
             ),
           ],
@@ -222,13 +206,33 @@ class _MembershipPageState extends State<MembershipPage> {
           ),
         ),
         const SizedBox(height: 12),
+        if (widget.memberName case final name?) DetailRow('Tên hội viên', name),
+        if (widget.memberId case final id? when id.length >= 8)
+          DetailRow('Mã hội viên', shortId(id).toUpperCase()),
         DetailRow('Ngày bắt đầu', Membership.displayDate(row.startDate)),
         DetailRow('Ngày kết thúc', Membership.displayDate(row.endDate)),
-        const SizedBox(height: 8),
-        const Text('Mã hội viên'),
-        Semantics(
-          label: 'Mã hội viên: ${row.id}',
-          child: SelectableText(row.id),
+        // Same one-line layout as the dates; the code can still be copied.
+        SelectionArea(
+          child: DetailRow('Mã gói', shortId(row.id).toUpperCase()),
+        ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton(
+            onPressed: () => Navigator.of(context)
+                .push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => RenewalPage(
+                      service: RenewalService(widget.service.api),
+                      membershipId: row.id,
+                    ),
+                  ),
+                )
+                .then((_) {
+                  if (mounted && widget.service.api.authenticated) load();
+                }),
+            child: const Text('Gia hạn Membership'),
+          ),
         ),
       ],
     ),

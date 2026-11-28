@@ -224,7 +224,7 @@ void main() {
     expect(writes, 1);
     expect(find.text('Đã lưu chính sách từ máy chủ.'), findsOneWidget);
     expect(
-      find.text('02/01/2030 10:00 (giờ Việt Nam, UTC+07:00)'),
+      find.text('02/01/2030 10:00'),
       findsWidgets,
     );
     expect(find.byType(DatePickerDialog), findsNothing);

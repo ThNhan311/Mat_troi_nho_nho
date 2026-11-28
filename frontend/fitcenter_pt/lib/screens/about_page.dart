@@ -1,5 +1,6 @@
-
 import 'package:flutter/material.dart';
+
+import '../widgets/brand_logo.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -9,9 +10,7 @@ class AboutPage extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.surface,
       appBar: AppBar(
-        backgroundColor: colors.surface,
         elevation: 0,
         iconTheme: IconThemeData(color: colors.onSurface),
         title: Text(
@@ -29,31 +28,7 @@ class AboutPage extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Logo ứng dụng
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: Icon(
-                Icons.fitness_center,
-                color: colors.primary,
-                size: 52,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Tên ứng dụng
-            Text(
-              'FitCenter',
-              style: TextStyle(
-                color: colors.onSurface,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            const BrandLogo(width: 220),
 
             const SizedBox(height: 8),
 
@@ -74,7 +49,7 @@ class AboutPage extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: colors.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(22),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,9 +67,7 @@ class AboutPage extends StatelessWidget {
 
                   Text(
                     'FitCenter hỗ trợ huấn luyện viên cá nhân quản lý '
-                        'lịch rảnh, theo dõi các buổi tập đã được đặt, '
-                        'xây dựng giáo án và hỗ trợ hội viên trong quá trình '
-                        'tập luyện.',
+                    'lịch làm và theo dõi các buổi tập học viên đã đặt.',
                     style: TextStyle(
                       color: colors.onSurface.withValues(alpha: 0.7),
                       height: 1.6,
@@ -117,22 +90,12 @@ class AboutPage extends StatelessWidget {
 
                   const _FeatureItem(
                     icon: Icons.calendar_month,
-                    title: 'Quản lý lịch rảnh và khung giờ tập',
+                    title: 'Quản lý lịch làm và khung giờ tập',
                   ),
 
                   const _FeatureItem(
                     icon: Icons.event_available,
                     title: 'Theo dõi và quản lý buổi tập đã đặt',
-                  ),
-
-                  const _FeatureItem(
-                    icon: Icons.fitness_center,
-                    title: 'Tạo và quản lý giáo án tập luyện',
-                  ),
-
-                  const _FeatureItem(
-                    icon: Icons.person_outline,
-                    title: 'Quản lý hồ sơ huấn luyện viên',
                   ),
                 ],
               ),
@@ -161,10 +124,7 @@ class _FeatureItem extends StatelessWidget {
   final IconData icon;
   final String title;
 
-  const _FeatureItem({
-    required this.icon,
-    required this.title,
-  });
+  const _FeatureItem({required this.icon, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -174,19 +134,12 @@ class _FeatureItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: colors.primary,
-            size: 21,
-          ),
+          Icon(icon, color: colors.primary, size: 21),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
-              style: TextStyle(
-                color: colors.onSurface,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: colors.onSurface, fontSize: 14),
             ),
           ),
         ],

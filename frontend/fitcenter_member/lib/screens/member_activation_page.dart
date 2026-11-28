@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../widgets/brand_logo.dart';
+
 import '../services/api_client.dart';
 import '../services/member_activation_service.dart';
 
@@ -20,6 +22,7 @@ class _MemberActivationPageState extends State<MemberActivationPage> {
       _confirm = TextEditingController();
   int _phase = 0;
   bool _busy = false, _unknown = false;
+  bool _hidePassword = true, _hideConfirm = true;
   String? _error, _grant;
   late final int _epoch = widget.service.session.sessionEpoch;
   bool get _current => mounted && widget.service.session.sessionEpoch == _epoch;
@@ -106,6 +109,20 @@ class _MemberActivationPageState extends State<MemberActivationPage> {
     final color = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Kích hoạt tài khoản Member')),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          child: Align(
+            alignment: Alignment.bottomLeft,
+            heightFactor: 1,
+            child: OutlinedButton.icon(
+              onPressed: _busy ? null : () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back, size: 20),
+              label: const Text('Về đăng nhập'),
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -117,22 +134,13 @@ class _MemberActivationPageState extends State<MemberActivationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(Icons.fitness_center, size: 72, color: color.primary),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'FITCENTER',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2,
-                      ),
-                    ),
+                    const Center(child: BrandLogo(width: 240)),
                     const SizedBox(height: 24),
                     if (_phase == 0) ...[
                       const Text(
                         'Nhập email Member đã được phòng tập tạo để nhận mã kích hoạt.',
                       ),
+                      const SizedBox(height: 18),
                       TextFormField(
                         key: const Key('activation-email'),
                         controller: _email,
@@ -154,36 +162,57 @@ class _MemberActivationPageState extends State<MemberActivationPage> {
                       const Text(
                         'Nếu tài khoản đủ điều kiện, mã đã được gửi qua email. Mã có hiệu lực 5 phút.',
                       ),
+                      const SizedBox(height: 18),
+                      // Resend sits inside the code field, at its right edge.
                       TextFormField(
                         key: const Key('activation-otp'),
                         controller: _otp,
                         enabled: !_busy && !_unknown,
                         keyboardType: TextInputType.number,
                         obscureText: true,
-                        decoration: const InputDecoration(labelText: 'Mã OTP'),
+                        decoration: InputDecoration(
+                          labelText: 'Mã OTP',
+                          suffixIcon: Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: TextButton(
+                              onPressed: _busy || _unknown
+                                  ? null
+                                  : () => _action(resend: true),
+                              child: const Text('Gửi lại OTP'),
+                            ),
+                          ),
+                        ),
                         validator: (v) =>
                             v == null || !RegExp(r'^[0-9]{6}$').hasMatch(v)
                             ? 'Nhập mã gồm 6 chữ số.'
                             : null,
-                      ),
-                      TextButton(
-                        onPressed: _busy || _unknown
-                            ? null
-                            : () => _action(resend: true),
-                        child: const Text('Gửi lại OTP'),
                       ),
                     ],
                     if (_phase == 2) ...[
                       const Text(
                         'Đã xác thực email. Đặt mật khẩu để hoàn tất kích hoạt.',
                       ),
+                      const SizedBox(height: 18),
                       TextFormField(
                         key: const Key('activation-password'),
                         controller: _password,
                         enabled: !_busy && !_unknown,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: _hidePassword,
+                        decoration: InputDecoration(
                           labelText: 'Mật khẩu mới',
+                          suffixIcon: IconButton(
+                            tooltip: _hidePassword
+                                ? 'Hiện mật khẩu'
+                                : 'Ẩn mật khẩu',
+                            onPressed: () => setState(
+                              () => _hidePassword = !_hidePassword,
+                            ),
+                            icon: Icon(
+                              _hidePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
                         ),
                         validator: (v) =>
                             v == null ||
@@ -193,13 +222,27 @@ class _MemberActivationPageState extends State<MemberActivationPage> {
                             ? 'Ít nhất 8 ký tự, tối đa 72 byte UTF-8.'
                             : null,
                       ),
+                      const SizedBox(height: 18),
                       TextFormField(
                         key: const Key('activation-confirm'),
                         controller: _confirm,
                         enabled: !_busy && !_unknown,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: _hideConfirm,
+                        decoration: InputDecoration(
                           labelText: 'Nhập lại mật khẩu',
+                          suffixIcon: IconButton(
+                            tooltip: _hideConfirm
+                                ? 'Hiện mật khẩu nhập lại'
+                                : 'Ẩn mật khẩu nhập lại',
+                            onPressed: () => setState(
+                              () => _hideConfirm = !_hideConfirm,
+                            ),
+                            icon: Icon(
+                              _hideConfirm
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                          ),
                         ),
                         validator: (v) =>
                             v != _password.text ? 'Mật khẩu chưa khớp.' : null,
@@ -222,7 +265,8 @@ class _MemberActivationPageState extends State<MemberActivationPage> {
                         'Kết quả chưa rõ. Không gửi lại thao tác này; quay về đăng nhập để kiểm tra.',
                       ),
                     if (_busy) const LinearProgressIndicator(),
-                    const SizedBox(height: 24),
+                    // The verify button moves up, right under the code row.
+                    SizedBox(height: _phase == 1 ? 12 : 24),
                     if (_phase < 3)
                       ElevatedButton(
                         onPressed: _busy || _unknown ? null : _action,
@@ -234,10 +278,6 @@ class _MemberActivationPageState extends State<MemberActivationPage> {
                               : 'Hoàn tất kích hoạt',
                         ),
                       ),
-                    TextButton(
-                      onPressed: _busy ? null : () => Navigator.pop(context),
-                      child: const Text('Về đăng nhập'),
-                    ),
                   ],
                 ),
               ),

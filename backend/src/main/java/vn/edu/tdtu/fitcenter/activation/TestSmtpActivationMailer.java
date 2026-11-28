@@ -7,6 +7,7 @@ import java.util.Properties;
 
 /** Dev/test transport only. Never connects outside loopback or sends to real recipients. */
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="fitcenter.mail.smtp.enabled",havingValue="false",matchIfMissing=true)
 public class TestSmtpActivationMailer implements ActivationMailer {
     private final int port;
     public TestSmtpActivationMailer(@Value("${fitcenter.activation.test-smtp-port:1025}") int port){this.port=port;}

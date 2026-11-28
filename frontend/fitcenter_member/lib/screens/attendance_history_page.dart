@@ -48,9 +48,7 @@ class AttendanceHistoryPage extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.surface,
       appBar: AppBar(
-        backgroundColor: colors.surface,
         elevation: 0,
         title: Text(
           'Lịch sử điểm danh',
@@ -117,7 +115,7 @@ class AttendanceHistoryPage extends StatelessWidget {
             height: 54,
             decoration: BoxDecoration(
               color: colors.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(22),
             ),
             child: Icon(
               Icons.face_retouching_natural,
@@ -165,7 +163,7 @@ class AttendanceHistoryPage extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: colors.onSurface.withValues(alpha: 0.06),
         ),

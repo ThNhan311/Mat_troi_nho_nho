@@ -4,10 +4,22 @@ import '../services/booking_state.dart';
 import '../services/booking_models.dart';
 import '../services/vietnam_time.dart';
 import '../widgets/api_status.dart';
+import '../widgets/brand_logo.dart';
+import '../widgets/month_calendar.dart';
+import '../widgets/pull_to_reload.dart';
+import '../widgets/start_time_dialog.dart';
+import '../widgets/student_info.dart';
+
+/// Orange and green mean what they mean on the member calendar.
+const bookedColor = Color(0xFFF57C00);
+const trainedColor = Color(0xFF2E9E44);
 
 class AvailabilityPage extends StatefulWidget {
   final BookingState state;
-  const AvailabilityPage({super.key, required this.state});
+
+  /// Whether this tab is on screen; the month is only read then.
+  final bool active;
+  const AvailabilityPage({super.key, required this.state, this.active = true});
 
   @override
   State<AvailabilityPage> createState() => _AvailabilityPageState();
@@ -15,9 +27,169 @@ class AvailabilityPage extends StatefulWidget {
 
 class _AvailabilityPageState extends State<AvailabilityPage> {
   List<Map<String, dynamic>> get _slots => widget.state.availability;
+
+  DateTime get _today => vietnamDate(DateTime.now().toUtc());
+  late DateTime _month = DateTime.utc(_today.year, _today.month);
+
+  /// Null shows every upcoming slot.
+  DateTime? _day;
+
+  /// The displayed month, for days outside what the app always loads.
+  List<Slot> _monthSlots = [];
+  List<Booking> _monthBookings = [];
+  bool _monthFailed = false, _wasLoading = false, _started = false;
+  int _ticket = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.state.addListener(_onState);
+    _sync(false);
+  }
+
+  @override
+  void didUpdateWidget(AvailabilityPage old) {
+    super.didUpdateWidget(old);
+    if (old.state != widget.state) {
+      old.state.removeListener(_onState);
+      widget.state.addListener(_onState);
+    }
+    if (widget.active && !old.active) _sync(true);
+  }
+
+  @override
+  void dispose() {
+    widget.state.removeListener(_onState);
+    super.dispose();
+  }
+
+  void _onState() => _sync(false);
+
+  /// Reads after the app's own lists, and again after every reload.
+  void _sync(bool returned) {
+    final state = widget.state;
+    final ready = state.loaded && !state.loading && state.alive;
+    if (!widget.active) {
+      if (state.loading) _started = false;
+      _wasLoading = state.loading;
+      return;
+    }
+    if (ready && (!_started || _wasLoading || returned)) {
+      _started = true;
+      _loadMonth();
+    }
+    _wasLoading = state.loading;
+  }
+
+  Future<void> _loadMonth() async {
+    final ticket = ++_ticket;
+    final api = widget.state.service.api;
+    final epoch = api.sessionEpoch;
+    // Midnight in Vietnam is 17:00 UTC of the previous day.
+    DateTime start(int offset) => DateTime.utc(
+      _month.year,
+      _month.month + offset,
+    ).subtract(const Duration(hours: 7));
+    final range = queryRange(start(0), start(1));
+    var failed = false;
+    Future<List<T>> read<T>(
+      String path,
+      T Function(Map<String, dynamic>) parse,
+    ) async {
+      try {
+        return items(await api.peek(path, query: range), parse);
+      } catch (_) {
+        failed = true;
+        return <T>[];
+      }
+    }
+
+    final slots = read('/pt/slots', Slot.fromJson);
+    final bookings = read('/pt/bookings', Booking.fromJson);
+    final slotRows = await slots, bookingRows = await bookings;
+    if (!mounted || ticket != _ticket || epoch != api.sessionEpoch) return;
+    setState(() {
+      _monthSlots = slotRows;
+      _monthBookings = bookingRows;
+      _monthFailed = failed;
+    });
+  }
+
+  /// Inside the loaded window only the app's own list is trusted, so a removed
+  /// slot never comes back from the month read.
+  bool _outsideWindow(DateTime instant) =>
+      instant.isBefore(widget.state.from) || !instant.isBefore(widget.state.to);
+
+  Iterable<Slot> get _calendarSlots => {
+    for (final s in _monthSlots)
+      if (_outsideWindow(s.startAt)) s.id: s,
+    for (final s in widget.state.slots) s.id: s,
+  }.values.where((s) => s.status != 'DISABLED');
+
+  Iterable<Booking> get _calendarBookings => {
+    for (final b in _monthBookings) b.id: b,
+    for (final b in widget.state.bookings) b.id: b,
+  }.values;
+
+  bool _on(DateTime instant, DateTime day) => vietnamDate(instant) == day;
+
+  Color get _freeColor => Theme.of(context).brightness == Brightness.dark
+      ? Colors.white
+      : Colors.black;
+
+  /// Dots under a day, in the same order as the legend.
+  List<Color> _marks(DateTime day) {
+    final now = DateTime.now().toUtc();
+    bool has(String status) =>
+        _calendarBookings.any((b) => b.status == status && _on(b.startAt, day));
+    return [
+      if (_calendarSlots.any(
+        (s) =>
+            s.status == 'AVAILABLE' &&
+            s.startAt.isAfter(now) &&
+            _on(s.startAt, day),
+      ))
+        _freeColor,
+      if (has('CONFIRMED')) bookedColor,
+      if (has('COMPLETED')) trainedColor,
+    ];
+  }
+
+  void _showMonth(int offset) {
+    setState(() {
+      _month = DateTime.utc(_month.year, _month.month + offset);
+      _day = null;
+      _monthSlots = [];
+      _monthBookings = [];
+      _monthFailed = false;
+    });
+    _loadMonth();
+  }
+
+  List<Map<String, dynamic>> get _shownSlots {
+    final day = _day;
+    if (day == null) return _slots;
+    final rows = _calendarSlots.where((s) => _on(s.startAt, day)).toList()
+      ..sort((a, b) => a.startAt.compareTo(b.startAt));
+    return rows.map(widget.state.slot).toList();
+  }
+
+  /// The session that booked a slot, with what is known about the student.
+  Map<String, dynamic>? _bookedBy(Slot slot) {
+    final booking = _calendarBookings
+        .where((b) => b.slotId == slot.id && b.status != 'CANCELLED')
+        .firstOrNull;
+    return booking == null ? null : widget.state.session(booking);
+  }
+
+  String _dayName(DateTime day) => day == _today
+      ? 'Hôm nay'
+      : 'Ngày ${day.day.toString().padLeft(2, '0')}/'
+            '${day.month.toString().padLeft(2, '0')}';
   DateTime _dateOnly(DateTime date) =>
       DateTime.utc(date.year, date.month, date.day);
-  bool _hasStartedOrPassed(Map<String, dynamic> slot) => false;
+  bool _hasStartedOrPassed(Map<String, dynamic> slot) =>
+      !(slot['dto'] as Slot).startAt.isAfter(DateTime.now().toUtc());
 
   String _formatDate(DateTime date) {
     final day = date.day.toString().padLeft(2, '0');
@@ -32,6 +204,16 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
         '${time.minute.toString().padLeft(2, '0')}';
   }
 
+  /// The team's rule: every session is this long, so only the start is chosen.
+  static const _sessionMinutes = 90;
+
+  TimeOfDay? _endOf(TimeOfDay? start) {
+    if (start == null) return null;
+    // A late session ends after midnight.
+    final end = (start.hour * 60 + start.minute + _sessionMinutes) % (24 * 60);
+    return TimeOfDay(hour: end ~/ 60, minute: end % 60);
+  }
+
   void _showMessage(String message) {
     if (!mounted) return;
 
@@ -40,13 +222,9 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _showSlotDialog({int? index}) async {
+  Future<void> _showSlotDialog({Map<String, dynamic>? existingSlot}) async {
     await widget.state.act(() async {
-      final isEditing = index != null;
-
-      if (isEditing && (index < 0 || index >= _slots.length)) return;
-
-      final existingSlot = isEditing ? _slots[index] : null;
+      final isEditing = existingSlot != null;
 
       if (existingSlot != null) {
         if (existingSlot['booked'] == true) {
@@ -60,25 +238,20 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
         }
       }
 
+      // A new slot starts on the chosen day, unless that day has gone.
+      final chosen = _day;
       DateTime selectedDate =
           existingSlot?['date'] as DateTime? ??
-          vietnamDate(DateTime.now().toUtc());
+          (chosen != null && !chosen.isBefore(_today) ? chosen : _today);
 
       TimeOfDay? selectedStart;
-      TimeOfDay? selectedEnd;
 
       if (existingSlot != null) {
         final startParts = (existingSlot['start'] as String).split(':');
-        final endParts = (existingSlot['end'] as String).split(':');
 
         selectedStart = TimeOfDay(
           hour: int.parse(startParts[0]),
           minute: int.parse(startParts[1]),
-        );
-
-        selectedEnd = TimeOfDay(
-          hour: int.parse(endParts[0]),
-          minute: int.parse(endParts[1]),
         );
       }
 
@@ -107,29 +280,28 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
                   setDialogState(() {
                     selectedDate = _dateOnly(pickedDate);
                     validationMessage = null;
+                    final time = selectedStart;
+                    if (time != null && !startsLater(selectedDate, time)) {
+                      selectedStart = null;
+                      validationMessage =
+                          'Giờ đã chọn đã qua trong ngày này. '
+                          'Hãy chọn lại giờ bắt đầu.';
+                    }
                   });
                 }
               }
 
-              Future<void> chooseTime({required bool isStart}) async {
-                final initialTime = isStart
-                    ? (selectedStart ?? const TimeOfDay(hour: 8, minute: 0))
-                    : (selectedEnd ?? const TimeOfDay(hour: 9, minute: 30));
-
-                final pickedTime = await showTimePicker(
+              Future<void> chooseTime() async {
+                final pickedTime = await showDialog<TimeOfDay>(
                   useRootNavigator: false,
                   context: dialogContext,
-                  initialTime: initialTime,
+                  builder: (_) =>
+                      StartTimeDialog(day: selectedDate, keep: selectedStart),
                 );
 
                 if (pickedTime != null) {
                   setDialogState(() {
-                    if (isStart) {
-                      selectedStart = pickedTime;
-                    } else {
-                      selectedEnd = pickedTime;
-                    }
-
+                    selectedStart = pickedTime;
                     validationMessage = null;
                   });
                 }
@@ -148,10 +320,9 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
                       const SizedBox(height: 8),
                       InkWell(
                         onTap: chooseDate,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(20),
                         child: InputDecorator(
                           decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
                             suffixIcon: Icon(Icons.calendar_month),
                           ),
                           child: Text(_formatDate(selectedDate)),
@@ -161,29 +332,29 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
                       const Text('Giờ bắt đầu'),
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
-                        onPressed: () => chooseTime(isStart: true),
+                        key: const Key('slot-start-time'),
+                        onPressed: chooseTime,
                         icon: const Icon(Icons.access_time),
                         label: Text(_formatTime(selectedStart)),
                       ),
                       const SizedBox(height: 12),
-                      const Text('Giờ kết thúc'),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: () => chooseTime(isStart: false),
-                        icon: const Icon(Icons.access_time),
-                        label: Text(_formatTime(selectedEnd)),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Mỗi khung giờ phải kéo dài đúng 90 phút.',
-                        style: TextStyle(fontSize: 12),
+                      // Worked out from the start, so it is not a button.
+                      Text(
+                        selectedStart == null
+                            ? 'Giờ kết thúc: tự tính sau giờ bắt đầu '
+                                  '$_sessionMinutes phút.'
+                            : 'Giờ kết thúc: '
+                                  '${_formatTime(_endOf(selectedStart))} '
+                                  '($_sessionMinutes phút)',
+                        key: const Key('slot-end-time'),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       if (validationMessage != null) ...[
                         const SizedBox(height: 12),
                         Text(
                           validationMessage!,
-                          style: const TextStyle(
-                            color: Colors.red,
+                          style: TextStyle(
+                            color: Theme.of(dialogContext).colorScheme.error,
                             fontSize: 13,
                           ),
                         ),
@@ -198,33 +369,19 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
                   ),
                   FilledButton(
                     onPressed: () {
-                      if (selectedStart == null || selectedEnd == null) {
+                      if (selectedStart == null) {
                         setDialogState(() {
-                          validationMessage =
-                              'Vui lòng chọn giờ bắt đầu và giờ kết thúc.';
+                          validationMessage = 'Vui lòng chọn giờ bắt đầu.';
                         });
                         return;
                       }
 
-                      final startMinutes =
-                          selectedStart!.hour * 60 + selectedStart!.minute;
-
-                      var endMinutes =
-                          selectedEnd!.hour * 60 + selectedEnd!.minute;
-
-                      if (endMinutes <= startMinutes) endMinutes += 24 * 60;
-                      if (endMinutes <= startMinutes) {
+                      if (!startsLater(selectedDate, selectedStart!)) {
+                        final now = vietnamClock(DateTime.now().toUtc());
                         setDialogState(() {
                           validationMessage =
-                              'Giờ kết thúc phải sau giờ bắt đầu.';
-                        });
-                        return;
-                      }
-
-                      if (endMinutes - startMinutes != 90) {
-                        setDialogState(() {
-                          validationMessage =
-                              'Mỗi khung giờ phải kéo dài đúng 90 phút.';
+                              'Giờ ${_formatTime(selectedStart)} đã qua. '
+                              'Bây giờ là $now, hãy chọn giờ muộn hơn.';
                         });
                         return;
                       }
@@ -250,12 +407,8 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
     });
   }
 
-  Future<void> _deleteSlot(int index) async {
+  Future<void> _deleteSlot(Map<String, dynamic> slot) async {
     await widget.state.act(() async {
-      if (index < 0 || index >= _slots.length) return;
-
-      final slot = _slots[index];
-
       if (slot['booked'] == true) {
         _showMessage('Không thể xóa khung giờ đã được đặt.');
         return;
@@ -279,7 +432,12 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+              child: Text(
+                'Xóa',
+                style: TextStyle(
+                  color: Theme.of(dialogContext).colorScheme.error,
+                ),
+              ),
             ),
           ],
         ),
@@ -293,151 +451,130 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
+    final day = _day;
+    final shown = _shownSlots;
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            ApiStatus(state: widget.state),
-            Row(
-              children: [
-                Icon(Icons.calendar_month, size: 32, color: colors.primary),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Quản lý lịch làm',
-                        style: TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.bold,
-                        ),
+        child: PullToReload(
+          onReload: () => PullToReload.bookings(widget.state),
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+            children: [
+              ApiStatus(state: widget.state),
+              // The logo shares the title's line.
+              const Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Lịch làm',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
                       ),
-                      SizedBox(height: 4),
-                      Text('Các khung giờ nhận học viên'),
-                    ],
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  BrandLogo(width: 100),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Theo dõi lịch dạy và mở khung giờ rảnh',
+                style: TextStyle(
+                  color: colors.onSurface.withValues(alpha: 0.65),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 24),
+              MonthCalendar(
+                month: _month,
+                today: _today,
+                selected: day,
+                marksOf: _marks,
+                legend: [
+                  (_freeColor, 'Khung giờ trống'),
+                  (bookedColor, 'Đã được đặt'),
+                  (trainedColor, 'Đã dạy'),
+                ],
+                onPrevious: () => _showMonth(-1),
+                onNext: () => _showMonth(1),
+                // Tapping the chosen day again shows everything.
+                onSelect: (date) =>
+                    setState(() => _day = date == _day ? null : date),
+                note: _monthFailed
+                    ? 'Chưa tải đủ trạng thái lịch. Kéo xuống để tải lại.'
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                key: const Key('create-slot'),
+                onPressed: widget.state.blocked
+                    ? null
+                    : () => _showSlotDialog(),
+                icon: const Icon(Icons.add),
+                label: const Text('Tạo khung giờ làm'),
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      day == null
+                          ? 'Tất cả khung giờ'
+                          : '${_dayName(day)} • ${shown.length} khung giờ',
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (day != null)
+                    TextButton(
+                      key: const Key('all-slots'),
+                      onPressed: () => setState(() => _day = null),
+                      child: const Text('Xem tất cả'),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (shown.isNotEmpty)
+                for (final slot in shown) _buildSlotCard(context, slot)
+              else if (day == null)
+                _buildEmptyState(context)
+              else
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Text(
+                    '${_dayName(day)} chưa có khung giờ làm.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 13),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              key: const Key('create-slot'),
-              onPressed: widget.state.blocked ? null : () => _showSlotDialog(),
-              icon: const Icon(Icons.add),
-              label: const Text('Tạo khung giờ làm'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryCard(
-                    context,
-                    title: 'Chưa được đặt',
-                    value: _slots
-                        .where((slot) => slot['booked'] == false)
-                        .length
-                        .toString(),
-                    icon: Icons.event_available,
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildSummaryCard(
-                    context,
-                    title: 'Đã được đặt',
-                    value: _slots
-                        .where((slot) => slot['booked'] == true)
-                        .length
-                        .toString(),
-                    icon: Icons.event_busy,
-                    color: Colors.orange,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 28),
-            const Text(
-              'Danh sách khung giờ',
-              style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            if (_slots.isEmpty)
-              _buildEmptyState(context)
-            else
-              ...List.generate(
-                _slots.length,
-                (index) => _buildSlotCard(context, index, _slots[index]),
-              ),
-            const SizedBox(height: 16),
-            Text(
-              'Giờ hiển thị theo Việt Nam (UTC+07:00).',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 26),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              color: colors.onSurface.withValues(alpha: 0.7),
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSlotCard(
-    BuildContext context,
-    int index,
-    Map<String, dynamic> slot,
-  ) {
+  Widget _buildSlotCard(BuildContext context, Map<String, dynamic> slot) {
     final colors = Theme.of(context).colorScheme;
     final isBooked = slot['booked'] == true;
     final date = slot['date'] as DateTime;
     final isLocked = _hasStartedOrPassed(slot);
     final canManage = !isBooked && !isLocked && !widget.state.blocked;
+    final student = isBooked ? _bookedBy(slot['dto'] as Slot) : null;
+    // Free is the black of the legend; booked is its orange.
+    final tone = isBooked ? bookedColor : _freeColor;
 
     return Container(
       key: ValueKey('availability-${slot['id']}'),
@@ -445,12 +582,10 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isBooked
-              ? Colors.orange.withValues(alpha: 0.35)
-              : Colors.green.withValues(alpha: 0.35),
-        ),
+        borderRadius: BorderRadius.circular(22),
+        border: isBooked
+            ? Border.all(color: bookedColor.withValues(alpha: 0.35))
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -474,9 +609,9 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
                 enabled: canManage,
                 onSelected: (value) {
                   if (value == 'edit') {
-                    _showSlotDialog(index: index);
+                    _showSlotDialog(existingSlot: slot);
                   } else if (value == 'delete') {
-                    _deleteSlot(index);
+                    _deleteSlot(slot);
                   }
                 },
                 itemBuilder: (context) => const [
@@ -504,20 +639,26 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: isBooked
-                  ? Colors.orange.withValues(alpha: 0.12)
-                  : Colors.green.withValues(alpha: 0.12),
+              color: tone.withValues(alpha: isBooked ? 0.12 : 0.06),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               isBooked ? 'Đã được đặt' : 'Chưa được đặt',
               style: TextStyle(
-                color: isBooked ? Colors.orange : Colors.green,
+                color: tone,
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
               ),
             ),
           ),
+          if (student != null) ...[
+            Divider(height: 24, color: colors.outlineVariant),
+            StudentInfo(
+              api: widget.state.service.api,
+              session: student,
+              avatarSize: 56,
+            ),
+          ],
           if (isBooked || isLocked) ...[
             const SizedBox(height: 8),
             Text(
@@ -542,7 +683,7 @@ class _AvailabilityPageState extends State<AvailabilityPage> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         children: [

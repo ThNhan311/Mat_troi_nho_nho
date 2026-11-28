@@ -58,6 +58,7 @@ Future<void> add(WidgetTester t) async {
   await t.pumpAndSettle();
   await t.enterText(find.byType(TextFormField).at(0), 'Synthetic PT');
   await t.enterText(find.byType(TextFormField).at(1), 'new@example.invalid');
+  await t.enterText(find.byKey(const Key('add-phone')), '0901 234 567');
 }
 
 void main() {
@@ -111,9 +112,7 @@ void main() {
       );
     });
   }
-  testWidgets('list uses real DTO and unavailable actions never write', (
-    t,
-  ) async {
+  testWidgets('list uses real DTO; showing actions never writes', (t) async {
     int writes = 0;
     final a = client((r) async {
       if (r.method != 'GET') writes++;
@@ -125,9 +124,9 @@ void main() {
     await open(t, a);
     expect(find.text('Chưa kích hoạt'), findsOneWidget);
     expect(find.text('Synthetic PT'), findsOneWidget);
-    await t.tap(find.byTooltip('Sửa tài khoản — Chưa khả dụng'));
-    await t.pump();
-    expect(find.text('Chưa khả dụng'), findsOneWidget);
+    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+    expect(find.byType(Switch), findsNothing);
     expect(writes, 0);
   });
   testWidgets('empty/error never show sample accounts', (t) async {
@@ -141,10 +140,11 @@ void main() {
     int posts = 0, gets = 0;
     final a = client((r) async {
       if (r.method == 'GET') {
-        gets++;
+        if (r.url.path.endsWith('/admin/members')) gets++;
         return json([]);
       }
       posts++;
+      expect(jsonDecode(r.body)['phone'], '0901234567');
       return json({...dto(), 'role': 'MEMBER'}, 201);
     });
     addTearDown(a.dispose);

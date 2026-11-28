@@ -146,7 +146,6 @@ class _WorkoutPlanPageState extends State<WorkoutPlanPage> {
     final exercises = currentDay['exercises'] as List<dynamic>;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'Kế hoạch tập luyện',
@@ -268,7 +267,7 @@ class _WorkoutPlanPageState extends State<WorkoutPlanPage> {
               ),
               decoration: BoxDecoration(
                 color: isSelected ? colors.primary : colors.surface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(22),
                 border: Border.all(
                   color: isSelected
                       ? colors.primary
@@ -318,7 +317,7 @@ class _WorkoutPlanPageState extends State<WorkoutPlanPage> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,7 +396,7 @@ class _WorkoutPlanPageState extends State<WorkoutPlanPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: completed
               ? colors.primary.withValues(alpha: 0.45)

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_theme.dart';
 
 class TrainerCard extends StatelessWidget {
   const TrainerCard({
@@ -22,8 +21,9 @@ class TrainerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Material(
-      color: AppColors.cardColor,
+      color: colors.surface,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
@@ -33,7 +33,7 @@ class TrainerCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? AppColors.green : Colors.transparent,
+              color: isSelected ? colors.primary : Colors.transparent,
               width: 1.5,
             ),
           ),
@@ -41,10 +41,10 @@ class TrainerCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: AppColors.green.withValues(alpha: 0.15),
+                backgroundColor: colors.primary.withValues(alpha: 0.15),
                 child: Icon(
                   avatarIcon,
-                  color: AppColors.green,
+                  color: colors.primary,
                   size: 30,
                 ),
               ),
@@ -63,16 +63,16 @@ class TrainerCard extends StatelessWidget {
                     const SizedBox(height: 5),
                     Text(
                       specialty,
-                      style: const TextStyle(
-                        color: AppColors.green,
+                      style: TextStyle(
+                        color: colors.primary,
                         fontSize: 13,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       experience,
-                      style: const TextStyle(
-                        color: Colors.white54,
+                      style: TextStyle(
+                        color: colors.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),
@@ -84,8 +84,8 @@ class TrainerCard extends StatelessWidget {
                     ? Icons.radio_button_checked
                     : Icons.radio_button_off,
                 color: isSelected
-                    ? AppColors.green
-                    : Colors.white38,
+                    ? colors.primary
+                    : colors.outline,
               ),
             ],
           ),

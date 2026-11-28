@@ -1,145 +1,209 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
-import '../widgets/info_card.dart';
-import '../widgets/api_status.dart';
 import '../services/booking_state.dart';
+import '../widgets/api_status.dart';
+import '../widgets/avatar.dart';
+import '../widgets/brand_logo.dart';
+import '../widgets/feature_tile.dart';
+import '../widgets/overview_section.dart';
+import '../widgets/pull_to_reload.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
     super.key,
     required this.state,
     required this.onOpenSchedule,
+    required this.onOpenSessions,
+    required this.onOpenProfile,
     required this.onShowMessage,
+    this.photo,
+    this.name,
     this.sessionCount,
     this.memberCount,
   });
 
-  final VoidCallback onOpenSchedule;
-  final int? sessionCount, memberCount;
-  final void Function(String message) onShowMessage;
-
   final BookingState state;
+  final VoidCallback onOpenSchedule;
+  final VoidCallback onOpenSessions;
+  final VoidCallback onOpenProfile;
+  final void Function(String message) onShowMessage;
+  final Uint8List? photo;
+  final String? name;
+  final int? sessionCount, memberCount;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          ApiStatus(state: state),
-          // Tiêu đề trang chủ
-          Row(
+      child: PullToReload(
+        onReload: () => PullToReload.bookings(state),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.fitness_center, size: 38, color: colors.primary),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
+              _buildGreeting(context),
+              ApiStatus(state: state),
+              const SizedBox(height: 22),
+              _buildHeroCard(context),
+              const SizedBox(height: 28),
+              _sectionTitle('Tổng quan'),
+              const SizedBox(height: 14),
+              OverviewSection(
+                state: state,
+                sessionCount: sessionCount,
+                memberCount: memberCount,
+                onOpenSessions: onOpenSessions,
+                onOpenSchedule: onOpenSchedule,
+              ),
+              const SizedBox(height: 28),
+              _sectionTitle('Công việc của bạn'),
+              const SizedBox(height: 14),
+              FeatureTile(
+                icon: Icons.event_note,
+                title: 'Buổi tập đã đặt',
+                subtitle: 'Xem học viên và trạng thái từng buổi',
+                onTap: onOpenSessions,
+              ),
+              const SizedBox(height: 10),
+              FeatureTile(
+                icon: Icons.calendar_month,
+                title: 'Lịch làm',
+                subtitle: 'Các khung giờ nhận học viên',
+                onTap: onOpenSchedule,
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) => Text(
+    title,
+    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+  );
+
+  Widget _buildGreeting(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onOpenProfile,
+          child: Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              shape: BoxShape.circle,
+            ),
+            child: AvatarCircle(image: photo, size: 46),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: name == null
+              ? const Text(
+                  'Xin chào PT!',
+                  style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+                )
+              : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'FitCenter PT',
+                      'Xin chào PT,',
                       style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        color: colors.onSurfaceVariant,
+                        fontSize: 13,
                       ),
                     ),
-                    Text('PERSONAL TRAINER'),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$name!',
+                      key: const Key('greeting-name'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+        const SizedBox(width: 12),
+        const BrandLogo(key: Key('home-logo'), width: 120),
+      ],
+    );
+  }
+
+  /// The campaign banner keeps its own ratio so no artwork is cropped.
+  Widget _buildHeroCard(BuildContext context) {
+    // Matches the dark edge of the artwork, in both light and dark mode.
+    const base = Color(0xFF121411);
+    const lime = Color(0xFFCBF31D);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: base,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              AspectRatio(
+                aspectRatio: 1672 / 941,
+                child: Image.asset(
+                  'assets/images/home_banner.webp',
+                  key: const Key('home-banner'),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  semanticLabel: 'FitCenter: Push your limits',
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 12, 12, 12),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'YOUR FITNESS JOURNEY',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    FilledButton.icon(
+                      onPressed: onOpenSchedule,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: lime,
+                        foregroundColor: base,
+                      ),
+                      icon: const Icon(Icons.calendar_month, size: 20),
+                      label: const Text('Mở lịch làm'),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 30),
-
-          const Text(
-            'Xin chào!',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-
-          Text(
-            'Quản lý lịch tập và hỗ trợ học viên của bạn.',
-            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.65)),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Thẻ truy cập lịch làm việc
-          Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: colors.primary,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'LỊCH LÀM VIỆC',
-                  style: TextStyle(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Chủ động sắp xếp\nlịch nhận học viên',
-                  style: TextStyle(
-                    color: colors.onPrimary,
-                    fontSize: 27,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                FilledButton.icon(
-                  onPressed: onOpenSchedule,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colors.surface,
-                    foregroundColor: colors.onSurface,
-                  ),
-                  icon: const Icon(Icons.calendar_month),
-                  label: const Text('Quản lý lịch làm'),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 28),
-
-          const Text(
-            'Tổng quan hôm nay',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 14),
-
-          Row(
-            children: [
-              Expanded(
-                child: InfoCard(
-                  icon: Icons.event_available,
-                  title: 'Buổi tập',
-                  value: sessionCount?.toString() ?? '—',
-                  subtitle: 'Hôm nay',
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: InfoCard(
-                  icon: Icons.people_outline,
-                  title: 'Học viên',
-                  value: memberCount?.toString() ?? '—',
-                  subtitle: 'Hôm nay',
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 28),
-        ],
+        ),
       ),
     );
   }

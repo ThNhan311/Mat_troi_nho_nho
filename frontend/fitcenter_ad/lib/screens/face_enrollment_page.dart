@@ -5,6 +5,7 @@ import '../services/admin_account_service.dart';
 import '../services/api_client.dart';
 import '../services/initial_activation_service.dart' show newActivationKey;
 import '../services/vietnam_time.dart';
+import '../widgets/selectable_dialog.dart';
 
 class FaceEnrollmentPage extends StatefulWidget {
   final FaceEnrollmentService service;
@@ -78,7 +79,7 @@ class _FaceEnrollmentPageState extends State<FaceEnrollmentPage> {
   }
 
   Future<bool> confirm(String text) async =>
-      await showDialog<bool>(
+      await showSelectableDialog<bool>(
         context: context,
         useRootNavigator: false,
         builder: (c) => AlertDialog(
@@ -313,7 +314,7 @@ class _FaceEnrollmentPageState extends State<FaceEnrollmentPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('${label(op.status)} • ${op.id.substring(0, 8)}'),
-                      Text(vietnamTime(op.startedAt)),
+                      Text(vietnamShortTime(op.startedAt)),
                       if (op.failureCode != null)
                         Text('Mẫu chưa được kích hoạt: ${op.failureCode}'),
                       if (op.cleanupPending)

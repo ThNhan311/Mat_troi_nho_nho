@@ -20,6 +20,7 @@ import vn.edu.tdtu.fitcenter.domain.entity.User;
 import vn.edu.tdtu.fitcenter.domain.enums.AccountStatus;
 import vn.edu.tdtu.fitcenter.domain.enums.BookingStatus;
 import vn.edu.tdtu.fitcenter.domain.enums.Role;
+import vn.edu.tdtu.fitcenter.dto.booking.BookedMember;
 import vn.edu.tdtu.fitcenter.dto.booking.BookingResponse;
 import vn.edu.tdtu.fitcenter.repository.BookingRepository;
 import vn.edu.tdtu.fitcenter.repository.MemberRepository;
@@ -74,6 +75,27 @@ class PtBookingQueryServiceTest {
             record.setCompletedAt(record.getEndAt());
         }
         return record;
+    }
+
+    @Test
+    void bookedMemberNamesAreAskedForTheSignedInTrainerOnly() {
+        mockTrainer();
+        var named = List.of(new BookedMember(UUID.randomUUID(), "Member A", "0901234567", "FEMALE"));
+        when(members.findBookedWith(trainer.getId())).thenReturn(named);
+
+        assertEquals(named, service.getMyBookedMembers(EMAIL));
+        verify(members).findBookedWith(trainer.getId());
+        verifyNoMoreInteractions(members);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Role.class, names = "PT", mode = EnumSource.Mode.EXCLUDE)
+    void otherRolesGetNoMemberNames(Role role) {
+        user.setRole(role);
+        when(users.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.of(user));
+
+        assertThrows(AccessDeniedException.class, () -> service.getMyBookedMembers(EMAIL));
+        verifyNoInteractions(members);
     }
 
     @Test

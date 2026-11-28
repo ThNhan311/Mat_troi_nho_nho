@@ -1,218 +1,270 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../services/booking_models.dart';
+import '../services/vietnam_time.dart';
+import '../widgets/trainer_photo.dart';
+import '../widgets/trainer_showcase_card.dart';
+
+/// One trainer: the photo, who they are, how to reach them and when they are
+/// free. The booking button stays on screen.
 class TrainerDetailPage extends StatelessWidget {
   final String trainerName;
-  final String? bio;
-  final String specialty;
-  final String experience;
-  final String rating;
-  final String sessions;
+
+  /// The round picture; the initials stand in when there is none.
+  final Widget? photo;
+  final String? bio, specialization, experience, phone, gender;
+
+  /// Null when the server has not said; then nothing is claimed about it.
+  final List<Slot>? slots;
   final ValueChanged<String> onShowMessage;
   final VoidCallback onBookAppointment;
 
   const TrainerDetailPage({
     super.key,
     required this.trainerName,
+    this.photo,
     this.bio,
-    required this.specialty,
-    required this.experience,
-    required this.rating,
-    required this.sessions,
+    this.specialization,
+    this.experience,
+    this.phone,
+    this.gender,
+    this.slots,
     required this.onShowMessage,
     required this.onBookAppointment,
   });
 
+  static const photoSize = 112.0;
+  static const _shownSlots = 4;
+
+  static String? _filled(String? value) =>
+      value == null || value.trim().isEmpty ? null : value.trim();
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
+    final specialties = splitSpecialties(specialization);
+    final sex = genderText(gender);
+    final years = experienceText(experience);
+    final about = _filled(bio);
+    final number = _filled(phone);
+    final muted = TextStyle(
+      color: colors.onSurfaceVariant,
+      fontSize: 14,
+      height: 1.5,
+    );
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(title: const Text('Hồ sơ huấn luyện viên')),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  onPressed: onBookAppointment,
+                  child: const Text('Chọn lịch tập với PT'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 110,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    color: colors.primary.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.person, size: 65, color: colors.primary),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Center(
-                child: Text(
-                  trainerName,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: colors.onSurface,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  specialty,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: colors.primary, fontSize: 14),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildStat(context, 'Đánh giá', rating, Icons.star),
-                  const SizedBox(width: 10),
-                  _buildStat(
-                    context,
-                    'Kinh nghiệm',
-                    experience,
-                    Icons.work_outline,
+                  const SizedBox(height: 8),
+                  Center(
+                    child:
+                        photo ?? TrainerInitials(trainerName, size: photoSize),
                   ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          trainerName,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      if (sex != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          sex,
+                          style: TextStyle(
+                            color: colors.onSurfaceVariant,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (years != null)
+                    Text(
+                      years,
+                      textAlign: TextAlign.center,
+                      style: muted.copyWith(
+                        color: colors.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                  if (specialties.isEmpty)
+                    Text(
+                      'Chưa cập nhật chuyên môn',
+                      textAlign: TextAlign.center,
+                      style: muted,
+                    )
+                  else
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final item in specialties) _tag(context, item),
+                      ],
+                    ),
+                  const SizedBox(height: 18),
+                  _section(context, [
+                    _heading('Giới thiệu'),
+                    const SizedBox(height: 4),
+                    Text(about ?? 'Chưa có phần giới thiệu.', style: muted),
+                  ]),
+                  _section(context, [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Số điện thoại', style: muted),
+                              Text(
+                                number ?? 'Chưa có thông tin',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (number != null)
+                          OutlinedButton(
+                            key: const Key('copy-phone'),
+                            onPressed: () => _copy(context, number),
+                            child: const Text('Sao chép'),
+                          ),
+                      ],
+                    ),
+                  ]),
+                  if (slots case final free?)
+                    _slotSection(context, free, muted),
                 ],
               ),
-              const SizedBox(height: 10),
-              _buildInfoCard(
-                context,
-                icon: Icons.fitness_center,
-                title: 'Giới thiệu',
-                content: bio ?? 'Chưa có thông tin',
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _copy(BuildContext context, String number) async {
+    final messenger = ScaffoldMessenger.of(context);
+    await Clipboard.setData(ClipboardData(text: number));
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(content: Text('Đã sao chép số điện thoại.')),
+      );
+  }
+
+  Widget _heading(String text) => Text(
+    text,
+    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+  );
+
+  Widget _section(BuildContext context, List<Widget> children) => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(22),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    ),
+  );
+
+  Widget _tag(BuildContext context, String label) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: colors.primary,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _slotSection(BuildContext context, List<Slot> free, TextStyle muted) {
+    final colors = Theme.of(context).colorScheme;
+    final more = free.length - _shownSlots;
+    return _section(context, [
+      _heading('Lịch trống sắp tới'),
+      const SizedBox(height: 4),
+      if (free.isEmpty)
+        Text('Chưa có lịch trống trong thời gian tới', style: muted),
+      for (final (index, slot) in free.take(_shownSlots).indexed) ...[
+        if (index > 0) Divider(height: 1, color: colors.outlineVariant),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${weekdayName(slot.startAt)}, '
+                  '${vietnamDateText(slot.startAt).substring(0, 5)}',
+                  style: muted,
+                ),
               ),
-              const SizedBox(height: 14),
-              _buildInfoCard(
-                context,
-                icon: Icons.track_changes,
-                title: 'Chuyên môn',
-                content: specialty,
-              ),
-              const SizedBox(height: 14),
-              _buildInfoCard(
-                context,
-                icon: Icons.calendar_month,
-                title: 'Lịch huấn luyện',
-                content:
-                    'Xem các khung giờ còn trống và chọn lịch phù hợp với bạn.',
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: onBookAppointment,
-                  icon: const Icon(Icons.calendar_month),
-                  label: const Text('Chọn lịch tập với PT'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.primary,
-                    foregroundColor: colors.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
+              Text(
+                '${vietnamClock(slot.startAt)} - ${vietnamClock(slot.endAt)}',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildStat(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-  ) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: colors.primary, size: 22),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: TextStyle(
-                color: colors.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.onSurface,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String content,
-  }) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: colors.primary, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: colors.onSurface,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  content,
-                  style: TextStyle(
-                    color: colors.onSurface.withValues(alpha: 0.65),
-                    fontSize: 13,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+      ],
+      if (more > 0) Text('Còn $more lịch khác', style: muted),
+    ]);
   }
 }

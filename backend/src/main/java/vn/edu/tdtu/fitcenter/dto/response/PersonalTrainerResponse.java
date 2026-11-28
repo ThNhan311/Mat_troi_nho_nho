@@ -8,6 +8,8 @@ public record PersonalTrainerResponse(
         String fullName,
         String bio,
         String specialization,
-        String experienceSummary
+        String experienceSummary,
+        String phone,
+        String gender
 ) {
 }

@@ -223,7 +223,6 @@ class _BookingDashboardState extends State<BookingDashboard> {
           spacing: 16,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            const Text('Giờ Việt Nam (UTC+07:00) • dữ liệu từ máy chủ'),
             OutlinedButton(
               key: const Key('refresh'),
               onPressed: loading || sending ? null : () => load(manual: true),

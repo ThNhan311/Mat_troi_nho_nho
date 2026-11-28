@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/booking_state.dart';
 import '../widgets/api_status.dart';
+import '../widgets/pull_to_reload.dart';
 
 class BookingHistoryPage extends StatefulWidget {
   const BookingHistoryPage({
@@ -65,10 +66,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                 onPressed: () {
                   Navigator.pop(dialogContext, true);
                 },
-                child: const Text(
-                  'Hủy lịch',
-                  style: TextStyle(color: Colors.redAccent),
-                ),
+                child: Text('Hủy lịch', style: TextStyle(color: colors.error)),
               ),
             ],
           );
@@ -89,35 +87,36 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.surface,
-      appBar: AppBar(
-        title: const Text('Lịch sử đặt lịch'),
-        backgroundColor: colors.surface,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          ApiStatus(state: widget.state),
-          Text(
-            'Các buổi tập PT của bạn',
-            style: TextStyle(
-              color: colors.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+      appBar: AppBar(title: const Text('Lịch sử đặt lịch')),
+      body: PullToReload(
+        onReload: () => PullToReload.bookings(widget.state),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+
+          padding: const EdgeInsets.all(16),
+          children: [
+            ApiStatus(state: widget.state),
+            Text(
+              'Các buổi tập PT của bạn',
+              style: TextStyle(
+                color: colors.onSurface,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Theo dõi trạng thái các buổi tập đã đặt.',
-            style: TextStyle(color: colors.onSurface.withValues(alpha: 0.65)),
-          ),
-          const SizedBox(height: 20),
-          if (bookings.isEmpty)
-            _buildEmptyState(context)
-          else
-            for (int index = 0; index < bookings.length; index++)
-              _buildBookingCard(context, bookings[index], index),
-        ],
+            const SizedBox(height: 6),
+            Text(
+              'Theo dõi trạng thái các buổi tập đã đặt.',
+              style: TextStyle(color: colors.onSurface.withValues(alpha: 0.65)),
+            ),
+            const SizedBox(height: 20),
+            if (bookings.isEmpty)
+              _buildEmptyState(context)
+            else
+              for (int index = 0; index < bookings.length; index++)
+                _buildBookingCard(context, bookings[index], index),
+          ],
+        ),
       ),
     );
   }
@@ -129,7 +128,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         children: [
@@ -171,7 +170,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
       key: ValueKey('history-${booking['id']}'),
       color: colors.surfaceContainerHighest,
       margin: const EdgeInsets.only(bottom: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -198,7 +197,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             const SizedBox(height: 10),
             _buildInfoRow(context, Icons.access_time, booking['time']!),
             const SizedBox(height: 8),
-            Text('Mã đặt lịch: ${booking['id']}'),
             if (booking['reason'] != null) Text('Lý do: ${booking['reason']}'),
             const SizedBox(height: 16),
             Row(
@@ -219,9 +217,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                     onPressed: widget.state.blocked
                         ? null
                         : () => _showCancelDialog(index),
-                    child: const Text(
+                    child: Text(
                       'Hủy lịch',
-                      style: TextStyle(color: Colors.redAccent),
+                      style: TextStyle(color: colors.error),
                     ),
                   ),
               ],

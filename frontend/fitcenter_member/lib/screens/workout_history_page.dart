@@ -10,7 +10,6 @@ class WorkoutHistoryPage extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'Lịch sử tập luyện',
@@ -48,7 +47,7 @@ class WorkoutHistoryPage extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: colors.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(22),
                   border: Border.all(
                     color: colors.onSurface.withValues(alpha: 0.08),
                   ),

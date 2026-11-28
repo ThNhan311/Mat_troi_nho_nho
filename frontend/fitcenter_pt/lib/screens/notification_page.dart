@@ -100,9 +100,7 @@ class _NotificationPageState extends State<NotificationPage> {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.surface,
       appBar: AppBar(
-        backgroundColor: colors.surface,
         elevation: 0,
         iconTheme: IconThemeData(color: colors.onSurface),
         title: Text(
@@ -163,9 +161,9 @@ class _NotificationPageState extends State<NotificationPage> {
                       : colors.primaryContainer.withValues(
                     alpha: 0.65,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(22),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(22),
                     onTap: () => _showNotification(index),
                     child: Padding(
                       padding: const EdgeInsets.all(16),

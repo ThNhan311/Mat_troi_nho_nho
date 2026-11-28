@@ -84,13 +84,24 @@ class AdminAccountService {
     return rows;
   }
 
-  Future<AdminAccount> create(String role, String email, String name) async {
+  Future<AdminAccount> create(
+    String role,
+    String email,
+    String name, {
+    String? phone,
+    String? gender,
+  }) async {
     final account = AdminAccount.parse(
       await api.request(
         'POST',
         path(role),
         expectedStatus: 201,
-        body: {'email': email.trim(), 'fullName': name.trim()},
+        body: {
+          'email': email.trim(),
+          'fullName': name.trim(),
+          'phone': ?phone,
+          'gender': ?gender,
+        },
       ),
       write: true,
     );

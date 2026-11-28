@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import '../services/api_client.dart';
 import '../services/renewal_service.dart';
 import '../services/renewal_models.dart';
+import '../widgets/pull_to_reload.dart';
+import '../widgets/record_card.dart';
+import '../widgets/renewal_confirm_dialog.dart';
+import 'transfer_dialog.dart';
 
 class RenewalPage extends StatefulWidget {
   final RenewalService service;
@@ -95,6 +99,17 @@ class _RenewalPageState extends State<RenewalPage> {
     }
   }
 
+  Future<void> pay(RenewalPayment payment) async {
+    if (!current || busy || loading) return;
+    await showDialog<void>(
+      context: context,
+      useRootNavigator: false,
+      builder: (_) => TransferDialog(service: widget.service, payment: payment),
+    );
+    // It may have been confirmed while the dialog was open.
+    if (current) await load();
+  }
+
   Future<void> create() async {
     if (!current || busy || loading || pendingKey != null || planId == null)
       return;
@@ -103,21 +118,10 @@ class _RenewalPageState extends State<RenewalPage> {
     final yes = await showDialog<bool>(
       context: context,
       useRootNavigator: false,
-      builder: (c) => AlertDialog(
-        title: const Text('Tạo giao dịch gia hạn mới'),
-        content: Text(
-          '${chosen.name} • ${chosen.days} ngày • ${paymentDecimal(chosen.cents)} VNĐ. Giao dịch chờ kết quả thanh toán mô phỏng; chưa cộng thời hạn. Giá và thời lượng được máy chủ chốt khi tạo.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: const Text('Quay lại'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(c, true),
-            child: const Text('Tạo giao dịch'),
-          ),
-        ],
+      builder: (_) => RenewalConfirmDialog(
+        planName: chosen.name,
+        days: chosen.days,
+        cents: chosen.cents,
       ),
     );
     if (!current) return;
@@ -138,6 +142,7 @@ class _RenewalPageState extends State<RenewalPage> {
       error = null;
       reconciled = false;
     });
+    RenewalPayment? unpaid;
     try {
       final p = await widget.service.create(
         widget.membershipId,
@@ -151,6 +156,7 @@ class _RenewalPageState extends State<RenewalPage> {
           pendingPlan = null;
           uncertain = false;
         });
+      if (p.status == 'PENDING' && p.cents > 0) unpaid = p;
     } on ApiError catch (e) {
       if (current)
         setState(() {
@@ -164,6 +170,12 @@ class _RenewalPageState extends State<RenewalPage> {
     } finally {
       if (current) setState(() => busy = false);
     }
+    // A new unpaid transaction goes straight to the payment screen, which
+    // reloads this page when it is closed.
+    if (current && unpaid != null) {
+      await pay(unpaid);
+      return;
+    }
     if (current && pendingKey == null) {
       final failure = error;
       await load();
@@ -175,152 +187,155 @@ class _RenewalPageState extends State<RenewalPage> {
   Widget build(BuildContext context) {
     if (!current) return const SizedBox.shrink();
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gia hạn Membership'),
-        actions: [
-          IconButton(
-            tooltip: 'Tải lại gia hạn',
-            onPressed: loading || busy ? null : load,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Thanh toán mô phỏng',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-            ),
-            const Text(
-              'Không thu tiền thật. Chỉ kết quả từ máy chủ mới cấp kỳ sử dụng. Gói khác chỉ áp dụng cho kỳ gia hạn.',
-            ),
-            const SizedBox(height: 8),
-            SelectableText('Mã hội viên: ${widget.membershipId}'),
-            if (loading)
-              const LinearProgressIndicator(key: Key('renewal-loading')),
-            if (error != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  error!,
-                  key: const Key('renewal-error'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            if (uncertain)
+      appBar: AppBar(title: const Text('Gia hạn Membership')),
+      body: PullToReload(
+        onReload: () async {
+          if (!loading && !busy) await load();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               const Text(
-                'Chưa rõ kết quả. Hãy tải lại để đối chiếu trước khi thử lại cùng yêu cầu. Không tạo giao dịch khác thay cho yêu cầu này.',
+                'Thanh toán chuyển khoản',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
-            if (uncertain && pendingKey != null)
-              TextButton(
-                key: const Key('renewal-retry'),
-                onPressed: busy || loading || !reconciled ? null : send,
-                child: const Text('Thử lại cùng yêu cầu'),
-              ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              key: ValueKey('renewal-plan-$planId'),
-              initialValue: planId,
-              decoration: const InputDecoration(labelText: 'Chọn gói gia hạn'),
-              isExpanded: true,
-              items: plans
-                  .map(
-                    (p) => DropdownMenuItem(
-                      value: p.id,
-                      child: Text(
-                        '${p.name} • ${p.days} ngày • ${paymentDecimal(p.cents)} VNĐ',
-                      ),
+              const SizedBox(height: 8),
+              if (loading)
+                const LinearProgressIndicator(key: Key('renewal-loading')),
+              if (error != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    error!,
+                    key: const Key('renewal-error'),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
                     ),
-                  )
-                  .toList(),
-              onChanged: busy || loading || pendingKey != null
-                  ? null
-                  : (v) => setState(() => planId = v),
-            ),
-            const SizedBox(height: 12),
-            FilledButton(
-              key: const Key('renewal-create'),
-              onPressed: busy || loading || pendingKey != null || planId == null
-                  ? null
-                  : create,
-              child: Text(busy ? 'Đang gửi…' : 'Tạo giao dịch gia hạn mới'),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Kỳ sử dụng đã thanh toán',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            if (!loading && periods.isEmpty)
-              const Text('Chưa có kỳ sử dụng được xác minh.'),
-            for (final p in periods)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        p.phaseLabel,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(p.name ?? 'Kỳ tổng hợp từ dữ liệu cũ'),
-                      Text(
-                        '${showPaidDate(p.start)} – ${showPaidDate(p.end)} (ngày Việt Nam)',
-                      ),
-                      if (p.cents != null)
-                        Text(
-                          '${paymentDecimal(p.cents!)} VNĐ • ${p.days} ngày',
+                  ),
+                ),
+              if (uncertain)
+                const Text(
+                  'Chưa rõ kết quả. Hãy tải lại để đối chiếu trước khi thử lại cùng yêu cầu. Không tạo giao dịch khác thay cho yêu cầu này.',
+                ),
+              if (uncertain && pendingKey != null)
+                TextButton(
+                  key: const Key('renewal-retry'),
+                  onPressed: busy || loading || !reconciled ? null : send,
+                  child: const Text('Thử lại cùng yêu cầu'),
+                ),
+              const SizedBox(height: 16),
+              // A title above the field, so nothing sits on its border.
+              const Text(
+                'Chọn gói gia hạn',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                key: ValueKey('renewal-plan-$planId'),
+                initialValue: planId,
+                // Shown while nothing is chosen.
+                hint: const Text('Chưa chọn gói gia hạn'),
+                disabledHint: const Text('Chưa chọn gói gia hạn'),
+                isExpanded: true,
+                items: plans
+                    .map(
+                      (p) => DropdownMenuItem(
+                        value: p.id,
+                        child: Text(
+                          '${p.name} • ${p.days} ngày • ${paymentMoney(p.cents)}',
                         ),
-                      if (p.source == 'LEGACY_AGGREGATE')
-                        const Text(
-                          'Dữ liệu cũ tổng hợp; chưa có snapshot giá và lịch sử từng lần mua.',
-                        ),
-                      SelectableText('Mã kỳ: ${p.id}'),
-                      Text('Mã gói: ${p.planId}'),
+                      ),
+                    )
+                    .toList(),
+                onChanged: busy || loading || pendingKey != null
+                    ? null
+                    : (v) => setState(() => planId = v),
+              ),
+              const SizedBox(height: 12),
+              FilledButton(
+                key: const Key('renewal-create'),
+                onPressed:
+                    busy || loading || pendingKey != null || planId == null
+                    ? null
+                    : create,
+                child: Text(busy ? 'Đang gửi…' : 'Tạo giao dịch gia hạn mới'),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Kỳ sử dụng đã thanh toán',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              if (!loading && periods.isEmpty)
+                const Text('Chưa có kỳ sử dụng được xác minh.'),
+              for (final p in periods)
+                RecordCard(
+                  icon: Icons.event_available_outlined,
+                  title: p.phaseLabel,
+                  rows: [
+                    RecordRow('Gói', p.name ?? 'Kỳ tổng hợp từ dữ liệu cũ'),
+                    RecordRow('Từ ngày', showPaidDate(p.start)),
+                    RecordRow('Đến ngày', showPaidDate(p.end)),
+                    if (p.cents != null) ...[
+                      RecordRow('Thời hạn', '${p.days} ngày'),
+                      RecordRow(
+                        'Số tiền',
+                        paymentMoney(p.cents!),
+                        strong: true,
+                      ),
                     ],
-                  ),
+                    RecordRow('Mã kỳ', shortCode(p.id)),
+                    RecordRow('Mã gói', shortCode(p.planId)),
+                  ],
+                  note: p.source == 'LEGACY_AGGREGATE'
+                      ? 'Dữ liệu cũ tổng hợp; chưa có snapshot giá và lịch sử từng lần mua.'
+                      : null,
                 ),
+              const SizedBox(height: 24),
+              const Text(
+                'Giao dịch gia hạn',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-            const SizedBox(height: 24),
-            const Text(
-              'Giao dịch gia hạn',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            if (!loading && payments.isEmpty)
-              const Text('Chưa có giao dịch gia hạn.'),
-            for (final p in payments)
-              Semantics(
-                container: true,
-                explicitChildNodes: true,
-                label: 'Mã giao dịch: ${p.id}',
-                child: Card(
-                  key: ValueKey('payment-${p.id}'),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(p.planName),
-                        SelectableText('Mã giao dịch: ${p.id}'),
-                        Text('${paymentDecimal(p.cents)} VNĐ • ${p.days} ngày'),
-                        Text(p.statusLabel),
-                        Text(p.fulfillmentLabel),
-                        if (p.reason != null)
-                          Text('Lý do đối soát: ${p.reason}'),
-                        if (p.start != null && p.end != null)
-                          Text(
-                            '${showPaidDate(p.start!)} – ${showPaidDate(p.end!)}',
-                          ),
-                        Text(paymentTime(p.createdAt)),
+              if (!loading && payments.isEmpty)
+                const Text('Chưa có giao dịch gia hạn.'),
+              for (final p in payments)
+                Semantics(
+                  container: true,
+                  explicitChildNodes: true,
+                  label: 'Mã giao dịch: ${shortCode(p.id)}',
+                  child: RecordCard(
+                    key: ValueKey('payment-${p.id}'),
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Giao dịch ${shortCode(p.id)}',
+                    rows: [
+                      RecordRow('Gói', p.planName),
+                      RecordRow('Thời hạn', '${p.days} ngày'),
+                      RecordRow('Số tiền', paymentMoney(p.cents), strong: true),
+                      RecordRow('Trạng thái', p.statusLabel),
+                      RecordRow('Kỳ sử dụng', p.fulfillmentLabel),
+                      if (p.start != null && p.end != null) ...[
+                        RecordRow('Từ ngày', showPaidDate(p.start!)),
+                        RecordRow('Đến ngày', showPaidDate(p.end!)),
                       ],
-                    ),
+                      if (p.reason != null)
+                        RecordRow('Lý do đối soát', p.reason!),
+                      RecordRow('Ngày tạo', paymentTime(p.createdAt)),
+                    ],
+                    action: p.status == 'PENDING' && p.cents > 0
+                        ? FilledButton.icon(
+                            key: ValueKey('pay-${p.id}'),
+                            onPressed: busy || loading ? null : () => pay(p),
+                            icon: const Icon(Icons.qr_code_2),
+                            label: const Text('Thanh toán bằng mã QR'),
+                          )
+                        : null,
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

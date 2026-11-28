@@ -46,6 +46,8 @@ class PersonalTrainerControllerTest {
     @Autowired MockMvc mvc;
     @MockitoBean PersonalTrainerRepository trainers;
     @MockitoBean AvailabilitySlotRepository slots;
+    @MockitoBean vn.edu.tdtu.fitcenter.accountadmin.TrainerPhones phones;
+    @MockitoBean vn.edu.tdtu.fitcenter.accountadmin.TrainerGenders genders;
     @MockitoBean MembershipPlanService plans;
     @MockitoBean AuthService auth;
     @MockitoBean JwtService jwt;

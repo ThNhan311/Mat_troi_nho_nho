@@ -56,6 +56,15 @@ class RenewalService {
     return rows.map((x) => RenewalPayment.parse(x)).toList();
   }
 
+  Future<RenewalPayment> payment(String id) async {
+    final value = RenewalPayment.parse(
+      await api.request('GET', '/payments/$id'),
+    );
+    if (value.id != id)
+      throw const ApiError(0, 'INVALID_RESPONSE', 'Giao dịch không khớp.');
+    return value;
+  }
+
   Future<List<PaidPeriod>> periods(String membership) async {
     final data = await api.request('GET', '/memberships/$membership/periods');
     if (data is! Map<String, dynamic> ||

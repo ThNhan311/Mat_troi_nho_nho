@@ -99,6 +99,14 @@ class Booking {
 
 String shortId(String id) => id.substring(0, 8);
 
+/// What the trainer may see about a student who booked them.
+class BookedMember {
+  const BookedMember(this.name, {this.phone, this.gender});
+
+  final String name;
+  final String? phone, gender;
+}
+
 Booking transitioned(
   Object? payload,
   Booking previous,
@@ -156,11 +164,11 @@ class ServiceEligibility {
 
 String eligibilityReason(String code) =>
     const {
-      'BOOKING_NOT_CONFIRMED': 'Booking không còn CONFIRMED.',
+      'BOOKING_NOT_CONFIRMED': 'Buổi tập không còn ở trạng thái Đã xác nhận.',
       'SESSION_NOT_STARTED': 'Chưa đến giờ buổi tập.',
       'SESSION_ENDED': 'Buổi tập đã hết giờ.',
-      'MEMBER_ACCOUNT_INACTIVE': 'Tài khoản Member không hợp lệ.',
-      'MEMBERSHIP_INACTIVE': 'Membership hiện tại không hợp lệ.',
-      'MEMBERSHIP_NOT_COVERED': 'Membership không bao phủ toàn bộ buổi tập.',
+      'MEMBER_ACCOUNT_INACTIVE': 'Tài khoản hội viên không hợp lệ.',
+      'MEMBERSHIP_INACTIVE': 'Gói tập hiện tại không hợp lệ.',
+      'MEMBERSHIP_NOT_COVERED': 'Gói tập không bao phủ toàn bộ buổi tập.',
     }[code] ??
     'Không đủ điều kiện ($code).';

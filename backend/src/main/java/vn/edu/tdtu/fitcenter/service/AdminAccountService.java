@@ -7,6 +7,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.edu.tdtu.fitcenter.accountadmin.TrainerGenders;
+import vn.edu.tdtu.fitcenter.accountadmin.TrainerPhones;
 import vn.edu.tdtu.fitcenter.domain.entity.*;
 import vn.edu.tdtu.fitcenter.domain.enums.*;
 import vn.edu.tdtu.fitcenter.dto.account.*;
@@ -21,6 +23,8 @@ public class AdminAccountService {
     private final PersonalTrainerRepository pts;
     private final PasswordEncoder encoder;
     private final JdbcTemplate jdbc;
+    private final TrainerPhones trainerPhones;
+    private final TrainerGenders trainerGenders;
     private UUID actor(String email) {
         var actor=users.findByEmailIgnoreCase(email).orElseThrow(()->new BadCredentialsException("Unknown actor"));
         if(actor.getRole()!=Role.ADMIN || actor.getStatus()!=AccountStatus.ACTIVE || !users.existsByIdAndRoleAndStatus(actor.getId(),Role.ADMIN,AccountStatus.ACTIVE))throw new AccessDeniedException("ACTIVE ADMIN required");
@@ -34,9 +38,12 @@ public class AdminAccountService {
         var user=users.saveAndFlush(User.builder().email(request.email().trim()).role(role).status(AccountStatus.DISABLED)
                 .passwordHash(encoder.encode(Base64.getUrlEncoder().withoutPadding().encodeToString(random))).build());
         UUID profile=role==Role.MEMBER
-                ? members.saveAndFlush(Member.builder().user(user).fullName(request.fullName()).build()).getId()
+                ? members.saveAndFlush(Member.builder().user(user).fullName(request.fullName()).phone(request.phone()).gender(request.gender()).build()).getId()
                 : pts.saveAndFlush(PersonalTrainer.builder().user(user).fullName(request.fullName()).build()).getId();
         jdbc.update("INSERT INTO audit_logs(actor_user_id,actor_type,action,entity_type,entity_id,details) VALUES(?,'USER','ACCOUNT_CREATED_PENDING_ACTIVATION','USER',?,jsonb_build_object('role',?::text))",admin,user.getId(),role.name());
+        // Written last, and a failure here still rolls the new account back.
+        if(role==Role.PT && request.phone()!=null)trainerPhones.save(profile,request.phone());
+        if(role==Role.PT && request.gender()!=null)trainerGenders.save(profile,request.gender());
         return new AccountResponse(user.getId(),profile,user.getEmail(),request.fullName(),role.name(),"DISABLED",true);
     }
     @Transactional(readOnly=true)

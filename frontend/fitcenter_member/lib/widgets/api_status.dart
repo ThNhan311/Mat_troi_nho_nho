@@ -9,20 +9,6 @@ class ApiStatus extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Row(
-        children: [
-          const Text('Giờ Việt Nam (UTC+07:00)'),
-          const Spacer(),
-          IconButton(
-            key: const Key('refresh'),
-            tooltip: 'Tải lại',
-            onPressed: state.loading || state.busy
-                ? null
-                : () => state.refresh(manual: true),
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
       if (state.loading) const LinearProgressIndicator(),
       if (state.error != null)
         Padding(
@@ -32,11 +18,6 @@ class ApiStatus extends StatelessWidget {
             key: const Key('api-error'),
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
-        ),
-      if (state.message != null)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text(state.message!, key: const Key('success')),
         ),
       if (state.needsReconciliation)
         const Text(

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'desktop_shell.dart';
+
 import '../services/api_client.dart';
 import '../services/membership_plan_service.dart';
+import 'person_code.dart';
+import '../widgets/selectable_dialog.dart';
 
 class MembershipPage extends StatefulWidget {
   final MembershipPlanService service;
@@ -55,13 +59,10 @@ class _MembershipPageState extends State<MembershipPage> {
     }
   }
 
-  void _unavailable() =>
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Chưa khả dụng')));
   Future<void> _add() async {
     if (_dialog || !_current) return;
     setState(() => _dialog = true);
-    final plan = await showDialog<MembershipPlan>(
+    final plan = await showSelectableDialog<MembershipPlan>(
       context: context,
       useRootNavigator: false,
       barrierDismissible: false,
@@ -75,9 +76,81 @@ class _MembershipPageState extends State<MembershipPage> {
     if (plan != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Đã thêm gói tập từ máy chủ. Mã gói: ${plan.id}'),
+          content: const Text('Đã thêm gói tập từ máy chủ.'),
         ),
       );
+      await _load();
+    }
+  }
+
+  void _say(String text) {
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(text)));
+    }
+  }
+
+  Future<void> _edit(MembershipPlan plan) async {
+    if (_dialog || !_current) return;
+    setState(() => _dialog = true);
+    final saved = await showSelectableDialog<MembershipPlan>(
+      context: context,
+      useRootNavigator: false,
+      barrierDismissible: false,
+      builder: (_) => _CreatePlanDialog(
+        service: widget.service,
+        reload: _load,
+        editing: plan,
+      ),
+    );
+    if (!mounted || !_current) return;
+    setState(() => _dialog = false);
+    if (saved != null) _say('Đã lưu gói ${saved.name}.');
+    await _load();
+  }
+
+  Future<void> _delete(MembershipPlan plan) async {
+    if (_dialog || !_current) return;
+    setState(() => _dialog = true);
+    final yes = await showSelectableDialog<bool>(
+      context: context,
+      useRootNavigator: false,
+      builder: (dialog) => AlertDialog(
+        title: const Text('Xóa gói tập'),
+        content: SizedBox(
+          width: 420,
+          child: Text(
+            'Xóa gói "${plan.name}"? Nếu đã có người mua, gói chỉ ngừng bán và '
+            'ẩn khỏi danh sách; gói của họ giữ nguyên.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog, false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            key: const Key('confirm-plan-delete'),
+            onPressed: () => Navigator.pop(dialog, true),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || !_current) return;
+    setState(() => _dialog = false);
+    if (yes != true) return;
+    try {
+      final archived = await widget.service.delete(plan.id);
+      _say(
+        archived ? 'Gói đã có người mua nên chỉ ngừng bán.' : 'Đã xóa gói tập.',
+      );
+    } on ApiError catch (e) {
+      _say(e.toString());
+    }
+    if (_current) {
+      if (_createdId == plan.id) setState(() => _createdId = null);
       await _load();
     }
   }
@@ -85,55 +158,58 @@ class _MembershipPageState extends State<MembershipPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context), primary = theme.colorScheme.primary;
+    final desktop = AdminDesktopScope.isDesktop(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Quản lý gói tập',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        title: Text(
+          desktop ? 'Gói tập' : 'Quản lý gói tập',
+          style: desktop ? null : const TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: [
+          if (desktop)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilledButton.icon(
+                onPressed: _dialog || _loading || _error != null ? null : _add,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Thêm gói'),
+              ),
+            ),
           IconButton(
             tooltip: 'Tải lại danh sách',
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.refresh),
           ),
-          IconButton(
-            tooltip: 'Đăng xuất',
-            onPressed: widget.onLogout,
-            icon: const Icon(Icons.logout),
-          ),
+          if (!AdminDesktopScope.isDesktop(context))
+            IconButton(
+              tooltip: 'Đăng xuất',
+              onPressed: widget.onLogout,
+              icon: const Icon(Icons.logout),
+            ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _dialog || _loading || _error != null ? null : _add,
-        icon: const Icon(Icons.add),
-        label: const Text('Thêm gói'),
-      ),
+      floatingActionButton: desktop
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _dialog || _loading || _error != null ? null : _add,
+              icon: const Icon(Icons.add),
+              label: const Text('Thêm gói'),
+            ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
           children: [
-            const Text(
-              'MEMBERSHIP PLANS',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.8,
+            if (!desktop) ...[
+              const Text(
+                'Các gói hội viên',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Các gói hội viên',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Các gói đang hoạt động. Thời hạn tính bằng ngày.',
-              style: theme.textTheme.bodyMedium,
-            ),
+              const SizedBox(height: 8),
+            ],
+            Text('Các gói đang hoạt động.', style: theme.textTheme.bodyMedium),
             const SizedBox(height: 24),
             if (_createdId != null)
-              SelectableText('Mã gói vừa tạo: $_createdId'),
+              SelectableText('Mã gói vừa tạo: ${personCode(_createdId!)}'),
             if (_loading) const Center(child: CircularProgressIndicator()),
             if (_error != null) ...[
               Text(_error!, key: const Key('plan-error')),
@@ -141,101 +217,93 @@ class _MembershipPageState extends State<MembershipPage> {
             ],
             if (!_loading && _error == null && _plans.isEmpty)
               const Text('Chưa có gói tập đang hoạt động.'),
-            ..._plans.map(
-              (plan) => Card(
-                elevation: 0,
-                margin: const EdgeInsets.only(bottom: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: theme.dividerColor.withValues(alpha: 0.12),
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+            _PlanGrid(
+              children: [
+                for (final plan in _plans)
+                  Card(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: primary.withValues(alpha: 0.13),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: Icon(
-                              Icons.card_membership_outlined,
+                          Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.card_membership_outlined,
+                                  color: primary,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  plan.name,
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          Text(
+                            moneyText(plan.cents),
+                            style: TextStyle(
+                              fontSize: 25,
+                              fontWeight: FontWeight.w800,
                               color: primary,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              plan.name,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
+                          const SizedBox(height: 6),
+                          Text('Thời hạn: ${durationText(plan.durationDays)}'),
+                          if (plan.description != null) Text(plan.description!),
+                          const Divider(height: 28),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.check_circle_outline,
+                                size: 19,
+                                color: Color(0xFF2E9E44),
                               ),
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'Sửa gói — Chưa khả dụng',
-                            onPressed: _unavailable,
-                            icon: const Icon(Icons.edit_outlined),
-                          ),
-                          IconButton(
-                            tooltip: 'Xóa gói — Chưa khả dụng',
-                            onPressed: _unavailable,
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      Text(
-                        '${decimalPrice(plan.cents)} đ',
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w800,
-                          color: primary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text('Thời hạn: ${plan.durationDays} ngày'),
-                      if (plan.description != null) Text(plan.description!),
-                      SelectableText('Mã gói: ${plan.id}'),
-                      const Divider(height: 28),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.check_circle_outline,
-                            size: 19,
-                            color: Colors.green,
-                          ),
-                          const SizedBox(width: 7),
-                          const Expanded(
-                            child: Text(
-                              'Đang hoạt động',
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                          Tooltip(
-                            message: 'Đổi trạng thái — Chưa khả dụng',
-                            child: Switch(
-                              value: true,
-                              onChanged: (_) => _unavailable(),
-                            ),
+                              const SizedBox(width: 7),
+                              const Expanded(
+                                child: Text(
+                                  'Đang hoạt động',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              IconButton(
+                                key: ValueKey('edit-plan-${plan.id}'),
+                                tooltip: 'Sửa gói',
+                                onPressed: _dialog ? null : () => _edit(plan),
+                                icon: const Icon(Icons.edit_outlined, size: 20),
+                              ),
+                              IconButton(
+                                key: ValueKey('delete-plan-${plan.id}'),
+                                tooltip: 'Xóa gói',
+                                onPressed: _dialog ? null : () => _delete(plan),
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+              ],
             ),
           ],
         ),
@@ -244,20 +312,60 @@ class _MembershipPageState extends State<MembershipPage> {
   }
 }
 
+/// One column on narrow windows, two or three side by side on wide ones.
+class _PlanGrid extends StatelessWidget {
+  final List<Widget> children;
+  const _PlanGrid({required this.children});
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      final columns = box.maxWidth >= 1000
+          ? 3
+          : box.maxWidth >= 820
+          ? 2
+          : 1;
+      final width = (box.maxWidth - 14 * (columns - 1)) / columns;
+      return Wrap(
+        spacing: 14,
+        children: [
+          for (final child in children) SizedBox(width: width, child: child),
+        ],
+      );
+    },
+  );
+}
+
 class _CreatePlanDialog extends StatefulWidget {
   final MembershipPlanService service;
   final Future<void> Function() reload;
-  const _CreatePlanDialog({required this.service, required this.reload});
+  final MembershipPlan? editing;
+  const _CreatePlanDialog({
+    required this.service,
+    required this.reload,
+    this.editing,
+  });
   @override
   State<_CreatePlanDialog> createState() => _CreatePlanDialogState();
 }
 
 class _CreatePlanDialogState extends State<_CreatePlanDialog> {
   final _form = GlobalKey<FormState>();
-  final _name = TextEditingController(),
-      _description = TextEditingController(),
-      _price = TextEditingController(),
-      _days = TextEditingController();
+  late final _name = TextEditingController(text: widget.editing?.name),
+      _description = TextEditingController(text: widget.editing?.description),
+      _price = TextEditingController(text: _priceText(widget.editing?.cents)),
+      _days = TextEditingController(
+        text: widget.editing == null
+            ? null
+            : '${widget.editing!.durationDays ~/ _unit.days}',
+      );
+  late DurationUnit _unit = widget.editing == null
+      ? DurationUnit.day
+      : DurationUnit.of(widget.editing!.durationDays);
+  static String? _priceText(int? cents) => cents == null
+      ? null
+      : cents % 100 == 0
+      ? '${cents ~/ 100}'
+      : decimalPrice(cents);
   bool _sending = false, _unknown = false;
   String? _error;
   late final int _epoch = widget.service.api.sessionEpoch;
@@ -282,12 +390,24 @@ class _CreatePlanDialogState extends State<_CreatePlanDialog> {
       _error = null;
     });
     try {
-      final plan = await widget.service.create(
-        name: _name.text,
-        description: _description.text.isEmpty ? null : _description.text,
-        durationDays: int.parse(_days.text.trim()),
-        cents: priceCents(_price.text)!,
-      );
+      final name = _name.text,
+          description = _description.text.isEmpty ? null : _description.text,
+          days = int.parse(_days.text.trim()) * _unit.days,
+          cents = priceCents(_price.text)!;
+      final plan = widget.editing == null
+          ? await widget.service.create(
+              name: name,
+              description: description,
+              durationDays: days,
+              cents: cents,
+            )
+          : await widget.service.update(
+              widget.editing!.id,
+              name: name,
+              description: description,
+              durationDays: days,
+              cents: cents,
+            );
       if (mounted && _current) Navigator.pop(context, plan);
     } on ApiError catch (e) {
       if (_current)
@@ -304,7 +424,7 @@ class _CreatePlanDialogState extends State<_CreatePlanDialog> {
   Widget build(BuildContext context) => PopScope(
     canPop: !_sending,
     child: AlertDialog(
-      title: const Text('Thêm gói tập'),
+      title: Text(widget.editing == null ? 'Thêm gói tập' : 'Sửa gói tập'),
       content: SizedBox(
         width: 420,
         child: Form(
@@ -326,19 +446,55 @@ class _CreatePlanDialogState extends State<_CreatePlanDialog> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
-                  decoration: const InputDecoration(labelText: 'Giá (VNĐ)'),
+                  decoration: const InputDecoration(labelText: 'Giá (VND)'),
                   validator: validatePlanPrice,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _days,
-                  enabled: !_sending && !_unknown,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Thời hạn (ngày)',
-                  ),
-                  validator: validateDurationDays,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _days,
+                        enabled: !_sending && !_unknown,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Thời hạn',
+                        ),
+                        onChanged: (_) => setState(() {}),
+                        validator: (v) => validateDuration(v, _unit),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 150,
+                      child: DropdownButtonFormField<DurationUnit>(
+                        key: const Key('plan-unit'),
+                        initialValue: _unit,
+                        isExpanded: true,
+                        decoration: const InputDecoration(labelText: 'Đơn vị'),
+                        items: [
+                          for (final unit in DurationUnit.values)
+                            DropdownMenuItem(
+                              value: unit,
+                              child: Text(unit.label),
+                            ),
+                        ],
+                        onChanged: _sending || _unknown
+                            ? null
+                            : (v) {
+                                if (v != null) setState(() => _unit = v);
+                              },
+                      ),
+                    ),
+                  ],
                 ),
+                if (_unit != DurationUnit.day &&
+                    validateDuration(_days.text, _unit) == null)
+                  Text(
+                    '= ${int.parse(_days.text.trim()) * _unit.days} ngày '
+                    '(1 tháng tính 30 ngày, 1 năm tính 365 ngày)',
+                  ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _description,

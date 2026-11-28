@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import 'api_client.dart';
@@ -18,6 +20,10 @@ class BookingState extends ChangeNotifier {
   int _readVersion = 0;
   List<Booking> bookings = [];
   List<Slot> slots = [];
+  Map<String, BookedMember> members = {};
+
+  /// How far back sessions are read, for the taught and cancelled lists.
+  static const historyDays = 60;
   DateTime from = DateTime.now().toUtc().subtract(const Duration(days: 1));
   DateTime to = DateTime.now().toUtc().add(const Duration(days: 31));
   BookingState(this.service);
@@ -82,13 +88,15 @@ class BookingState extends ChangeNotifier {
     try {
       final result = await Future.wait<Object>([
         service.slots(from, to),
-        service.bookings(from, to),
+        service.bookings(from.subtract(const Duration(days: historyDays)), to),
       ]);
       if (!alive || version != _readVersion) return;
       slots = result[0] as List<Slot>;
       bookings = result[1] as List<Booking>;
       loaded = true;
       if (manual) needsReconciliation = false;
+      // Not awaited: the bookings must not wait for the names.
+      if (bookings.isNotEmpty) unawaited(_loadNames(version));
     } on ApiError catch (e) {
       if (alive && version == _readVersion) error = e.toString();
     } catch (_) {
@@ -102,18 +110,35 @@ class BookingState extends ChangeNotifier {
     }
   }
 
+  Future<void> _loadNames(int version) async {
+    final found = await service.api.bookedMembers();
+    if (found == null || !alive || version != _readVersion) return;
+    members = found;
+    changed();
+  }
+
+  static String _when(DateTime instant) =>
+      '${vietnamDateText(instant)} ${vietnamClock(instant)}';
+
   Map<String, dynamic> session(Booking b) => {
     'id': b.id,
-    'memberName': 'Member ${shortId(b.memberId)}',
+    // Until the server gives a name, the short code stands in for it.
+    'memberName':
+        members[b.memberId]?.name ??
+        'Học viên ${shortId(b.memberId).toUpperCase()}',
+    'memberId': b.memberId,
+    'memberPhone': members[b.memberId]?.phone,
+    'memberGender': members[b.memberId]?.gender,
+    'memberCode': shortId(b.memberId).toUpperCase(),
     'date': vietnamDate(b.startAt),
     'start': vietnamClock(b.startAt),
     'end': vietnamClock(b.endAt),
     'status': b.status,
     'dto': b,
     if (b.cancelReason != null) 'cancellationReason': b.cancelReason,
-    if (b.cancelledAt != null) 'cancelledAt': vietnamTime(b.cancelledAt!),
+    if (b.cancelledAt != null) 'cancelledAt': _when(b.cancelledAt!),
     if (b.cancelledBy != null) 'cancelledBy': b.cancelledBy,
-    if (b.completedAt != null) 'completedAt': vietnamTime(b.completedAt!),
+    if (b.completedAt != null) 'completedAt': _when(b.completedAt!),
   };
   List<Map<String, dynamic>> get sessions => bookings.map(session).toList();
   Map<String, dynamic> slot(Slot s) => {
@@ -134,7 +159,7 @@ class BookingState extends ChangeNotifier {
     if (!alive) return;
     slots = [...slots.where((s) => s.id != previous?.id), next];
     await accepted(
-      '${previous == null ? "Đã tạo khung giờ làm." : "Đã cập nhật khung giờ."}\nMã khung giờ: ${next.id}',
+      previous == null ? 'Đã tạo khung giờ làm.' : 'Đã cập nhật khung giờ.',
     );
   }
 

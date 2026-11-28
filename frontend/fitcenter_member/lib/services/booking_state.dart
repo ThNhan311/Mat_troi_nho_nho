@@ -196,13 +196,13 @@ class BookingState extends ChangeNotifier {
           'id': b.id,
           'trainer': trainerName(b.ptId),
           'date': vietnamDateText(b.startAt),
-          'time':
-              '${vietnamClock(b.startAt)} - ${vietnamClock(b.endAt)} (giờ Việt Nam)',
+          'time': '${vietnamClock(b.startAt)} - ${vietnamClock(b.endAt)}',
           'status': b.status,
           if (b.cancelReason != null) 'reason': b.cancelReason!,
         },
       )
       .toList();
+
   Future<void> createSelected() async {
     final pt = trainerId, slot = slotId;
     if (pt == null || slot == null) return;
@@ -210,9 +210,7 @@ class BookingState extends ChangeNotifier {
     if (!alive) return;
     bookings = [...bookings, booking];
     clearSelection();
-    await accepted(
-      'Đặt lịch thành công • Đã xác nhận\nMã đặt lịch: ${booking.id}',
-    );
+    await accepted('Đặt lịch thành công');
   }
 
   Future<void> cancel(String id) async {
@@ -221,6 +219,6 @@ class BookingState extends ChangeNotifier {
     if (!alive) return;
     bookings = bookings.map((b) => b.id == next.id ? next : b).toList();
     clearSelection();
-    await accepted('Đã hủy lịch tập.\nMã đặt lịch: ${next.id}');
+    await accepted('Đã hủy lịch tập');
   }
 }
